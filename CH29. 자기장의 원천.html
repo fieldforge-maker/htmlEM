@@ -316,12 +316,12 @@ sub, sup { font-size: .7em; line-height: 0; }
 
 
 
+
 /* 화면 3: 두 식 비교 칸의 숫자 묶음 */
 #s3 .kv { margin-top: .5em; }
 #s3 .kv dd:last-child, #s3 .kv dd + dd { color: var(--muted); text-align: left; }
 #s3 .s3-walls { margin-top: .7em; padding-top: .55em; border-top: 1px solid var(--line); }
 
-#s4 .s4-under { margin-top: .5em; }
 
 /* 화면 5: 변별 기여 표와 범례 */
 #s5 .key-contrib { display: inline-block; width: 1.8em; height: 8px; border-radius: 4px; background: var(--field); opacity: .45; }
@@ -341,6 +341,23 @@ sub, sup { font-size: .7em; line-height: 0; }
 #s7 .dir.zero { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { #s7 .dir { transition: none; } }
 
+/* 화면 8: 도선별 칩, 조절 줄 */
+#s8 .chip .lbl { font-family: var(--font-math); }
+#s8 .chip .u { color: var(--muted); font-size: .9em; }
+#s8 .chip.out { opacity: .55; }
+#s8 .chip.out b { font-family: var(--font-ui); font-weight: 500; font-size: .9em; }
+#s8 .opt { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-bottom: .6em; }
+#s8 .opt > span { font-size: .86em; }
+#s8 .wire-row { display: grid; grid-template-columns: 1.8em auto minmax(0, 1fr) 2.6em; align-items: center; gap: 0 12px; margin-bottom: .5em; }
+#s8 .wire-row > .eq { font-size: .95em; }
+#s8 .wire-row .seg button { padding: .25em .6em; }
+#s8 .wire-row input[type="range"] { width: 100%; min-width: 0; margin: 0; accent-color: var(--accent); }
+#s8 .wire-row output { font-family: var(--font-num); font-size: .86em; color: var(--muted); text-align: right; }
+#s8 .seg .sym { vertical-align: -.16em; }
+#s8 .toggles { margin-top: .3em; }
+
+#s9 .s9-under { margin-top: .5em; }
+
 </style>
 </head>
 <body>
@@ -348,15 +365,17 @@ sub, sup { font-size: .7em; line-height: 0; }
   <header class="top">
     <h1><span class="chapter">CH29.</span>자기장의 원천</h1>
     <nav class="tabs" aria-label="화면 목록">
-      <span class="tab-group">토로이드</span>
-      <button class="tab" type="button" data-screen="s1" title="예제 29.6 · 슬라이드 17–18"><span class="tab-no">1</span><span class="tab-label">앙페르 경로</span></button>
-      <button class="tab" type="button" data-screen="s2" title="슬라이드 18"><span class="tab-no">2</span><span class="tab-label">나선 감기와 외부장</span></button>
-      <button class="tab" type="button" data-screen="s3" title="토로이드와 솔레노이드 잇기" hidden><span class="tab-no">–</span><span class="tab-label">펼치면 솔레노이드</span></button>
+      <button class="tab" type="button" data-screen="s8" title="Knight 그림 29.24–29.25 · 슬라이드 12–14"><span class="tab-no">1</span><span class="tab-label">앙페르 법칙</span></button>
       <span class="tab-group">솔레노이드</span>
-      <button class="tab" type="button" data-screen="s4" title="슬라이드 20, 22, 25"><span class="tab-no">3</span><span class="tab-label">자기력선과 축 위 B</span></button>
-      <button class="tab" type="button" data-screen="s5" title="슬라이드 20–21"><span class="tab-no">4</span><span class="tab-label">직사각형 경로</span></button>
-      <button class="tab" type="button" data-screen="s6" title="슬라이드 22"><span class="tab-no">5</span><span class="tab-label">둘레 방향 외부장</span></button>
-      <button class="tab" type="button" data-screen="s7" title="슬라이드 23–24"><span class="tab-no">6</span><span class="tab-label">보강과 상쇄</span></button>
+      <button class="tab" type="button" data-screen="s4" title="Knight 그림 29.29–29.30 · 슬라이드 20"><span class="tab-no">2</span><span class="tab-label">자기력선</span></button>
+      <button class="tab" type="button" data-screen="s7" title="Knight 그림 29.29 · 슬라이드 23–24"><span class="tab-no">3</span><span class="tab-label">보강과 상쇄</span></button>
+      <button class="tab" type="button" data-screen="s5" title="Knight 그림 29.31 · 슬라이드 20–21"><span class="tab-no">4</span><span class="tab-label">직사각형 경로</span></button>
+      <button class="tab" type="button" data-screen="s9" title="Knight 그림 29.32 · 슬라이드 22, 25"><span class="tab-no">5</span><span class="tab-label">유한한 솔레노이드</span></button>
+      <button class="tab" type="button" data-screen="s6" title="교재 밖 심화 · 슬라이드 22"><span class="tab-no">6</span><span class="tab-label">둘레 방향 외부장</span></button>
+      <span class="tab-group">토로이드</span>
+      <button class="tab" type="button" data-screen="s1" title="Knight 연습문제 P29.55 · 슬라이드 17–18"><span class="tab-no">7</span><span class="tab-label">앙페르 경로</span></button>
+      <button class="tab" type="button" data-screen="s2" title="교재 밖 심화 · 슬라이드 18"><span class="tab-no">8</span><span class="tab-label">나선 감기와 외부장</span></button>
+      <button class="tab" type="button" data-screen="s3" title="숨김: 토로이드와 솔레노이드 잇기" hidden><span class="tab-no">–</span><span class="tab-label">펼치면 솔레노이드</span></button>
     </nav>
     <div class="tools">
       <button class="icon-btn" id="themeBtn" type="button" aria-label="어두운 화면으로 바꾸기">
@@ -586,10 +605,10 @@ sub, sup { font-size: .7em; line-height: 0; }
     <footer class="steps"></footer>
   </main>
 
-  <!-- ===== 화면 4: 솔레노이드 · 자기력선과 축 위 B ===== -->
+  <!-- ===== 화면: 솔레노이드의 자기력선 ===== -->
   <main class="screen" id="s4" hidden>
     <div class="screen-head">
-      <p class="eyebrow">슬라이드 20 · 22 · 25</p>
+      <p class="eyebrow">슬라이드 20</p>
       <h2>솔레노이드의 자기력선</h2>
     </div>
 
@@ -605,14 +624,6 @@ sub, sup { font-size: .7em; line-height: 0; }
     </div>
 
     <aside class="panel" id="s4-panel" aria-label="계산과 조절">
-      <details class="fold" open>
-        <summary><span>축 위 <span class="m">B</span>(<span class="m">x</span>)</span></summary>
-        <div class="fold-body">
-          <div class="graph-box"><canvas id="s4-graph" aria-label="솔레노이드 축 위의 자기장 크기 그래프"></canvas></div>
-          <div class="toggles s4-under"><label><input type="checkbox" id="s4-probeChk"><b class="mv">B</b> 측정점</label></div>
-        </div>
-      </details>
-
       <details class="fold">
         <summary>가운데 자기장</summary>
         <div class="fold-body">
@@ -624,8 +635,8 @@ sub, sup { font-size: .7em; line-height: 0; }
           <dl class="kv" id="s4-kv">
             <dt id="s4-idealKey"></dt><dd id="s4-idealVal"></dd><dd id="s4-idealUnit"></dd>
             <dt>가운데 ÷ 이상값</dt><dd id="s4-ratioVal"></dd><dd>%</dd>
-            <dt class="s4-end">끝 <span class="m">B</span>(<span class="m">L</span>/2)</dt><dd class="s4-end" id="s4-endVal"></dd><dd class="s4-end" id="s4-endUnit"></dd>
-            <dt class="s4-end">끝 ÷ 이상값</dt><dd class="s4-end" id="s4-endRatio"></dd><dd class="s4-end">%</dd>
+            <dt class="end-row">끝 <span class="m">B</span>(<span class="m">L</span>/2)</dt><dd class="end-row" id="s4-endVal"></dd><dd class="end-row" id="s4-endUnit"></dd>
+            <dt class="end-row">끝 ÷ 이상값</dt><dd class="end-row" id="s4-endRatio"></dd><dd class="end-row">%</dd>
           </dl>
         </div>
       </details>
@@ -905,6 +916,214 @@ sub, sup { font-size: .7em; line-height: 0; }
     <footer class="steps"></footer>
   </main>
 
+  <!-- ===== 화면 8: 앙페르 법칙 기초 (나이트 §29.6) ===== -->
+  <main class="screen" id="s8" hidden>
+    <div class="screen-head">
+      <p class="eyebrow">슬라이드 12–14</p>
+      <h2>앙페르 법칙</h2>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="canvas-box">
+        <canvas id="s8-stage" aria-label="종이면에 수직인 긴 직선 도선들과 닫힌 앙페르 경로"></canvas>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sym dot"></i>나옴</span>
+        <span><i class="sym cross"></i>들어감</span>
+        <span><i class="key-path"></i>앙페르 경로</span>
+        <span><i class="key-field"></i><b class="mv">B</b></span>
+      </div>
+    </div>
+
+    <aside class="panel" id="s8-panel" aria-label="그래프, 계산과 조절">
+      <details class="fold" open>
+        <summary><span>경로를 따라 쌓인 ∮<b class="mv">B</b>·d<b class="mv">s</b></span></summary>
+        <div class="fold-body">
+          <div class="graph-box"><canvas id="s8-graph" aria-label="시작점에서 경로를 따라간 비율에 따른 B·ds 누적 적분 그래프"></canvas></div>
+        </div>
+      </details>
+
+      <details class="fold">
+        <summary>감싸는 전류</summary>
+        <div class="fold-body">
+          <div class="enc-row">
+            <span class="chip" id="s8-chip0"><i class="sym dot"></i><span class="lbl"></span><b></b><span class="u">A</span></span>
+            <span class="chip" id="s8-chip1"><i class="sym dot"></i><span class="lbl"></span><b></b><span class="u">A</span></span>
+            <span class="chip" id="s8-chip2"><i class="sym dot"></i><span class="lbl"></span><b></b><span class="u">A</span></span>
+            <span class="chip" id="s8-chip3"><i class="sym dot"></i><span class="lbl"></span><b></b><span class="u">A</span></span>
+          </div>
+          <p class="enc-total"><span class="eq"><span class="m">I</span><sub>through</sub> =</span> <span class="num" id="s8-encExpr"></span> <strong id="s8-encVal">–</strong></p>
+        </div>
+      </details>
+
+      <details class="fold">
+        <summary>앙페르 법칙</summary>
+        <div class="fold-body">
+          <p class="law eq">∮ <b class="mv">B</b>·d<b class="mv">s</b> = μ<sub>0</sub><span class="m">I</span><sub>through</sub></p>
+          <div class="result">
+            <span>∮ <b class="mv">B</b>·d<b class="mv">s</b> 수치 적분</span>
+            <span class="readout"><span class="big" id="s8-loopVal">–</span><span class="unit">μT·m</span></span>
+          </div>
+          <dl class="kv">
+            <dt class="eq">μ<sub>0</sub><span class="m">I</span><sub>through</sub></dt><dd></dd><dd id="s8-muVal">–</dd>
+            <dt>차이</dt><dd></dd><dd id="s8-diff">–</dd>
+          </dl>
+          <p class="subst" id="s8-subst"></p>
+          <p class="geo" id="s8-how"></p>
+        </div>
+      </details>
+
+      <details class="fold">
+        <summary>조절</summary>
+        <div class="fold-body">
+          <div class="opt">
+            <span>경로</span>
+            <div class="seg" role="group" aria-label="경로 모양">
+              <button type="button" data-shape="circle" aria-pressed="true">원</button>
+              <button type="button" data-shape="free" aria-pressed="false">자유 모양</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span>적분 방향</span>
+            <div class="seg" role="group" aria-label="적분 방향">
+              <button type="button" data-dir="1" aria-pressed="true">반시계</button>
+              <button type="button" data-dir="-1" aria-pressed="false">시계</button>
+            </div>
+          </div>
+          <div class="opt">
+            <span>도선 수</span>
+            <div class="seg" role="group" aria-label="도선 수">
+              <button type="button" data-n="1" aria-pressed="true">1</button>
+              <button type="button" data-n="2" aria-pressed="false">2</button>
+              <button type="button" data-n="3" aria-pressed="false">3</button>
+              <button type="button" data-n="4" aria-pressed="false">4</button>
+            </div>
+          </div>
+          <div class="wire-row" data-k="0">
+            <span class="eq"><span class="m">I</span><sub>1</sub></span>
+            <div class="seg" role="group" aria-label="I1 방향">
+              <button type="button" data-wd="1" aria-pressed="true" aria-label="나옴"><i class="sym dot"></i></button>
+              <button type="button" data-wd="-1" aria-pressed="false" aria-label="들어감"><i class="sym cross"></i></button>
+            </div>
+            <input type="range" min="1" max="5" step="1" value="3" aria-label="I1 크기">
+            <output></output>
+          </div>
+          <div class="wire-row" data-k="1">
+            <span class="eq"><span class="m">I</span><sub>2</sub></span>
+            <div class="seg" role="group" aria-label="I2 방향">
+              <button type="button" data-wd="1" aria-pressed="true" aria-label="나옴"><i class="sym dot"></i></button>
+              <button type="button" data-wd="-1" aria-pressed="false" aria-label="들어감"><i class="sym cross"></i></button>
+            </div>
+            <input type="range" min="1" max="5" step="1" value="4" aria-label="I2 크기">
+            <output></output>
+          </div>
+          <div class="wire-row" data-k="2">
+            <span class="eq"><span class="m">I</span><sub>3</sub></span>
+            <div class="seg" role="group" aria-label="I3 방향">
+              <button type="button" data-wd="1" aria-pressed="false" aria-label="나옴"><i class="sym dot"></i></button>
+              <button type="button" data-wd="-1" aria-pressed="true" aria-label="들어감"><i class="sym cross"></i></button>
+            </div>
+            <input type="range" min="1" max="5" step="1" value="1" aria-label="I3 크기">
+            <output></output>
+          </div>
+          <div class="wire-row" data-k="3">
+            <span class="eq"><span class="m">I</span><sub>4</sub></span>
+            <div class="seg" role="group" aria-label="I4 방향">
+              <button type="button" data-wd="1" aria-pressed="true" aria-label="나옴"><i class="sym dot"></i></button>
+              <button type="button" data-wd="-1" aria-pressed="false" aria-label="들어감"><i class="sym cross"></i></button>
+            </div>
+            <input type="range" min="1" max="5" step="1" value="3" aria-label="I4 크기">
+            <output></output>
+          </div>
+          <div class="toggles">
+            <label><input type="checkbox" id="s8-tintChk" checked><span><b class="mv">B</b>·d<b class="mv">s</b> 부호 띠</span></label>
+            <button class="btn" id="s8-resetBtn" type="button">처음 배치로</button>
+          </div>
+        </div>
+      </details>
+    </aside>
+
+    <footer class="steps"></footer>
+  </main>
+
+  <!-- ===== 화면: 유한한 솔레노이드 ===== -->
+  <main class="screen" id="s9" hidden>
+    <div class="screen-head">
+      <p class="eyebrow">슬라이드 22 · 25</p>
+      <h2>유한한 솔레노이드</h2>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="canvas-box">
+        <canvas id="s9-stage" aria-label="축을 지나는 면으로 자른 솔레노이드와 자기력선"></canvas>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sym dot"></i>나옴</span>
+        <span><i class="sym cross"></i>들어감</span>
+        <span><i class="key-field"></i><b class="mv">B</b></span>
+      </div>
+    </div>
+
+    <aside class="panel" id="s9-panel" aria-label="계산과 조절">
+      <details class="fold" open>
+        <summary><span>축 위 <span class="m">B</span>(<span class="m">x</span>)</span></summary>
+        <div class="fold-body">
+          <div class="graph-box"><canvas id="s9-graph" aria-label="솔레노이드 축 위의 자기장 크기 그래프"></canvas></div>
+          <div class="toggles s9-under"><label><input type="checkbox" id="s9-probeChk"><b class="mv">B</b> 측정점</label></div>
+        </div>
+      </details>
+
+      <details class="fold">
+        <summary>가운데 자기장</summary>
+        <div class="fold-body">
+          <p class="law eq" id="s9-law"></p>
+          <div class="result">
+            <span class="eq"><span class="m">B</span>(0)</span>
+            <span class="readout"><span class="big" id="s9-bVal">–</span><span class="unit" id="s9-bUnit">μT</span></span>
+          </div>
+          <dl class="kv" id="s9-kv">
+            <dt id="s9-idealKey"></dt><dd id="s9-idealVal"></dd><dd id="s9-idealUnit"></dd>
+            <dt>가운데 ÷ 이상값</dt><dd id="s9-ratioVal"></dd><dd>%</dd>
+            <dt class="end-row">끝 <span class="m">B</span>(<span class="m">L</span>/2)</dt><dd class="end-row" id="s9-endVal"></dd><dd class="end-row" id="s9-endUnit"></dd>
+            <dt class="end-row">끝 ÷ 이상값</dt><dd class="end-row" id="s9-endRatio"></dd><dd class="end-row">%</dd>
+          </dl>
+        </div>
+      </details>
+
+      <details class="fold">
+        <summary>조절</summary>
+        <div class="fold-body">
+          <div class="ctrl-pair">
+            <div class="ctrl">
+              <label for="s9-nIn">감은 수 <span class="m">N</span></label><output id="s9-nOut" for="s9-nIn"></output>
+              <input type="range" id="s9-nIn" min="1" max="80" step="1" value="40">
+            </div>
+            <div class="ctrl">
+              <label for="s9-lIn">길이 <span class="m">L</span></label><output id="s9-lOut" for="s9-lIn"></output>
+              <input type="range" id="s9-lIn" min="5" max="40" step="0.5" value="20">
+            </div>
+          </div>
+          <div class="ctrl-pair">
+            <div class="ctrl">
+              <label for="s9-rIn">반지름 <span class="m">R</span></label><output id="s9-rOut" for="s9-rIn"></output>
+              <input type="range" id="s9-rIn" min="1" max="6" step="0.1" value="3">
+            </div>
+            <div class="ctrl">
+              <label for="s9-iIn">전류 <span class="m">I</span></label><output id="s9-iOut" for="s9-iIn"></output>
+              <input type="range" id="s9-iIn" min="0.5" max="4" step="0.5" value="2">
+            </div>
+          </div>
+          <div class="toggles">
+            <label><input type="checkbox" id="s9-washChk"><span>|<b class="mv">B</b>| 색칠</span></label>
+          </div>
+          <p class="geo"><span class="m">n</span> = <span class="m">N</span>/<span class="m">L</span> = <span class="num" id="s9-nVal"></span> 회/cm</p>
+        </div>
+      </details>
+    </aside>
+
+    <footer class="steps"></footer>
+  </main>
+
 </div>
 
 <script>
@@ -1112,7 +1331,9 @@ const EM = (() => {
   }
   function route() {
     const id = location.hash.slice(1);
-    show(screens.has(id) ? id : screens.keys().next().value);
+    // 주소에 화면이 없으면 보이는 첫 탭의 화면
+    const first = document.querySelector('.tab[data-screen]:not([hidden]):not(:disabled)');
+    show(screens.has(id) ? id : first ? first.dataset.screen : screens.keys().next().value);
   }
 
   function toggleFullscreen() {
@@ -1522,6 +1743,775 @@ const EM3D = (() => {
     scene: cam => new Scene(cam), attachOrbit,
   };
 })();
+
+/* ================= 공용: 솔레노이드 단면과 자기력선 (화면 '자기력선', '유한한 솔레노이드') =================
+   COIL(ID, STEPS)로 화면 하나를 등록한다. 단계 항목의 표시: N(감은 수), poles(N/S), axis(축 점선),
+   dimLines(측정점을 켜면 자기력선을 흐리게), dims('L' 또는 'R' 치수), sweep, anim('L' | 'R'). */
+window.COIL = function (ID, STEPS) {
+  'use strict';
+  const { TAU, MU0, C, F, m: M, DOT, CROSS } = EM;
+  const $ = id => document.getElementById(ID + '-' + id);
+  const N_FIX = 2;                   // 5–6단계에서 고정하는 n (회/cm)
+  const LINE_W = 2.5;                // 자기력선 굵기 (px)
+
+  const state = { N: 40, L: 20, R: 3, I: 2, wash: true, probe: 0, showProbe: false };
+  let fit = { L: 20, R: 3 };         // 화면에 맞추는 크기 (cm). 애니메이션 동안은 고정해 크기 변화가 보이게 한다
+  let coarse = false;                // 움직이는 동안은 거친 격자로 빠르게
+
+
+  let stage, graph, sctx, gctx;
+  let view = { cx: 0, cy: 0, s: 1, xh: 1 };
+  let field = null;                  // 자기력선 계산 결과 (매개변수가 바뀔 때만 다시 계산)
+  let anim = null, refineTimer = 0;   // anim: { tw, finish }
+  let step = 0;
+  const S = () => STEPS[step];
+
+  /* ---------- 물리: 원형 고리의 정확한 자기장 ---------- */
+  // 제1·2종 완전 타원 적분 K(m), E(m) (m = k²), 산술-기하 평균(AGM)으로
+  const KE = { K: 0, E: 0 };
+  function ellipKE(m) {
+    let a = 1, b = Math.sqrt(1 - m), sum = 0.5 * m, p = 0.5;
+    for (let it = 0; it < 20; it++) {
+      const c = 0.5 * (a - b);
+      if (c <= 1e-15 * a) break;
+      const an = 0.5 * (a + b);
+      b = Math.sqrt(a * b); a = an;
+      p *= 2; sum += p * c * c;
+    }
+    KE.K = Math.PI / (2 * a);
+    KE.E = KE.K * (1 - sum);
+  }
+  // 반지름 a(m), 전류 1 A인 고리가 축 방향 거리 z, 축에서 거리 rho(m)인 점에 만드는 [B축, B반지름] (T)
+  function loopB(a, z, rho, out) {
+    const z2 = z * z;
+    if (rho < 1e-9 * a) { out[0] = MU0 * a * a / (2 * Math.pow(a * a + z2, 1.5)); out[1] = 0; return; }
+    const al2 = (a - rho) * (a - rho) + z2, be2 = (a + rho) * (a + rho) + z2, be = Math.sqrt(be2);
+    ellipKE(4 * a * rho / be2);
+    const k = MU0 / (2 * Math.PI * al2 * be);
+    out[0] = k * ((a * a - rho * rho - z2) * KE.E + al2 * KE.K);
+    out[1] = k * z / rho * ((a * a + rho * rho + z2) * KE.E - al2 * KE.K);
+  }
+  // k번째 감은 고리의 위치 (cm): 길이 L을 N칸으로 나눈 칸의 가운데
+  const turnX = (k, N, L) => (k - (N - 1) / 2) * L / N;
+  // 축 위의 B (T): 고리 N개의 합
+  function axisB(x, P = state) {
+    const a = P.R / 100, a2 = a * a;
+    let sum = 0;
+    for (let k = 0; k < P.N; k++) {
+      const z = (x - turnX(k, P.N, P.L)) / 100;
+      sum += a2 / Math.pow(a2 + z * z, 1.5);
+    }
+    return MU0 * P.I * sum / 2;
+  }
+  // 비교 기준: 솔레노이드는 μ0nI, 고리 하나는 μ0I/2R
+  const idealB = (P = state) => P.N === 1 ? MU0 * P.I / (2 * P.R / 100) : MU0 * (P.N / (P.L / 100)) * P.I;
+
+  /* ---------- 격자: 위 반평면(y ≥ 0)의 B ----------
+     표 간격 ht를 고리 간격 d의 약수로 잡으면 고리마다의 자기장은 고리 하나의 표를 옮긴 것이다.
+     타원 적분은 표 한 장만 계산하고, N개의 합은 빗살 합 S(u) = S(u − q) + T(u) − T(u − Nq)로 구한다. */
+  function buildGrid(P, dom, hTarget) {
+    const { N, L, R } = P;
+    const d = L / N;
+    const q = Math.max(1, Math.ceil(d / hTarget - 1e-9));     // 고리 간격 = q·ht
+    const ht = d / q;
+    const p = Math.max(1, Math.floor(hTarget / ht + 1e-9));   // 격자 간격 = p·ht
+    const hx = p * ht;
+    const xk0 = turnX(0, N, L);
+    const c0 = Math.ceil((xk0 - dom.xMin) / ht);
+    const x0 = xk0 - c0 * ht;                                  // 격자 첫 열
+    const nx = Math.ceil((dom.xMax - x0) / hx) + 1;
+    const mR = Math.max(2, Math.round(R / hTarget));
+    const hy = R / mR;                                         // 도선(y = R)이 두 행 한가운데에 오게
+    const ny = Math.ceil(dom.yMax / hy + 0.5) + 1;             // 행 j: y = (j − 0.5)·hy
+    const nu = (nx - 1) * p + 1;
+    const W = Math.max(c0 + N * q, nu - 1 - c0) + 1;           // 표에 필요한 |어긋남|
+    const TZ = new Float64Array(W), TR = new Float64Array(W);
+    const cz = new Float64Array(nu), cr = new Float64Array(nu);
+    const BX = new Float32Array(nx * ny), BY = new Float32Array(nx * ny);
+    const b = [0, 0], a = R / 100;
+    const tz = c => TZ[c < 0 ? -c : c];
+    const tr = c => (c < 0 ? -TR[-c] : TR[c]);                 // B반지름은 축 방향 어긋남에 대해 홀함수
+    for (let j = 0; j < ny; j++) {
+      const y = (j - 0.5) * hy, sg = y < 0 ? -1 : 1;
+      for (let c = 0; c < W; c++) {
+        loopB(a, c * ht / 100, Math.abs(y) / 100, b);
+        TZ[c] = b[0]; TR[c] = sg * b[1];
+      }
+      for (let t = 0; t < nu; t++) {
+        const u = t - c0;
+        if (t < q) {
+          let sz = 0, sr = 0;
+          for (let k = 0; k < N; k++) { sz += tz(u - k * q); sr += tr(u - k * q); }
+          cz[t] = sz; cr[t] = sr;
+        } else {
+          cz[t] = cz[t - q] + tz(u) - tz(u - N * q);
+          cr[t] = cr[t - q] + tr(u) - tr(u - N * q);
+        }
+      }
+      for (let i = 0, g = j * nx; i < nx; i++) { BX[g + i] = cz[i * p]; BY[g + i] = cr[i * p]; }
+    }
+    return { x0, hx, hy, nx, ny, BX, BY };
+  }
+
+  /* ---------- 자기력선: 격자 B를 쌍선형 보간해 RK4로 따라간다 ---------- */
+  function computeField(P, w, h, s, fitR) {
+    const { N, L, R } = P;
+    const xh = w / 2 / s * 1.03, yh = h / 2 / s * 1.03;
+    const dom = { xMin: -xh, xMax: xh, yMax: yh };
+    // 격자 간격: 고운 격자 2 px, 거친 격자 3 px. 점 수가 너무 많으면 키운다
+    let hT = (coarse ? 3 : 2) / s;
+    const cap = coarse ? 40000 : 120000;
+    const est = (2 * xh / hT) * (yh / hT);
+    if (est > cap) hT *= Math.sqrt(est / cap);
+    const G = buildGrid(P, dom, hT);
+    const { x0, hx, hy, nx, ny, BX, BY } = G;
+
+    const d = L / N;
+    const xs = Array.from({ length: N }, (_, k) => turnX(k, N, L));
+    const mR = markerR(P, s, w, h);
+    const rStop = Math.min((mR + 1) / s, N > 1 ? 0.3 * d : Infinity);   // 촘촘하면 도선 사이 틈을 막지 않게
+    const hMin = Math.min(hx, hy);
+    // 자기력선 간격: 화면에 맞춘 크기(fit)로 정하므로 한 단계 안에서는 cm 단위로 일정하다 (밀도 = 세기)
+    const dpx = Math.min(18, Math.max(7, Math.min(fitR * s / 5.5, Math.min(w, h) / 30)));
+    const gap = dpx / s;                                       // 자기력선 간격 (cm)
+
+    const v = [0, 0];
+    // 쌍선형 보간한 B의 단위 방향 (y ≥ 0)
+    function dir(x, y, out) {
+      let fx = (x - x0) / hx, fy = y / hy + 0.5;
+      if (fx < 0) fx = 0; else if (fx > nx - 1.0001) fx = nx - 1.0001;
+      if (fy < 0) fy = 0; else if (fy > ny - 1.0001) fy = ny - 1.0001;
+      const i = fx | 0, j = fy | 0, tx = fx - i, ty = fy - j;
+      const k = j * nx + i;
+      const bx = (BX[k] * (1 - tx) + BX[k + 1] * tx) * (1 - ty) + (BX[k + nx] * (1 - tx) + BX[k + nx + 1] * tx) * ty;
+      const by = (BY[k] * (1 - tx) + BY[k + 1] * tx) * (1 - ty) + (BY[k + nx] * (1 - tx) + BY[k + nx + 1] * tx) * ty;
+      const m = Math.hypot(bx, by);
+      if (m === 0) { out[0] = 0; out[1] = 0; return 0; }
+      out[0] = bx / m; out[1] = by / m;
+      return m;
+    }
+    const wireDist = (x, y) => {
+      const k = Math.min(N - 1, Math.max(0, Math.round((x - xs[0]) / d)));
+      return Math.hypot(x - xs[k], y - R);
+    };
+    const inDom = (x, y) => x > dom.xMin && x < dom.xMax && y < dom.yMax && y >= 0;
+
+    // 씨앗 (sx, sy)에서 sgn 방향으로 따라간다. mid: x = 0을 다시 지나면 멈춤, 아니면 씨앗으로 돌아오면 멈춤
+    const k1 = [0, 0], k2 = [0, 0], k3 = [0, 0], k4 = [0, 0];
+    function trace(sx, sy, sgn, mid) {
+      const pts = [sx, sy];
+      let x = sx, y = sy, len = 0, side = 0, end = 'max';
+      dir(sx, sy, v);
+      const ux0 = v[0] * sgn, uy0 = v[1] * sgn;
+      let prevProj = 0;
+      for (let n = 0; n < 9000; n++) {
+        const dw = wireDist(x, y);
+        if (dw < rStop) { end = 'wire'; break; }
+        const ds = sgn * Math.min(3 * hMin, Math.max(0.4 * hMin, 0.3 * (dw - rStop)));
+        if (!dir(x, y, k1)) { end = 'null'; break; }
+        dir(x + 0.5 * ds * k1[0], y + 0.5 * ds * k1[1], k2);
+        dir(x + 0.5 * ds * k2[0], y + 0.5 * ds * k2[1], k3);
+        dir(x + ds * k3[0], y + ds * k3[1], k4);
+        let nx2 = x + ds / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]);
+        let ny2 = y + ds / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
+        if (ny2 < 0) ny2 = 0;
+        len += Math.abs(ds);
+        if (!inDom(nx2, ny2)) { pts.push(nx2, ny2); end = 'out'; break; }
+        if (mid) {
+          if (!side) side = Math.sign(nx2);
+          else if (nx2 * side <= 0) {           // 가운데 면(x = 0)으로 돌아옴: 교점에서 멈춘다
+            const t = x / (x - nx2);
+            pts.push(0, y + t * (ny2 - y)); end = 'mid'; break;
+          }
+        } else if (len > 8 * hMin) {
+          // 씨앗을 지나는 수직선을 넘을 때 씨앗 가까이면 닫힌 곡선
+          const proj = (nx2 - sx) * ux0 + (ny2 - sy) * uy0;
+          const perp = Math.abs((nx2 - sx) * uy0 - (ny2 - sy) * ux0);
+          if (prevProj < 0 && proj >= 0 && perp < Math.max(4 * hMin, 0.35 * gap)) { pts.push(sx, sy); end = 'loop'; break; }
+          prevProj = proj;
+        }
+        x = nx2; y = ny2;
+        pts.push(x, y);
+      }
+      return { pts, end, ux0, uy0 };
+    }
+
+    // 겹침 검사용 칸 (위 반평면)
+    const cs = 0.45 * gap;
+    const ox = Math.ceil(2 * xh / cs) + 2, oy = Math.ceil(yh / cs) + 2;
+    const occ = new Uint8Array(ox * oy);
+    const cell = (x, y) => [Math.floor((x - dom.xMin) / cs), Math.floor(y / cs)];
+    const mark = pts => {
+      for (let i = 0; i < pts.length; i += 2) {
+        const [a, b] = cell(pts[i], pts[i + 1]);
+        if (a >= 0 && a < ox && b >= 0 && b < oy) occ[b * ox + a] = 1;
+      }
+    };
+    const taken = (x, y) => {
+      const [a, b] = cell(x, y);
+      for (let j = b - 1; j <= b + 1; j++) for (let i = a - 1; i <= a + 1; i++) {
+        if (i >= 0 && i < ox && j >= 0 && j < oy && occ[j * ox + i]) return true;
+      }
+      return false;
+    };
+    const mirX = pts => { const o = new Array(pts.length); for (let i = 0, n = pts.length; i < n; i += 2) { o[n - 2 - i] = -pts[i]; o[n - 1 - i] = pts[i + 1]; } return o; };
+
+    const upper = [];                 // { pts, arrows: [[x, y, ux, uy]] } (위 반평면)
+    const minPx = 0.8 / s;            // 화면에서 0.8 px보다 가까운 점은 버린다
+    const thin = pts => {
+      const o = [pts[0], pts[1]];
+      let lx = pts[0], ly = pts[1];
+      for (let i = 2; i < pts.length - 2; i += 2) {
+        if (Math.abs(pts[i] - lx) + Math.abs(pts[i + 1] - ly) < minPx) continue;
+        lx = pts[i]; ly = pts[i + 1]; o.push(lx, ly);
+      }
+      if (pts.length > 2) o.push(pts[pts.length - 2], pts[pts.length - 1]);
+      return o;
+    };
+    // 곡선 위 호 길이 t (0–1) 지점의 위치와 방향
+    function along(pts, t) {
+      let total = 0;
+      for (let i = 2; i < pts.length; i += 2) total += Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]);
+      let goal = total * t, acc = 0;
+      for (let i = 2; i < pts.length; i += 2) {
+        const sl = Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]);
+        if (acc + sl >= goal && sl > 0) {
+          const f = (goal - acc) / sl;
+          return [pts[i - 2] + f * (pts[i] - pts[i - 2]), pts[i - 1] + f * (pts[i + 1] - pts[i - 1]),
+            (pts[i] - pts[i - 2]) / sl, (pts[i + 1] - pts[i - 1]) / sl, total];
+        }
+        acc += sl;
+      }
+      return null;
+    }
+
+    // 1) 가운데 면(x = 0)의 안쪽 씨앗: 고른 간격. 오른쪽 반만 따라가고 거울상으로 닫는다
+    const margin = Math.max(0.3 * gap, 1.6 * rStop);
+    for (let i = 0; ; i++) {
+      const sy = (i + 0.5) * gap;
+      if (sy > R - margin) break;
+      const r = trace(0, sy, 1, true);
+      const half = r.pts;
+      const full = mirX(half).concat(half.slice(2));
+      // 자기력선이 촘촘하면 화살촉은 한 줄 걸러 단다
+      const arrows = dpx >= 12 || i % 2 === 0 ? [[0, sy, r.ux0, r.uy0]] : [];
+      const n = half.length;
+      if (r.end === 'mid') {
+        const ex = half[n - 4], ey = half[n - 3];
+        const dx = half[n - 2] - ex, dy = half[n - 1] - ey, dl = Math.hypot(dx, dy) || 1;
+        arrows.push([0, half[n - 1], dx / dl, dy / dl]);
+      } else {
+        const a = along(half, 0.55);
+        if (a && a[4] * s > 320 && (dpx >= 12 || i % 2 === 1)) arrows.push([a[0], a[1], a[2], a[3]], [-a[0], a[1], a[2], -a[3]]);
+      }
+      mark(full);
+      upper.push({ pts: thin(full), arrows });
+    }
+
+    // 2) 띄엄띄엄 감았을 때: 도선 바로 옆 씨앗 (도선마다 원)과 감은 틈의 씨앗 (새어 나가는 자기력선)
+    if (d >= 1.8 * gap) {
+      const rr = [rStop + 0.5 * gap].filter(r => r < 0.42 * d);
+      const seeds = [];                // [x, y, 화살촉?]
+      for (const xk of xs) {
+        if (xk < -1e-9) continue;
+        for (const r of rr) seeds.push([xk, R + r, true], [xk, R - r, true]);
+      }
+      // 틈이 반지름에 견줄 만큼 넓을 때만 (좁으면 도선 줄을 따라 기는 선이 되어 어지럽다)
+      if (d >= 0.8 * R && d >= 3 * gap) {
+        for (const xk of xs) if (xk + d / 2 > -1e-9 && xk + d / 2 < L / 2 - 1e-9) seeds.push([xk + d / 2, R, false]);
+      }
+      for (const [xk, sy, tip] of seeds) {
+        if (taken(xk, sy) || sy <= 0) continue;
+        const res = trace(xk, sy, 1, false);
+        let pts = res.pts;
+        if (res.end !== 'loop') {
+          // 닫히지 않으면 뒤로도 따라가 뒤집어 잇는다
+          const back = trace(xk, sy, -1, false).pts, rev = [];
+          for (let i = back.length - 2; i >= 2; i -= 2) rev.push(back[i], back[i + 1]);
+          pts = rev.concat(res.pts);
+        }
+        mark(pts);
+        upper.push({ pts: thin(pts), arrows: tip ? [[xk, sy, res.ux0, res.uy0]] : [] });
+        if (xk > 1e-9) {
+          const mp = mirX(pts);
+          mark(mp);
+          upper.push({ pts: thin(mp), arrows: tip ? [[-xk, sy, res.ux0, -res.uy0]] : [] });
+        }
+      }
+    }
+
+    // 3) 아래 반평면은 거울상 (방향 그대로)
+    const lines = [];
+    for (const ln of upper) {
+      lines.push(ln);
+      const p = ln.pts.slice();
+      for (let i = 1; i < p.length; i += 2) p[i] = -p[i];
+      lines.push({ pts: p, arrows: ln.arrows.map(([x, y, ux, uy]) => [x, -y, ux, -uy]) });
+    }
+    return { G, lines, mR, dpx, wash: null, washColor: '' };
+  }
+
+  // 도선 표시(⊙/⊗) 반지름 (px)
+  function markerR(P, s, w, h) {
+    const cap = Math.min(11, 4 + Math.min(w, h) / 70);
+    return Math.max(3, Math.min(0.42 * P.L / P.N * s, 0.3 * P.R * s, cap));
+  }
+
+  /* ---------- 화면 맞추기 ---------- */
+  const fitFor = P => ({ L: P.N > 1 ? P.L : 0, R: P.R });
+  function scaleFor(f, w, h) {
+    const mx = f.L > 0 ? Math.max(0.2 * f.L, 2 * f.R) : 3 * f.R;
+    const my = Math.max(1.6 * f.R, 0.12 * f.L);
+    return Math.min(w / (f.L + 2 * mx), h / (2 * f.R + 2 * my));
+  }
+  // 지금 보기가 너무 작거나 너무 크면 다시 맞춘다
+  function maybeRefit() {
+    const box = stage.getBoundingClientRect();
+    if (box.width < 20) { fit = fitFor(state); return; }
+    const sNow = scaleFor(fit, box.width, box.height), sIdeal = scaleFor(fitFor(state), box.width, box.height);
+    if (sNow > sIdeal * 1.001 || sNow < sIdeal * 0.6) fit = fitFor(state);
+  }
+  const halfX = f => (f.L > 0 ? f.L / 2 + Math.max(0.2 * f.L, 2 * f.R) : 3 * f.R);
+
+  function ensureField(w, h, s) {
+    const key = [state.N, state.L, state.R.toFixed(4), Math.round(w), Math.round(h), s.toFixed(4), fit.R, coarse].join('|');
+    if (!field || field.key !== key) {
+      field = computeField(state, w, h, s, fit.R);
+      field.key = key;
+    }
+    return field;
+  }
+
+  // |B| 색칠: 가운데 |B|를 기준으로 투명도를 정한다
+  function washCanvas(fld) {
+    if (fld.wash && fld.washColor === C.field) return fld.wash;
+    const { nx, ny, BX, BY } = fld.G;
+    const ref = Math.abs(axisB(0, { ...state, I: 1 }));
+    const tmp = document.createElement('canvas');
+    tmp.width = 1; tmp.height = 1;
+    const t = tmp.getContext('2d');
+    t.fillStyle = C.field; t.fillRect(0, 0, 1, 1);
+    const [r, g, b] = t.getImageData(0, 0, 1, 1).data;
+    const rows = 2 * (ny - 1);
+    const cv = document.createElement('canvas');
+    cv.width = nx; cv.height = rows;
+    const c2 = cv.getContext('2d');
+    const img = c2.createImageData(nx, rows);
+    for (let j = 1; j < ny; j++) {
+      const up = ny - 1 - j, dn = ny - 2 + j;                  // 위쪽 행과 거울상 아래 행
+      for (let i = 0; i < nx; i++) {
+        const k = j * nx + i;
+        const a = Math.min(1, Math.hypot(BX[k], BY[k]) / ref);
+        const al = Math.round(255 * 0.3 * a);
+        for (const row of [up, dn]) {
+          const o = (row * nx + i) * 4;
+          img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = al;
+        }
+      }
+    }
+    c2.putImageData(img, 0, 0);
+    fld.wash = cv; fld.washColor = C.field;
+    return cv;
+  }
+
+  /* ---------- 실험대: 축을 지나는 단면 ---------- */
+  function drawStage() {
+    const { w, h } = EM.fitCanvas(stage, sctx);
+    if (w < 20 || h < 20) return;
+    const ctx = sctx;
+    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
+    const s = scaleFor(fit, w, h);
+    const cx = w / 2, cy = h / 2;
+    view = { cx, cy, s, xh: w / 2 / s };
+    const X = x => cx + x * s, Y = y => cy - y * s;
+    const { N, L, R } = state;
+    const fld = ensureField(w, h, s);
+    const mR = fld.mR;
+    const fs = Math.max(13, Math.round(EM.remPx() * 0.85));
+
+    // |B| 색칠
+    if (state.wash) {
+      const { x0, hx, hy, ny } = fld.G;
+      const cv = washCanvas(fld);
+      ctx.save();
+      ctx.imageSmoothingEnabled = true;
+      ctx.drawImage(cv, X(x0 - hx / 2), Y((ny - 1) * hy), cv.width * hx * s, 2 * (ny - 1) * hy * s);
+      ctx.restore();
+    }
+
+    // 솔레노이드 몸통 (감은 길이 L)
+    if (N > 1) {
+      const bw = mR + 3;
+      ctx.fillStyle = C.t1;
+      ctx.fillRect(X(-L / 2), Y(R) - bw, L * s, 2 * bw);
+      ctx.fillRect(X(-L / 2), Y(-R) - bw, L * s, 2 * bw);
+    }
+
+    // 축 (축 위 B를 다루는 단계, 측정점을 켜면 언제나)
+    if (S().axis || state.showProbe) {
+      ctx.save();
+      ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.muted;
+      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
+      ctx.restore();
+    }
+
+    // 자기력선
+    ctx.globalAlpha = S().dimLines && state.showProbe ? 0.4 : 1;
+    ctx.lineWidth = LINE_W; ctx.strokeStyle = C.field; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    for (const ln of fld.lines) {
+      const p = ln.pts;
+      ctx.moveTo(X(p[0]), Y(p[1]));
+      for (let i = 2; i < p.length; i += 2) ctx.lineTo(X(p[i]), Y(p[i + 1]));
+    }
+    ctx.stroke();
+    const ah = Math.max(6.5, Math.min(fs * 0.72, fld.dpx * 0.7));
+    for (const ln of fld.lines) {
+      for (const [x, y, ux, uy] of ln.arrows) EM.arrowHead(ctx, X(x) + ux * ah / 2, Y(y) - uy * ah / 2, ux, -uy, ah, C.field);
+    }
+    ctx.globalAlpha = 1;
+
+    // 도선: 위 ⊙, 아래 ⊗
+    for (let k = 0; k < N; k++) {
+      const x = X(turnX(k, N, L));
+      EM.marker(ctx, x, Y(R), mR, 'dot');
+      EM.marker(ctx, x, Y(-R), mR, 'cross');
+    }
+
+    // 극: 자기력선이 나오는 오른쪽 끝이 N
+    if (N > 1 && S().poles) {
+      const font = `600 ${fs}px ${F.ui}`;
+      tag(ctx, 'N', X(L / 2) + fs * 1.7, cy, C.muted, font, fs);
+      tag(ctx, 'S', X(-L / 2) - fs * 1.7, cy, C.muted, font, fs);
+    }
+
+    // 치수 (길이·지름을 바꾸는 단계)
+    if (S().dims && N > 1) {
+      const font = `600 ${fs}px ${F.ui}`;
+      const yd = Y(-R) + mR + fs * 1.4;
+      const label = `L = ${fmtCm(L)} cm`;
+      ctx.font = font;
+      const half = ctx.measureText(label).width / 2 + 8;
+      ctx.strokeStyle = C.muted; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(X(-L / 2), yd); ctx.lineTo(Math.max(X(-L / 2), cx - half), yd);
+      ctx.moveTo(Math.min(X(L / 2), cx + half), yd); ctx.lineTo(X(L / 2), yd);
+      ctx.stroke();
+      EM.arrowHead(ctx, X(-L / 2), yd, -1, 0, 8, C.muted);
+      EM.arrowHead(ctx, X(L / 2), yd, 1, 0, 8, C.muted);
+      tag(ctx, label, cx, yd, C.muted, font, fs);
+      if (S().dims === 'R') {
+        // 왼쪽 끝 바깥에 두되, 자리가 없으면(좁은 화면) 안쪽 아래 반에 둔다 (위쪽은 측정점 이름표 자리)
+        const rl = `R = ${R.toFixed(1)} cm`;
+        ctx.font = font;
+        const out = X(-L / 2) - fs * 2.6 - 8 - ctx.measureText(rl).width > 6;
+        const xd = out ? X(-L / 2) - fs * 2.6 : X(-L / 2) + fs, yr = out ? R : -R;
+        ctx.beginPath(); ctx.moveTo(xd, cy); ctx.lineTo(xd, Y(yr)); ctx.stroke();
+        EM.arrowHead(ctx, xd, Y(yr), 0, out ? -1 : 1, 8, C.muted);
+        ctx.beginPath(); ctx.arc(xd, cy, 2.5, 0, TAU); ctx.fillStyle = C.muted; ctx.fill();
+        tag(ctx, rl, out ? xd - 8 : xd + 8, Y(yr / 2), C.muted, font, fs, out ? 'right' : 'left');
+      }
+    }
+
+    // 측정점 (체크박스로 켤 때만)
+    if (state.showProbe) {
+      const px = X(state.probe);
+      ctx.beginPath(); ctx.arc(px, cy, 8, 0, TAU);
+      ctx.fillStyle = C.path; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = C.stage; ctx.stroke();
+      const unit = unitFor(idealB());
+      const label = `B = ${fmtB(axisB(state.probe), unit)} ${unit}`;
+      const font = `700 ${fs}px ${F.ui}`;
+      ctx.font = font;
+      const tw = ctx.measureText(label).width;
+      const lx = Math.min(w - 10 - tw / 2, Math.max(10 + tw / 2, px));
+      tag(ctx, label, lx, cy - fs * 1.5, C.field, font, fs);
+    }
+  }
+
+  // 바탕을 깐 짧은 이름표 (자기력선 위에서도 읽히게)
+  function tag(ctx, text, x, y, color, font, fs, align = 'center') {
+    ctx.font = font;
+    const tw = ctx.measureText(text).width;
+    const x0 = align === 'center' ? x - tw / 2 : align === 'right' ? x - tw : x;
+    ctx.globalAlpha = 0.9; ctx.fillStyle = C.stage;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x0 - 5, y - fs * 0.72, tw + 10, fs * 1.44, 5);
+    else ctx.rect(x0 - 5, y - fs * 0.72, tw + 10, fs * 1.44);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+  }
+
+  /* ---------- 계기판 그래프: 축 위 B(x) ---------- */
+  function niceStep(v) {
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    for (const k of [1, 2, 2.5, 5, 10]) if (k * p >= v - 1e-12) return k * p;
+    return 10 * p;
+  }
+  function drawGraph() {
+    const { w, h } = EM.fitCanvas(graph, gctx);
+    if (w < 40 || h < 40) return;
+    const ctx = gctx;
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
+    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
+    const Lp = fs * 3.6, Rp = 10, T = fs * 2, Bm = fs * 3;
+    const pw = w - Lp - Rp, ph = h - T - Bm;
+    const { N, L } = state;
+    const xr = halfX(fit);
+    const ideal = idealB();
+    const unit = unitFor(ideal), uf = unit === 'mT' ? 1e3 : 1e6;
+    // 곡선 표본
+    const n = Math.max(60, Math.round(pw / 2));
+    const xsS = [], bsS = [];
+    let bMax = ideal;
+    for (let i = 0; i <= n; i++) {
+      const x = -xr + 2 * xr * i / n, b = axisB(x);
+      xsS.push(x); bsS.push(b); if (b > bMax) bMax = b;
+    }
+    const stepV = niceStep(bMax * 1.12 * uf / 4);
+    const top = Math.ceil(bMax * 1.12 * uf / stepV) * stepV;
+    const X = x => Lp + (x + xr) / (2 * xr) * pw;
+    const Y = b => T + ph - b * uf / top * ph;
+
+    // 솔레노이드 구간
+    if (N > 1) {
+      ctx.globalAlpha = 0.5; ctx.fillStyle = C.t1;
+      ctx.fillRect(X(-L / 2), T, X(L / 2) - X(-L / 2), ph);
+      ctx.globalAlpha = 1;
+    }
+
+    // 격자와 축
+    ctx.lineWidth = 1; ctx.strokeStyle = C.line;
+    for (let v = stepV; v <= top + 1e-9; v += stepV) {
+      const y = Math.round(Y(v / uf)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(Lp, y); ctx.lineTo(Lp + pw, y); ctx.stroke();
+    }
+    ctx.strokeStyle = C.muted;
+    ctx.beginPath(); ctx.moveTo(Lp + 0.5, T); ctx.lineTo(Lp + 0.5, T + ph + 0.5); ctx.lineTo(Lp + pw, T + ph + 0.5); ctx.stroke();
+
+    ctx.fillStyle = C.muted; ctx.font = `500 ${fs}px ${F.num}`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    const dec = stepV < 1 ? (stepV < 0.1 ? 2 : 1) : (stepV % 1 ? 1 : 0);
+    for (let v = 0; v <= top + 1e-9; v += stepV) ctx.fillText(v.toFixed(dec), Lp - 6, Y(v / uf));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const xStep = xr > 24 ? 10 : xr > 9 ? 5 : 2;
+    for (let x = -Math.floor(xr / xStep) * xStep; x <= xr + 1e-9; x += xStep) ctx.fillText(String(Math.round(x)), X(x), T + ph + 5);
+    ctx.font = `500 ${fs}px ${F.ui}`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('x (cm)', Lp + pw, h - 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText(`B (${unit})`, 2, T - fs * 1.1);
+
+    // 기준선: μ0nI (고리 하나면 μ0I/2R)
+    ctx.save();
+    ctx.setLineDash([6, 5]); ctx.lineWidth = 2; ctx.strokeStyle = C.muted;
+    ctx.beginPath(); ctx.moveTo(Lp, Y(ideal)); ctx.lineTo(Lp + pw, Y(ideal)); ctx.stroke();
+    ctx.restore();
+    EM.haloText(ctx, N > 1 ? 'μ₀nI' : 'μ₀I/2R', Lp + pw - 2, Y(ideal) - fs * 0.75, C.muted, `italic ${fs + 1}px ${F.math}`, 'right', C.panel);
+
+    // 끝에서는 절반쯤
+    if (N > 1) {
+      ctx.save();
+      ctx.setLineDash([2, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.muted;
+      for (const sx of [-1, 1]) {
+        const x = X(sx * L / 2);
+        ctx.beginPath(); ctx.moveTo(x - 12, Y(ideal / 2)); ctx.lineTo(x + 12, Y(ideal / 2)); ctx.stroke();
+      }
+      ctx.restore();
+      EM.haloText(ctx, '½', X(L / 2) + 15, Y(ideal / 2), C.muted, `500 ${fs}px ${F.num}`, 'left', C.panel);
+    }
+
+    // 곡선
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const x = X(xsS[i]), y = Y(bsS[i]);
+      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = C.field; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.stroke();
+    // 끝 표시는 곡선 위에
+    if (N > 1) {
+      for (const sx of [-1, 1]) {
+        ctx.beginPath(); ctx.arc(X(sx * L / 2), Y(axisB(sx * L / 2)), 4.5, 0, TAU);
+        ctx.fillStyle = C.panel; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = C.muted; ctx.stroke();
+      }
+    }
+
+    // 측정점
+    if (state.showProbe) {
+      const x = X(state.probe), y = Y(axisB(state.probe));
+      ctx.save();
+      ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
+      ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke();
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU);
+      ctx.fillStyle = C.path; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = C.panel; ctx.stroke();
+    }
+  }
+
+  /* ---------- 글자 ---------- */
+  const unitFor = B => B >= 2e-3 ? 'mT' : 'μT';
+  function fmtB(B, unit) {
+    const v = B * (unit === 'mT' ? 1e3 : 1e6);
+    return v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
+  }
+  const fmtCm = v => (Math.abs(v - Math.round(v)) < 1e-6 ? v.toFixed(0) : v.toFixed(1));
+
+  function updateReadouts() {
+    const { N, L, R, I } = state;
+    const ideal = idealB(), unit = unitFor(ideal);
+    const b0 = axisB(0);
+    $('law').innerHTML = N > 1
+      ? `${M('B')} = μ<sub>0</sub>${M('nI')},&ensp;${M('n')} = ${EM.frac(M('N'), M('L'))}`
+      : `고리 하나: ${M('B')} = ${EM.frac(`μ<sub>0</sub>${M('I')}`, `2${M('R')}`)}`;
+    $('bVal').textContent = fmtB(b0, unit);
+    $('bUnit').textContent = unit;
+    $('idealKey').innerHTML = N > 1 ? `이상값 μ<sub>0</sub>${M('nI')}` : `μ<sub>0</sub>${M('I')}/2${M('R')}`;
+    $('idealVal').textContent = fmtB(ideal, unit);
+    $('idealUnit').textContent = unit;
+    $('ratioVal').textContent = (100 * b0 / ideal).toFixed(1);
+    const bEnd = axisB(L / 2);
+    $('endVal').textContent = fmtB(bEnd, unit);
+    $('endUnit').textContent = unit;
+    $('endRatio').textContent = (100 * bEnd / ideal).toFixed(1);
+    $('kv').querySelectorAll('.end-row').forEach(e => { e.hidden = N === 1; });
+    $('nOut').textContent = N;
+    $('lOut').textContent = `${fmtCm(L)} cm`;
+    $('rOut').textContent = `${R.toFixed(1)} cm`;
+    $('iOut').textContent = `${I.toFixed(1)} A`;
+    $('nIn').value = N; $('lIn').value = L; $('rIn').value = R; $('iIn').value = I;
+    $('nVal').textContent = (N / L).toFixed(2);
+  }
+
+  const redraw = () => EM.requestDraw(def);
+
+  /* ---------- 상태 변경 ---------- */
+  function setParams(p) {
+    Object.assign(state, p);
+    updateReadouts();
+    redraw();
+  }
+  const settle = () => { coarse = false; redraw(); };
+  // 단계의 움직임. 끝나거나 화면을 떠나면 finish로 끝 상태를 맞춘다
+  function run(dur, update, finish) {
+    const a = { tw: null, finish };
+    anim = a;
+    a.tw = EM.tween(dur, update, { onDone: () => { if (anim === a) anim = null; finish(); } });
+  }
+  function stopAnim(complete = false) {
+    const a = anim;
+    if (!a) return;
+    anim = null;
+    if (a.tw) a.tw.cancel();
+    if (complete) a.finish();
+  }
+  // 슬라이더를 움직이는 동안은 거친 격자, 멈추면 고운 격자
+  function scheduleRefine() {
+    clearTimeout(refineTimer);
+    refineTimer = setTimeout(() => { maybeRefit(); settle(); }, 220);
+  }
+
+  const def = EM.register({
+    id: ID,
+    steps: STEPS,
+    init() {
+      stage = $('stage'); graph = $('graph');   // 그래프는 없는 화면도 있다
+      sctx = stage.getContext('2d'); gctx = graph && graph.getContext('2d');
+
+      // 측정점 끌기 (켜져 있을 때만)
+      let dragging = false;
+      const xFromEvent = e => {
+        const rect = stage.getBoundingClientRect();
+        const lim = Math.min(view.xh, halfX(fit));
+        return Math.max(-lim, Math.min(lim, (e.clientX - rect.left - view.cx) / view.s));
+      };
+      stage.addEventListener('pointerdown', e => {
+        if (!state.showProbe) return;
+        if (STEPS[step].sweep) stopAnim();
+        dragging = true;
+        stage.classList.add('dragging');
+        stage.setPointerCapture(e.pointerId);
+        state.probe = xFromEvent(e); redraw();
+      });
+      stage.addEventListener('pointermove', e => { if (dragging) { state.probe = xFromEvent(e); redraw(); } });
+      const endDrag = () => { dragging = false; stage.classList.remove('dragging'); };
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
+
+      const slide = (id, key) => {
+        const el = $(id);
+        el.addEventListener('input', () => {
+          stopAnim();
+          coarse = true;
+          state[key] = +el.value;
+          maybeRefit();
+          updateReadouts(); redraw();
+          scheduleRefine();
+        });
+        el.addEventListener('change', () => { clearTimeout(refineTimer); maybeRefit(); settle(); });
+      };
+      slide('nIn', 'N'); slide('lIn', 'L'); slide('rIn', 'R');
+      $('iIn').addEventListener('input', e => { state.I = +e.target.value; updateReadouts(); redraw(); });
+      $('washChk').checked = state.wash;
+      $('washChk').addEventListener('change', e => { state.wash = e.target.checked; redraw(); });
+      if ($('probeChk')) $('probeChk').addEventListener('change', e => {
+        state.showProbe = e.target.checked;
+        stage.classList.toggle('can-drag', state.showProbe);
+        redraw();
+      });
+    },
+    enterStep(i, { forward }) {
+      step = i;
+      const S = STEPS[i];
+      stopAnim();
+      clearTimeout(refineTimer);
+      coarse = false;
+      stage.classList.toggle('can-drag', state.showProbe);
+      if (S.anim === 'L') {
+        // n 고정, L 10 → 40 cm (N = nL). 화면은 40 cm에 맞춰 두어 길어지는 것이 보이게
+        fit = { L: 40, R: 3 };
+        state.probe = 0;
+        const end = () => { setParams({ R: 3, N: 40 * N_FIX, L: 40 }); settle(); };
+        if (forward) {
+          setParams({ R: 3, N: 10 * N_FIX, L: 10 });
+          coarse = true;
+          run(3600, e => {
+            const N = Math.round(N_FIX * (10 + 30 * e));
+            if (N !== state.N) setParams({ N, L: N / N_FIX });
+          }, end);
+        } else end();
+      } else if (S.anim === 'R') {
+        // n 고정, R 2 → 6 cm
+        fit = { L: 40, R: 6 };
+        state.probe = 0;
+        const end = () => { setParams({ N: 40 * N_FIX, L: 40, R: 6 }); settle(); };
+        if (forward) {
+          setParams({ N: 40 * N_FIX, L: 40, R: 2 });
+          coarse = true;
+          run(3600, e => setParams({ R: 2 + 4 * e }), end);
+        } else end();
+      } else {
+        setParams({ N: S.N, L: 20, R: 3 });
+        fit = fitFor(state);
+        if (S.sweep) {
+          // 측정점이 가운데에서 끝까지 축을 따라간다
+          const end = () => { state.probe = state.L / 2; redraw(); };
+          if (forward) {
+            state.probe = 0;
+            run(2400, e => { state.probe = e * state.L / 2; redraw(); }, end);
+          } else end();
+        }
+      }
+      updateReadouts();
+    },
+    hide() { stopAnim(true); clearTimeout(refineTimer); coarse = false; },
+    draw() { drawStage(); if (graph) drawGraph(); },
+  });
+};
 
 /* ================= 솔레노이드 단면 공용 조각 (화면 5, 7) =================
    축이 가로인 솔레노이드를 축을 따라 자른 단면: 위 줄 ⊙, 아래 줄 ⊗, 두 줄 사이가 코일 안(황갈색 음영).
@@ -2612,780 +3602,14 @@ const ROWS = (() => {
   });
 })();
 
-/* ================= 화면 4: 솔레노이드 · 자기력선과 축 위 B (슬라이드 20, 22, 25) ================= */
+/* ================= 화면: 솔레노이드의 자기력선 (Knight 그림 29.29–29.30, 슬라이드 20) ================= */
 (() => {
-  'use strict';
-  const { TAU, MU0, C, F, m: M, DOT, CROSS } = EM;
-  const $ = id => document.getElementById('s4-' + id);
-  const N_FIX = 2;                   // 5–6단계에서 고정하는 n (회/cm)
-  const LINE_W = 2.5;                // 자기력선 굵기 (px)
-
-  const state = { N: 40, L: 20, R: 3, I: 2, wash: true, probe: 0, showProbe: false };
-  let fit = { L: 20, R: 3 };         // 화면에 맞추는 크기 (cm). 애니메이션 동안은 고정해 크기 변화가 보이게 한다
-  let coarse = false;                // 움직이는 동안은 거친 격자로 빠르게
-
-  const MNI = `μ<sub>0</sub>${M('nI')}`;
-  const STEPS = [
+  const { m: M, DOT, CROSS } = EM;
+  COIL('s4', [
     { N: 1, cap: `도선 고리 하나를 축을 지나는 면으로 자른 모습이다. 위쪽 단면에서는 전류가 나오고 ${DOT}, 아래쪽에서는 들어간다 ${CROSS}. 자기력선은 고리를 꿰뚫고 돌아오는 닫힌 곡선이고, 중심에서 ${M('B')} = ${EM.frac(`μ<sub>0</sub>${M('I')}`, `2${M('R')}`)}이다.` },
     { N: 5, cap: `고리 5개를 띄엄띄엄 감았다. 도선 가까이에서는 자기력선이 도선마다 원을 그리고, 감은 틈 사이로 자기력선이 새어 나간다.` },
-    { N: 40, cap: `40번 촘촘히 감으면 도선마다의 원은 사라진다. 안쪽 자기장은 축에 나란하고 고르며, 바깥 자기장은 매우 약하다. 자기력선이 나오는 오른쪽 끝이 N극이다.` },
-    { N: 40, sweep: true, cap: `축 위의 자기장을 그래프로 본다. 가운데에서는 ${M('B')} ≈ ${MNI} (${M('n')} = ${M('N')}/${M('L')})이고, 끝에서는 그 절반쯤이다. ${M('B')} = ${MNI}는 긴 솔레노이드의 가운데에서만 맞는다.` },
-    { anim: 'L', cap: `단위 길이당 감은 수 ${M('n')}을 그대로 두고 솔레노이드를 늘인다. 길수록 안쪽은 더 고르고 바깥은 더 약하며, ${M('B')} ≈ ${MNI}인 구간이 길어진다.` },
-    { anim: 'R', cap: `${M('n')}을 그대로 두고 지름을 키워도 가운데 자기장은 거의 그대로다. ${M('B')} = ${MNI}에는 지름도 길이도 없다. 평행판 축전기가 고른 전기장을 만들듯, 솔레노이드는 고른 자기장을 만든다.` },
-  ];
-
-  let stage, graph, sctx, gctx;
-  let view = { cx: 0, cy: 0, s: 1, xh: 1 };
-  let field = null;                  // 자기력선 계산 결과 (매개변수가 바뀔 때만 다시 계산)
-  let anim = null, refineTimer = 0;   // anim: { tw, finish }
-  let step = 0;
-
-  /* ---------- 물리: 원형 고리의 정확한 자기장 ---------- */
-  // 제1·2종 완전 타원 적분 K(m), E(m) (m = k²), 산술-기하 평균(AGM)으로
-  const KE = { K: 0, E: 0 };
-  function ellipKE(m) {
-    let a = 1, b = Math.sqrt(1 - m), sum = 0.5 * m, p = 0.5;
-    for (let it = 0; it < 20; it++) {
-      const c = 0.5 * (a - b);
-      if (c <= 1e-15 * a) break;
-      const an = 0.5 * (a + b);
-      b = Math.sqrt(a * b); a = an;
-      p *= 2; sum += p * c * c;
-    }
-    KE.K = Math.PI / (2 * a);
-    KE.E = KE.K * (1 - sum);
-  }
-  // 반지름 a(m), 전류 1 A인 고리가 축 방향 거리 z, 축에서 거리 rho(m)인 점에 만드는 [B축, B반지름] (T)
-  function loopB(a, z, rho, out) {
-    const z2 = z * z;
-    if (rho < 1e-9 * a) { out[0] = MU0 * a * a / (2 * Math.pow(a * a + z2, 1.5)); out[1] = 0; return; }
-    const al2 = (a - rho) * (a - rho) + z2, be2 = (a + rho) * (a + rho) + z2, be = Math.sqrt(be2);
-    ellipKE(4 * a * rho / be2);
-    const k = MU0 / (2 * Math.PI * al2 * be);
-    out[0] = k * ((a * a - rho * rho - z2) * KE.E + al2 * KE.K);
-    out[1] = k * z / rho * ((a * a + rho * rho + z2) * KE.E - al2 * KE.K);
-  }
-  // k번째 감은 고리의 위치 (cm): 길이 L을 N칸으로 나눈 칸의 가운데
-  const turnX = (k, N, L) => (k - (N - 1) / 2) * L / N;
-  // 축 위의 B (T): 고리 N개의 합
-  function axisB(x, P = state) {
-    const a = P.R / 100, a2 = a * a;
-    let sum = 0;
-    for (let k = 0; k < P.N; k++) {
-      const z = (x - turnX(k, P.N, P.L)) / 100;
-      sum += a2 / Math.pow(a2 + z * z, 1.5);
-    }
-    return MU0 * P.I * sum / 2;
-  }
-  // 비교 기준: 솔레노이드는 μ0nI, 고리 하나는 μ0I/2R
-  const idealB = (P = state) => P.N === 1 ? MU0 * P.I / (2 * P.R / 100) : MU0 * (P.N / (P.L / 100)) * P.I;
-
-  /* ---------- 격자: 위 반평면(y ≥ 0)의 B ----------
-     표 간격 ht를 고리 간격 d의 약수로 잡으면 고리마다의 자기장은 고리 하나의 표를 옮긴 것이다.
-     타원 적분은 표 한 장만 계산하고, N개의 합은 빗살 합 S(u) = S(u − q) + T(u) − T(u − Nq)로 구한다. */
-  function buildGrid(P, dom, hTarget) {
-    const { N, L, R } = P;
-    const d = L / N;
-    const q = Math.max(1, Math.ceil(d / hTarget - 1e-9));     // 고리 간격 = q·ht
-    const ht = d / q;
-    const p = Math.max(1, Math.floor(hTarget / ht + 1e-9));   // 격자 간격 = p·ht
-    const hx = p * ht;
-    const xk0 = turnX(0, N, L);
-    const c0 = Math.ceil((xk0 - dom.xMin) / ht);
-    const x0 = xk0 - c0 * ht;                                  // 격자 첫 열
-    const nx = Math.ceil((dom.xMax - x0) / hx) + 1;
-    const mR = Math.max(2, Math.round(R / hTarget));
-    const hy = R / mR;                                         // 도선(y = R)이 두 행 한가운데에 오게
-    const ny = Math.ceil(dom.yMax / hy + 0.5) + 1;             // 행 j: y = (j − 0.5)·hy
-    const nu = (nx - 1) * p + 1;
-    const W = Math.max(c0 + N * q, nu - 1 - c0) + 1;           // 표에 필요한 |어긋남|
-    const TZ = new Float64Array(W), TR = new Float64Array(W);
-    const cz = new Float64Array(nu), cr = new Float64Array(nu);
-    const BX = new Float32Array(nx * ny), BY = new Float32Array(nx * ny);
-    const b = [0, 0], a = R / 100;
-    const tz = c => TZ[c < 0 ? -c : c];
-    const tr = c => (c < 0 ? -TR[-c] : TR[c]);                 // B반지름은 축 방향 어긋남에 대해 홀함수
-    for (let j = 0; j < ny; j++) {
-      const y = (j - 0.5) * hy, sg = y < 0 ? -1 : 1;
-      for (let c = 0; c < W; c++) {
-        loopB(a, c * ht / 100, Math.abs(y) / 100, b);
-        TZ[c] = b[0]; TR[c] = sg * b[1];
-      }
-      for (let t = 0; t < nu; t++) {
-        const u = t - c0;
-        if (t < q) {
-          let sz = 0, sr = 0;
-          for (let k = 0; k < N; k++) { sz += tz(u - k * q); sr += tr(u - k * q); }
-          cz[t] = sz; cr[t] = sr;
-        } else {
-          cz[t] = cz[t - q] + tz(u) - tz(u - N * q);
-          cr[t] = cr[t - q] + tr(u) - tr(u - N * q);
-        }
-      }
-      for (let i = 0, g = j * nx; i < nx; i++) { BX[g + i] = cz[i * p]; BY[g + i] = cr[i * p]; }
-    }
-    return { x0, hx, hy, nx, ny, BX, BY };
-  }
-
-  /* ---------- 자기력선: 격자 B를 쌍선형 보간해 RK4로 따라간다 ---------- */
-  function computeField(P, w, h, s, fitR) {
-    const { N, L, R } = P;
-    const xh = w / 2 / s * 1.03, yh = h / 2 / s * 1.03;
-    const dom = { xMin: -xh, xMax: xh, yMax: yh };
-    // 격자 간격: 고운 격자 2 px, 거친 격자 3 px. 점 수가 너무 많으면 키운다
-    let hT = (coarse ? 3 : 2) / s;
-    const cap = coarse ? 40000 : 120000;
-    const est = (2 * xh / hT) * (yh / hT);
-    if (est > cap) hT *= Math.sqrt(est / cap);
-    const G = buildGrid(P, dom, hT);
-    const { x0, hx, hy, nx, ny, BX, BY } = G;
-
-    const d = L / N;
-    const xs = Array.from({ length: N }, (_, k) => turnX(k, N, L));
-    const mR = markerR(P, s, w, h);
-    const rStop = Math.min((mR + 1) / s, N > 1 ? 0.3 * d : Infinity);   // 촘촘하면 도선 사이 틈을 막지 않게
-    const hMin = Math.min(hx, hy);
-    // 자기력선 간격: 화면에 맞춘 크기(fit)로 정하므로 한 단계 안에서는 cm 단위로 일정하다 (밀도 = 세기)
-    const dpx = Math.min(18, Math.max(7, Math.min(fitR * s / 5.5, Math.min(w, h) / 30)));
-    const gap = dpx / s;                                       // 자기력선 간격 (cm)
-
-    const v = [0, 0];
-    // 쌍선형 보간한 B의 단위 방향 (y ≥ 0)
-    function dir(x, y, out) {
-      let fx = (x - x0) / hx, fy = y / hy + 0.5;
-      if (fx < 0) fx = 0; else if (fx > nx - 1.0001) fx = nx - 1.0001;
-      if (fy < 0) fy = 0; else if (fy > ny - 1.0001) fy = ny - 1.0001;
-      const i = fx | 0, j = fy | 0, tx = fx - i, ty = fy - j;
-      const k = j * nx + i;
-      const bx = (BX[k] * (1 - tx) + BX[k + 1] * tx) * (1 - ty) + (BX[k + nx] * (1 - tx) + BX[k + nx + 1] * tx) * ty;
-      const by = (BY[k] * (1 - tx) + BY[k + 1] * tx) * (1 - ty) + (BY[k + nx] * (1 - tx) + BY[k + nx + 1] * tx) * ty;
-      const m = Math.hypot(bx, by);
-      if (m === 0) { out[0] = 0; out[1] = 0; return 0; }
-      out[0] = bx / m; out[1] = by / m;
-      return m;
-    }
-    const wireDist = (x, y) => {
-      const k = Math.min(N - 1, Math.max(0, Math.round((x - xs[0]) / d)));
-      return Math.hypot(x - xs[k], y - R);
-    };
-    const inDom = (x, y) => x > dom.xMin && x < dom.xMax && y < dom.yMax && y >= 0;
-
-    // 씨앗 (sx, sy)에서 sgn 방향으로 따라간다. mid: x = 0을 다시 지나면 멈춤, 아니면 씨앗으로 돌아오면 멈춤
-    const k1 = [0, 0], k2 = [0, 0], k3 = [0, 0], k4 = [0, 0];
-    function trace(sx, sy, sgn, mid) {
-      const pts = [sx, sy];
-      let x = sx, y = sy, len = 0, side = 0, end = 'max';
-      dir(sx, sy, v);
-      const ux0 = v[0] * sgn, uy0 = v[1] * sgn;
-      let prevProj = 0;
-      for (let n = 0; n < 9000; n++) {
-        const dw = wireDist(x, y);
-        if (dw < rStop) { end = 'wire'; break; }
-        const ds = sgn * Math.min(3 * hMin, Math.max(0.4 * hMin, 0.3 * (dw - rStop)));
-        if (!dir(x, y, k1)) { end = 'null'; break; }
-        dir(x + 0.5 * ds * k1[0], y + 0.5 * ds * k1[1], k2);
-        dir(x + 0.5 * ds * k2[0], y + 0.5 * ds * k2[1], k3);
-        dir(x + ds * k3[0], y + ds * k3[1], k4);
-        let nx2 = x + ds / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]);
-        let ny2 = y + ds / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
-        if (ny2 < 0) ny2 = 0;
-        len += Math.abs(ds);
-        if (!inDom(nx2, ny2)) { pts.push(nx2, ny2); end = 'out'; break; }
-        if (mid) {
-          if (!side) side = Math.sign(nx2);
-          else if (nx2 * side <= 0) {           // 가운데 면(x = 0)으로 돌아옴: 교점에서 멈춘다
-            const t = x / (x - nx2);
-            pts.push(0, y + t * (ny2 - y)); end = 'mid'; break;
-          }
-        } else if (len > 8 * hMin) {
-          // 씨앗을 지나는 수직선을 넘을 때 씨앗 가까이면 닫힌 곡선
-          const proj = (nx2 - sx) * ux0 + (ny2 - sy) * uy0;
-          const perp = Math.abs((nx2 - sx) * uy0 - (ny2 - sy) * ux0);
-          if (prevProj < 0 && proj >= 0 && perp < Math.max(4 * hMin, 0.35 * gap)) { pts.push(sx, sy); end = 'loop'; break; }
-          prevProj = proj;
-        }
-        x = nx2; y = ny2;
-        pts.push(x, y);
-      }
-      return { pts, end, ux0, uy0 };
-    }
-
-    // 겹침 검사용 칸 (위 반평면)
-    const cs = 0.45 * gap;
-    const ox = Math.ceil(2 * xh / cs) + 2, oy = Math.ceil(yh / cs) + 2;
-    const occ = new Uint8Array(ox * oy);
-    const cell = (x, y) => [Math.floor((x - dom.xMin) / cs), Math.floor(y / cs)];
-    const mark = pts => {
-      for (let i = 0; i < pts.length; i += 2) {
-        const [a, b] = cell(pts[i], pts[i + 1]);
-        if (a >= 0 && a < ox && b >= 0 && b < oy) occ[b * ox + a] = 1;
-      }
-    };
-    const taken = (x, y) => {
-      const [a, b] = cell(x, y);
-      for (let j = b - 1; j <= b + 1; j++) for (let i = a - 1; i <= a + 1; i++) {
-        if (i >= 0 && i < ox && j >= 0 && j < oy && occ[j * ox + i]) return true;
-      }
-      return false;
-    };
-    const mirX = pts => { const o = new Array(pts.length); for (let i = 0, n = pts.length; i < n; i += 2) { o[n - 2 - i] = -pts[i]; o[n - 1 - i] = pts[i + 1]; } return o; };
-
-    const upper = [];                 // { pts, arrows: [[x, y, ux, uy]] } (위 반평면)
-    const minPx = 0.8 / s;            // 화면에서 0.8 px보다 가까운 점은 버린다
-    const thin = pts => {
-      const o = [pts[0], pts[1]];
-      let lx = pts[0], ly = pts[1];
-      for (let i = 2; i < pts.length - 2; i += 2) {
-        if (Math.abs(pts[i] - lx) + Math.abs(pts[i + 1] - ly) < minPx) continue;
-        lx = pts[i]; ly = pts[i + 1]; o.push(lx, ly);
-      }
-      if (pts.length > 2) o.push(pts[pts.length - 2], pts[pts.length - 1]);
-      return o;
-    };
-    // 곡선 위 호 길이 t (0–1) 지점의 위치와 방향
-    function along(pts, t) {
-      let total = 0;
-      for (let i = 2; i < pts.length; i += 2) total += Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]);
-      let goal = total * t, acc = 0;
-      for (let i = 2; i < pts.length; i += 2) {
-        const sl = Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]);
-        if (acc + sl >= goal && sl > 0) {
-          const f = (goal - acc) / sl;
-          return [pts[i - 2] + f * (pts[i] - pts[i - 2]), pts[i - 1] + f * (pts[i + 1] - pts[i - 1]),
-            (pts[i] - pts[i - 2]) / sl, (pts[i + 1] - pts[i - 1]) / sl, total];
-        }
-        acc += sl;
-      }
-      return null;
-    }
-
-    // 1) 가운데 면(x = 0)의 안쪽 씨앗: 고른 간격. 오른쪽 반만 따라가고 거울상으로 닫는다
-    const margin = Math.max(0.3 * gap, 1.6 * rStop);
-    for (let i = 0; ; i++) {
-      const sy = (i + 0.5) * gap;
-      if (sy > R - margin) break;
-      const r = trace(0, sy, 1, true);
-      const half = r.pts;
-      const full = mirX(half).concat(half.slice(2));
-      // 자기력선이 촘촘하면 화살촉은 한 줄 걸러 단다
-      const arrows = dpx >= 12 || i % 2 === 0 ? [[0, sy, r.ux0, r.uy0]] : [];
-      const n = half.length;
-      if (r.end === 'mid') {
-        const ex = half[n - 4], ey = half[n - 3];
-        const dx = half[n - 2] - ex, dy = half[n - 1] - ey, dl = Math.hypot(dx, dy) || 1;
-        arrows.push([0, half[n - 1], dx / dl, dy / dl]);
-      } else {
-        const a = along(half, 0.55);
-        if (a && a[4] * s > 320 && (dpx >= 12 || i % 2 === 1)) arrows.push([a[0], a[1], a[2], a[3]], [-a[0], a[1], a[2], -a[3]]);
-      }
-      mark(full);
-      upper.push({ pts: thin(full), arrows });
-    }
-
-    // 2) 띄엄띄엄 감았을 때: 도선 바로 옆 씨앗 (도선마다 원)과 감은 틈의 씨앗 (새어 나가는 자기력선)
-    if (d >= 1.8 * gap) {
-      const rr = [rStop + 0.5 * gap].filter(r => r < 0.42 * d);
-      const seeds = [];                // [x, y, 화살촉?]
-      for (const xk of xs) {
-        if (xk < -1e-9) continue;
-        for (const r of rr) seeds.push([xk, R + r, true], [xk, R - r, true]);
-      }
-      // 틈이 반지름에 견줄 만큼 넓을 때만 (좁으면 도선 줄을 따라 기는 선이 되어 어지럽다)
-      if (d >= 0.8 * R && d >= 3 * gap) {
-        for (const xk of xs) if (xk + d / 2 > -1e-9 && xk + d / 2 < L / 2 - 1e-9) seeds.push([xk + d / 2, R, false]);
-      }
-      for (const [xk, sy, tip] of seeds) {
-        if (taken(xk, sy) || sy <= 0) continue;
-        const res = trace(xk, sy, 1, false);
-        let pts = res.pts;
-        if (res.end !== 'loop') {
-          // 닫히지 않으면 뒤로도 따라가 뒤집어 잇는다
-          const back = trace(xk, sy, -1, false).pts, rev = [];
-          for (let i = back.length - 2; i >= 2; i -= 2) rev.push(back[i], back[i + 1]);
-          pts = rev.concat(res.pts);
-        }
-        mark(pts);
-        upper.push({ pts: thin(pts), arrows: tip ? [[xk, sy, res.ux0, res.uy0]] : [] });
-        if (xk > 1e-9) {
-          const mp = mirX(pts);
-          mark(mp);
-          upper.push({ pts: thin(mp), arrows: tip ? [[-xk, sy, res.ux0, -res.uy0]] : [] });
-        }
-      }
-    }
-
-    // 3) 아래 반평면은 거울상 (방향 그대로)
-    const lines = [];
-    for (const ln of upper) {
-      lines.push(ln);
-      const p = ln.pts.slice();
-      for (let i = 1; i < p.length; i += 2) p[i] = -p[i];
-      lines.push({ pts: p, arrows: ln.arrows.map(([x, y, ux, uy]) => [x, -y, ux, -uy]) });
-    }
-    return { G, lines, mR, dpx, wash: null, washColor: '' };
-  }
-
-  // 도선 표시(⊙/⊗) 반지름 (px)
-  function markerR(P, s, w, h) {
-    const cap = Math.min(11, 4 + Math.min(w, h) / 70);
-    return Math.max(3, Math.min(0.42 * P.L / P.N * s, 0.3 * P.R * s, cap));
-  }
-
-  /* ---------- 화면 맞추기 ---------- */
-  const fitFor = P => ({ L: P.N > 1 ? P.L : 0, R: P.R });
-  function scaleFor(f, w, h) {
-    const mx = f.L > 0 ? Math.max(0.2 * f.L, 2 * f.R) : 3 * f.R;
-    const my = Math.max(1.6 * f.R, 0.12 * f.L);
-    return Math.min(w / (f.L + 2 * mx), h / (2 * f.R + 2 * my));
-  }
-  // 지금 보기가 너무 작거나 너무 크면 다시 맞춘다
-  function maybeRefit() {
-    const box = stage.getBoundingClientRect();
-    if (box.width < 20) { fit = fitFor(state); return; }
-    const sNow = scaleFor(fit, box.width, box.height), sIdeal = scaleFor(fitFor(state), box.width, box.height);
-    if (sNow > sIdeal * 1.001 || sNow < sIdeal * 0.6) fit = fitFor(state);
-  }
-  const halfX = f => (f.L > 0 ? f.L / 2 + Math.max(0.2 * f.L, 2 * f.R) : 3 * f.R);
-
-  function ensureField(w, h, s) {
-    const key = [state.N, state.L, state.R.toFixed(4), Math.round(w), Math.round(h), s.toFixed(4), fit.R, coarse].join('|');
-    if (!field || field.key !== key) {
-      field = computeField(state, w, h, s, fit.R);
-      field.key = key;
-    }
-    return field;
-  }
-
-  // |B| 색칠: 가운데 |B|를 기준으로 투명도를 정한다
-  function washCanvas(fld) {
-    if (fld.wash && fld.washColor === C.field) return fld.wash;
-    const { nx, ny, BX, BY } = fld.G;
-    const ref = Math.abs(axisB(0, { ...state, I: 1 }));
-    const tmp = document.createElement('canvas');
-    tmp.width = 1; tmp.height = 1;
-    const t = tmp.getContext('2d');
-    t.fillStyle = C.field; t.fillRect(0, 0, 1, 1);
-    const [r, g, b] = t.getImageData(0, 0, 1, 1).data;
-    const rows = 2 * (ny - 1);
-    const cv = document.createElement('canvas');
-    cv.width = nx; cv.height = rows;
-    const c2 = cv.getContext('2d');
-    const img = c2.createImageData(nx, rows);
-    for (let j = 1; j < ny; j++) {
-      const up = ny - 1 - j, dn = ny - 2 + j;                  // 위쪽 행과 거울상 아래 행
-      for (let i = 0; i < nx; i++) {
-        const k = j * nx + i;
-        const a = Math.min(1, Math.hypot(BX[k], BY[k]) / ref);
-        const al = Math.round(255 * 0.3 * a);
-        for (const row of [up, dn]) {
-          const o = (row * nx + i) * 4;
-          img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = al;
-        }
-      }
-    }
-    c2.putImageData(img, 0, 0);
-    fld.wash = cv; fld.washColor = C.field;
-    return cv;
-  }
-
-  /* ---------- 실험대: 축을 지나는 단면 ---------- */
-  function drawStage() {
-    const { w, h } = EM.fitCanvas(stage, sctx);
-    if (w < 20 || h < 20) return;
-    const ctx = sctx;
-    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
-    const s = scaleFor(fit, w, h);
-    const cx = w / 2, cy = h / 2;
-    view = { cx, cy, s, xh: w / 2 / s };
-    const X = x => cx + x * s, Y = y => cy - y * s;
-    const { N, L, R } = state;
-    const fld = ensureField(w, h, s);
-    const mR = fld.mR;
-    const fs = Math.max(13, Math.round(EM.remPx() * 0.85));
-
-    // |B| 색칠
-    if (state.wash) {
-      const { x0, hx, hy, ny } = fld.G;
-      const cv = washCanvas(fld);
-      ctx.save();
-      ctx.imageSmoothingEnabled = true;
-      ctx.drawImage(cv, X(x0 - hx / 2), Y((ny - 1) * hy), cv.width * hx * s, 2 * (ny - 1) * hy * s);
-      ctx.restore();
-    }
-
-    // 솔레노이드 몸통 (감은 길이 L)
-    if (N > 1) {
-      const bw = mR + 3;
-      ctx.fillStyle = C.t1;
-      ctx.fillRect(X(-L / 2), Y(R) - bw, L * s, 2 * bw);
-      ctx.fillRect(X(-L / 2), Y(-R) - bw, L * s, 2 * bw);
-    }
-
-    // 축 (4단계부터, 측정점을 켜면 언제나)
-    if (step >= 3 || state.showProbe) {
-      ctx.save();
-      ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.muted;
-      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
-      ctx.restore();
-    }
-
-    // 자기력선
-    ctx.globalAlpha = step === 3 && state.showProbe ? 0.4 : 1;
-    ctx.lineWidth = LINE_W; ctx.strokeStyle = C.field; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-    ctx.beginPath();
-    for (const ln of fld.lines) {
-      const p = ln.pts;
-      ctx.moveTo(X(p[0]), Y(p[1]));
-      for (let i = 2; i < p.length; i += 2) ctx.lineTo(X(p[i]), Y(p[i + 1]));
-    }
-    ctx.stroke();
-    const ah = Math.max(6.5, Math.min(fs * 0.72, fld.dpx * 0.7));
-    for (const ln of fld.lines) {
-      for (const [x, y, ux, uy] of ln.arrows) EM.arrowHead(ctx, X(x) + ux * ah / 2, Y(y) - uy * ah / 2, ux, -uy, ah, C.field);
-    }
-    ctx.globalAlpha = 1;
-
-    // 도선: 위 ⊙, 아래 ⊗
-    for (let k = 0; k < N; k++) {
-      const x = X(turnX(k, N, L));
-      EM.marker(ctx, x, Y(R), mR, 'dot');
-      EM.marker(ctx, x, Y(-R), mR, 'cross');
-    }
-
-    // 극: 자기력선이 나오는 오른쪽 끝이 N
-    if (N > 1) {
-      const font = `600 ${fs}px ${F.ui}`;
-      tag(ctx, 'N', X(L / 2) + fs * 1.7, cy, C.muted, font, fs);
-      tag(ctx, 'S', X(-L / 2) - fs * 1.7, cy, C.muted, font, fs);
-    }
-
-    // 치수 (5–6단계)
-    if (step >= 4 && N > 1) {
-      const font = `600 ${fs}px ${F.ui}`;
-      const yd = Y(-R) + mR + fs * 1.4;
-      const label = `L = ${fmtCm(L)} cm`;
-      ctx.font = font;
-      const half = ctx.measureText(label).width / 2 + 8;
-      ctx.strokeStyle = C.muted; ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(X(-L / 2), yd); ctx.lineTo(Math.max(X(-L / 2), cx - half), yd);
-      ctx.moveTo(Math.min(X(L / 2), cx + half), yd); ctx.lineTo(X(L / 2), yd);
-      ctx.stroke();
-      EM.arrowHead(ctx, X(-L / 2), yd, -1, 0, 8, C.muted);
-      EM.arrowHead(ctx, X(L / 2), yd, 1, 0, 8, C.muted);
-      tag(ctx, label, cx, yd, C.muted, font, fs);
-      if (step === 5) {
-        // 왼쪽 끝 바깥에 두되, 자리가 없으면(좁은 화면) 안쪽 아래 반에 둔다 (위쪽은 측정점 이름표 자리)
-        const rl = `R = ${R.toFixed(1)} cm`;
-        ctx.font = font;
-        const out = X(-L / 2) - fs * 2.6 - 8 - ctx.measureText(rl).width > 6;
-        const xd = out ? X(-L / 2) - fs * 2.6 : X(-L / 2) + fs, yr = out ? R : -R;
-        ctx.beginPath(); ctx.moveTo(xd, cy); ctx.lineTo(xd, Y(yr)); ctx.stroke();
-        EM.arrowHead(ctx, xd, Y(yr), 0, out ? -1 : 1, 8, C.muted);
-        ctx.beginPath(); ctx.arc(xd, cy, 2.5, 0, TAU); ctx.fillStyle = C.muted; ctx.fill();
-        tag(ctx, rl, out ? xd - 8 : xd + 8, Y(yr / 2), C.muted, font, fs, out ? 'right' : 'left');
-      }
-    }
-
-    // 측정점 (체크박스로 켤 때만)
-    if (state.showProbe) {
-      const px = X(state.probe);
-      ctx.beginPath(); ctx.arc(px, cy, 8, 0, TAU);
-      ctx.fillStyle = C.path; ctx.fill();
-      ctx.lineWidth = 3; ctx.strokeStyle = C.stage; ctx.stroke();
-      const unit = unitFor(idealB());
-      const label = `B = ${fmtB(axisB(state.probe), unit)} ${unit}`;
-      const font = `700 ${fs}px ${F.ui}`;
-      ctx.font = font;
-      const tw = ctx.measureText(label).width;
-      const lx = Math.min(w - 10 - tw / 2, Math.max(10 + tw / 2, px));
-      tag(ctx, label, lx, cy - fs * 1.5, C.field, font, fs);
-    }
-  }
-
-  // 바탕을 깐 짧은 이름표 (자기력선 위에서도 읽히게)
-  function tag(ctx, text, x, y, color, font, fs, align = 'center') {
-    ctx.font = font;
-    const tw = ctx.measureText(text).width;
-    const x0 = align === 'center' ? x - tw / 2 : align === 'right' ? x - tw : x;
-    ctx.globalAlpha = 0.9; ctx.fillStyle = C.stage;
-    ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(x0 - 5, y - fs * 0.72, tw + 10, fs * 1.44, 5);
-    else ctx.rect(x0 - 5, y - fs * 0.72, tw + 10, fs * 1.44);
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle';
-    ctx.fillText(text, x, y);
-  }
-
-  /* ---------- 계기판 그래프: 축 위 B(x) ---------- */
-  function niceStep(v) {
-    const p = Math.pow(10, Math.floor(Math.log10(v)));
-    for (const k of [1, 2, 2.5, 5, 10]) if (k * p >= v - 1e-12) return k * p;
-    return 10 * p;
-  }
-  function drawGraph() {
-    const { w, h } = EM.fitCanvas(graph, gctx);
-    if (w < 40 || h < 40) return;
-    const ctx = gctx;
-    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
-    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
-    const Lp = fs * 3.6, Rp = 10, T = fs * 2, Bm = fs * 3;
-    const pw = w - Lp - Rp, ph = h - T - Bm;
-    const { N, L } = state;
-    const xr = halfX(fit);
-    const ideal = idealB();
-    const unit = unitFor(ideal), uf = unit === 'mT' ? 1e3 : 1e6;
-    // 곡선 표본
-    const n = Math.max(60, Math.round(pw / 2));
-    const xsS = [], bsS = [];
-    let bMax = ideal;
-    for (let i = 0; i <= n; i++) {
-      const x = -xr + 2 * xr * i / n, b = axisB(x);
-      xsS.push(x); bsS.push(b); if (b > bMax) bMax = b;
-    }
-    const stepV = niceStep(bMax * 1.12 * uf / 4);
-    const top = Math.ceil(bMax * 1.12 * uf / stepV) * stepV;
-    const X = x => Lp + (x + xr) / (2 * xr) * pw;
-    const Y = b => T + ph - b * uf / top * ph;
-
-    // 솔레노이드 구간
-    if (N > 1) {
-      ctx.globalAlpha = 0.5; ctx.fillStyle = C.t1;
-      ctx.fillRect(X(-L / 2), T, X(L / 2) - X(-L / 2), ph);
-      ctx.globalAlpha = 1;
-    }
-
-    // 격자와 축
-    ctx.lineWidth = 1; ctx.strokeStyle = C.line;
-    for (let v = stepV; v <= top + 1e-9; v += stepV) {
-      const y = Math.round(Y(v / uf)) + 0.5;
-      ctx.beginPath(); ctx.moveTo(Lp, y); ctx.lineTo(Lp + pw, y); ctx.stroke();
-    }
-    ctx.strokeStyle = C.muted;
-    ctx.beginPath(); ctx.moveTo(Lp + 0.5, T); ctx.lineTo(Lp + 0.5, T + ph + 0.5); ctx.lineTo(Lp + pw, T + ph + 0.5); ctx.stroke();
-
-    ctx.fillStyle = C.muted; ctx.font = `500 ${fs}px ${F.num}`;
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    const dec = stepV < 1 ? (stepV < 0.1 ? 2 : 1) : (stepV % 1 ? 1 : 0);
-    for (let v = 0; v <= top + 1e-9; v += stepV) ctx.fillText(v.toFixed(dec), Lp - 6, Y(v / uf));
-    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-    const xStep = xr > 24 ? 10 : xr > 9 ? 5 : 2;
-    for (let x = -Math.floor(xr / xStep) * xStep; x <= xr + 1e-9; x += xStep) ctx.fillText(String(Math.round(x)), X(x), T + ph + 5);
-    ctx.font = `500 ${fs}px ${F.ui}`;
-    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-    ctx.fillText('x (cm)', Lp + pw, h - 2);
-    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-    ctx.fillText(`B (${unit})`, 2, T - fs * 1.1);
-
-    // 기준선: μ0nI (고리 하나면 μ0I/2R)
-    ctx.save();
-    ctx.setLineDash([6, 5]); ctx.lineWidth = 2; ctx.strokeStyle = C.muted;
-    ctx.beginPath(); ctx.moveTo(Lp, Y(ideal)); ctx.lineTo(Lp + pw, Y(ideal)); ctx.stroke();
-    ctx.restore();
-    EM.haloText(ctx, N > 1 ? 'μ₀nI' : 'μ₀I/2R', Lp + pw - 2, Y(ideal) - fs * 0.75, C.muted, `italic ${fs + 1}px ${F.math}`, 'right', C.panel);
-
-    // 끝에서는 절반쯤
-    if (N > 1) {
-      ctx.save();
-      ctx.setLineDash([2, 3]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.muted;
-      for (const sx of [-1, 1]) {
-        const x = X(sx * L / 2);
-        ctx.beginPath(); ctx.moveTo(x - 12, Y(ideal / 2)); ctx.lineTo(x + 12, Y(ideal / 2)); ctx.stroke();
-      }
-      ctx.restore();
-      EM.haloText(ctx, '½', X(L / 2) + 15, Y(ideal / 2), C.muted, `500 ${fs}px ${F.num}`, 'left', C.panel);
-    }
-
-    // 곡선
-    ctx.beginPath();
-    for (let i = 0; i <= n; i++) {
-      const x = X(xsS[i]), y = Y(bsS[i]);
-      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
-    }
-    ctx.strokeStyle = C.field; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.stroke();
-    // 끝 표시는 곡선 위에
-    if (N > 1) {
-      for (const sx of [-1, 1]) {
-        ctx.beginPath(); ctx.arc(X(sx * L / 2), Y(axisB(sx * L / 2)), 4.5, 0, TAU);
-        ctx.fillStyle = C.panel; ctx.fill();
-        ctx.lineWidth = 2; ctx.strokeStyle = C.muted; ctx.stroke();
-      }
-    }
-
-    // 측정점
-    if (state.showProbe) {
-      const x = X(state.probe), y = Y(axisB(state.probe));
-      ctx.save();
-      ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
-      ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke();
-      ctx.restore();
-      ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU);
-      ctx.fillStyle = C.path; ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = C.panel; ctx.stroke();
-    }
-  }
-
-  /* ---------- 글자 ---------- */
-  const unitFor = B => B >= 2e-3 ? 'mT' : 'μT';
-  function fmtB(B, unit) {
-    const v = B * (unit === 'mT' ? 1e3 : 1e6);
-    return v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2);
-  }
-  const fmtCm = v => (Math.abs(v - Math.round(v)) < 1e-6 ? v.toFixed(0) : v.toFixed(1));
-
-  function updateReadouts() {
-    const { N, L, R, I } = state;
-    const ideal = idealB(), unit = unitFor(ideal);
-    const b0 = axisB(0);
-    $('law').innerHTML = N > 1
-      ? `${M('B')} = μ<sub>0</sub>${M('nI')},&ensp;${M('n')} = ${EM.frac(M('N'), M('L'))}`
-      : `고리 하나: ${M('B')} = ${EM.frac(`μ<sub>0</sub>${M('I')}`, `2${M('R')}`)}`;
-    $('bVal').textContent = fmtB(b0, unit);
-    $('bUnit').textContent = unit;
-    $('idealKey').innerHTML = N > 1 ? `이상값 μ<sub>0</sub>${M('nI')}` : `μ<sub>0</sub>${M('I')}/2${M('R')}`;
-    $('idealVal').textContent = fmtB(ideal, unit);
-    $('idealUnit').textContent = unit;
-    $('ratioVal').textContent = (100 * b0 / ideal).toFixed(1);
-    const bEnd = axisB(L / 2);
-    $('endVal').textContent = fmtB(bEnd, unit);
-    $('endUnit').textContent = unit;
-    $('endRatio').textContent = (100 * bEnd / ideal).toFixed(1);
-    $('kv').querySelectorAll('.s4-end').forEach(e => { e.hidden = N === 1; });
-    $('nOut').textContent = N;
-    $('lOut').textContent = `${fmtCm(L)} cm`;
-    $('rOut').textContent = `${R.toFixed(1)} cm`;
-    $('iOut').textContent = `${I.toFixed(1)} A`;
-    $('nIn').value = N; $('lIn').value = L; $('rIn').value = R; $('iIn').value = I;
-    $('nVal').textContent = (N / L).toFixed(2);
-  }
-
-  const redraw = () => EM.requestDraw(def);
-
-  /* ---------- 상태 변경 ---------- */
-  function setParams(p) {
-    Object.assign(state, p);
-    updateReadouts();
-    redraw();
-  }
-  const settle = () => { coarse = false; redraw(); };
-  // 단계의 움직임. 끝나거나 화면을 떠나면 finish로 끝 상태를 맞춘다
-  function run(dur, update, finish) {
-    const a = { tw: null, finish };
-    anim = a;
-    a.tw = EM.tween(dur, update, { onDone: () => { if (anim === a) anim = null; finish(); } });
-  }
-  function stopAnim(complete = false) {
-    const a = anim;
-    if (!a) return;
-    anim = null;
-    if (a.tw) a.tw.cancel();
-    if (complete) a.finish();
-  }
-  // 슬라이더를 움직이는 동안은 거친 격자, 멈추면 고운 격자
-  function scheduleRefine() {
-    clearTimeout(refineTimer);
-    refineTimer = setTimeout(() => { maybeRefit(); settle(); }, 220);
-  }
-
-  const def = EM.register({
-    id: 's4',
-    steps: STEPS,
-    init() {
-      stage = $('stage'); graph = $('graph');
-      sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
-
-      // 측정점 끌기 (켜져 있을 때만)
-      let dragging = false;
-      const xFromEvent = e => {
-        const rect = stage.getBoundingClientRect();
-        const lim = Math.min(view.xh, halfX(fit));
-        return Math.max(-lim, Math.min(lim, (e.clientX - rect.left - view.cx) / view.s));
-      };
-      stage.addEventListener('pointerdown', e => {
-        if (!state.showProbe) return;
-        if (STEPS[step].sweep) stopAnim();
-        dragging = true;
-        stage.classList.add('dragging');
-        stage.setPointerCapture(e.pointerId);
-        state.probe = xFromEvent(e); redraw();
-      });
-      stage.addEventListener('pointermove', e => { if (dragging) { state.probe = xFromEvent(e); redraw(); } });
-      const endDrag = () => { dragging = false; stage.classList.remove('dragging'); };
-      stage.addEventListener('pointerup', endDrag);
-      stage.addEventListener('pointercancel', endDrag);
-
-      const slide = (id, key) => {
-        const el = $(id);
-        el.addEventListener('input', () => {
-          stopAnim();
-          coarse = true;
-          state[key] = +el.value;
-          maybeRefit();
-          updateReadouts(); redraw();
-          scheduleRefine();
-        });
-        el.addEventListener('change', () => { clearTimeout(refineTimer); maybeRefit(); settle(); });
-      };
-      slide('nIn', 'N'); slide('lIn', 'L'); slide('rIn', 'R');
-      $('iIn').addEventListener('input', e => { state.I = +e.target.value; updateReadouts(); redraw(); });
-      $('washChk').checked = state.wash;
-      $('washChk').addEventListener('change', e => { state.wash = e.target.checked; redraw(); });
-      $('probeChk').checked = state.showProbe;
-      $('probeChk').addEventListener('change', e => {
-        state.showProbe = e.target.checked;
-        stage.classList.toggle('can-drag', state.showProbe);
-        redraw();
-      });
-    },
-    enterStep(i, { forward }) {
-      step = i;
-      const S = STEPS[i];
-      stopAnim();
-      clearTimeout(refineTimer);
-      coarse = false;
-      stage.classList.toggle('can-drag', state.showProbe);
-      if (S.anim === 'L') {
-        // n 고정, L 10 → 40 cm (N = nL). 화면은 40 cm에 맞춰 두어 길어지는 것이 보이게
-        fit = { L: 40, R: 3 };
-        state.probe = 0;
-        const end = () => { setParams({ R: 3, N: 40 * N_FIX, L: 40 }); settle(); };
-        if (forward) {
-          setParams({ R: 3, N: 10 * N_FIX, L: 10 });
-          coarse = true;
-          run(3600, e => {
-            const N = Math.round(N_FIX * (10 + 30 * e));
-            if (N !== state.N) setParams({ N, L: N / N_FIX });
-          }, end);
-        } else end();
-      } else if (S.anim === 'R') {
-        // n 고정, R 2 → 6 cm
-        fit = { L: 40, R: 6 };
-        state.probe = 0;
-        const end = () => { setParams({ N: 40 * N_FIX, L: 40, R: 6 }); settle(); };
-        if (forward) {
-          setParams({ N: 40 * N_FIX, L: 40, R: 2 });
-          coarse = true;
-          run(3600, e => setParams({ R: 2 + 4 * e }), end);
-        } else end();
-      } else {
-        setParams({ N: S.N, L: 20, R: 3 });
-        fit = fitFor(state);
-        if (S.sweep) {
-          // 측정점이 가운데에서 끝까지 축을 따라간다
-          const end = () => { state.probe = state.L / 2; redraw(); };
-          if (forward) {
-            state.probe = 0;
-            run(2400, e => { state.probe = e * state.L / 2; redraw(); }, end);
-          } else end();
-        }
-      }
-      updateReadouts();
-    },
-    hide() { stopAnim(true); clearTimeout(refineTimer); coarse = false; },
-    draw() { drawStage(); drawGraph(); },
-  });
+    { N: 40, cap: `40번 촘촘히 감으면 도선마다의 원은 사라진다. 안쪽 자기장은 축에 나란하고 고르며, 바깥 자기장은 매우 약하다. 무한히 길고 촘촘한 이상적인 솔레노이드라면 안은 완전히 고르고 바깥은 0이다.` },
+  ]);
 })();
 
 /* ================= 화면 5: 솔레노이드 · 직사각형 경로 (슬라이드 20–21) ================= */
@@ -4557,6 +4781,762 @@ const ROWS = (() => {
     hide() { cancelAnim(); },
     draw() { drawStage(); drawGraph(); },
   });
+})();
+
+/* ================= 화면 8: 앙페르 법칙 기초 (나이트 §29.6, 그림 29.24–29.25, 슬라이드 12–14) ================= */
+(() => {
+  'use strict';
+  const { TAU, MU0, C, F, m: M, DOT, CROSS } = EM;
+  const $ = id => document.getElementById('s8-' + id);
+  const VIEW = 11;                  // 무대 짧은 변의 반 = 11 cm
+  const NS = 720;                   // 경로 표본 수 = 수치 적분 조각 수
+  const NB = 16;                    // 경로 위 B 화살표 수 (적분 방향 표시는 그 사이에)
+  const A_W = 0.5;                  // 도선 반지름 (cm). 그 안에서는 B ∝ r
+  const GAP = 0.8;                  // 도선과 경로 사이의 최소 거리 (cm)
+  const SEP = 1.3;                  // 도선끼리의 최소 거리 (cm)
+  const B_LEN = 0.1, B_CAP = 2.6;   // 화살표 길이 (cm/μT)와 최대 길이 (cm)
+  const TH0 = -Math.PI / 2;         // 시작점: 원의 맨 아래
+  const TH_H = Math.PI * 0.22;      // 반지름 손잡이 (위 오른쪽)
+  const R_MIN = 1.5, R_MAX = 10.5;
+
+  // 자유 모양의 조절점 (반시계 차례, 0번이 시작점)
+  const FREE = [[-0.5, -7], [5.5, -5.5], [7, -0.5], [6.5, 5], [1, 6], [-5, 7.5], [-9, 2], [-6.5, -4]];
+  // 나이트 그림 29.25: I1은 밖, I2 ⊙ · I3 ⊗ · I4 ⊙는 안
+  const W4 = [
+    { x: 9.5, y: -6.5, I: 5, d: 1 }, { x: -4.5, y: 2, I: 4, d: 1 },
+    { x: 0.5, y: -3.5, I: 1, d: -1 }, { x: 3, y: 2.5, I: 3, d: 1 },
+  ];
+  const NEAR1 = { x: 7.92, y: -1.37 };  // 5단계: 경로에서 1 cm까지 다가온 I1
+  // 도선 하나 (나머지 자리는 도선 수를 늘릴 때 쓴다)
+  const solo = (x, y) => [{ x, y, I: 3, d: 1 }, ...W4.slice(1)];
+  const ring = r => ({ shape: 'circle', circ: { x: 0, y: 0, r }, ctrl: null, n: 1, wires: solo(0, 0), dir: 1 });
+  const FOUR = { shape: 'free', circ: null, ctrl: FREE, n: 4, wires: W4, dir: 1 };
+  const NEAR = { ...FOUR, wires: [{ ...W4[0], ...NEAR1 }, ...W4.slice(1)] };
+
+  const LOOP = `∮<b class="mv">B</b>·d<b class="mv">s</b>`;
+  const MU = 'μ<sub>0</sub>';
+  const IT = `${M('I')}<sub>through</sub>`;
+  const Ik = k => `${M('I')}<sub>${k}</sub>`;
+  const STEPS = [
+    { cfg: ring(6), cap: `긴 직선 도선 ${DOT}의 자기장은 도선을 중심으로 한 원의 접선 방향이고 크기는 ${M('B')} = ${EM.frac(`${MU}${M('I')}`, `2π${M('r')}`)}이다. 이 원을 따라 적분하면 ${LOOP} = ${M('B')}(2π${M('r')}) = ${MU}${M('I')}이다.` },
+    { cfg: ring(9), sweep: 4, cap: `반지름을 바꿔도 결과는 같다. ${M('B')}는 1/${M('r')}에 비례해 약해지고 둘레 2π${M('r')}은 ${M('r')}에 비례해 길어지므로 곱은 늘 ${MU}${M('I')}이다.` },
+    { cfg: { shape: 'free', circ: null, ctrl: FREE, n: 1, wires: solo(3, 2.5), dir: 1 }, dur: 1800, cap: `경로를 아무 모양으로 찌그러뜨리고 도선을 한쪽으로 옮겨도 ${LOOP} = ${MU}${M('I')}이다. 경로 위 ${M('B')}의 크기와 방향은 곳곳에서 다르지만 한 바퀴 더한 값은 그대로다.` },
+    { cfg: FOUR, dur: 900, cap: `도선이 여럿이면 경로를 뚫고 지나가는 전류만 센다. 오른손 네 손가락을 적분 방향으로 감을 때 엄지 쪽(${DOT})이 +, 반대쪽(${CROSS})이 −이다. ${IT} = ${Ik(2)} − ${Ik(3)} + ${Ik(4)}이고, 경로 밖의 ${Ik(1)}은 들어가지 않는다.` },
+    { cfg: NEAR, dur: 1600, cap: `밖의 ${Ik(1)}을 경로 가까이 옮기면 경로 위의 ${M('B')}가 크게 바뀐다. 식 왼쪽의 ${M('B')}는 밖의 전류까지 모든 전류가 만들지만, ${Ik(1)}의 기여는 한 바퀴 돌면 상쇄되어 ${LOOP}는 그대로다.` },
+    { cfg: { ...NEAR, dir: -1 }, dur: 450, cap: `적분 방향을 시계 방향으로 바꾸면 엄지가 종이면으로 들어가는 쪽(${CROSS})이 +가 된다. ${LOOP}와 ${IT}의 부호가 함께 바뀌어 둘 다 음수가 되고, 법칙은 그대로 성립한다.` },
+  ];
+
+  const copyW = ws => ws.map(w => ({ x: w.x, y: w.y, I: w.I, d: w.d, a: 1 }));
+  const state = {
+    shape: 'circle', shapeUI: 'circle', circ: { x: 0, y: 0, r: 6 }, ctrl: FREE.map(p => [...p]),
+    n: 1, wires: copyW(solo(0, 0)), dir: 1, tint: true,
+  };
+  let ghosts = [];          // 단계 전환 때 사라지는 중인 도선 (a: 1 → 0)
+
+  let stage, graph, sctx, gctx;
+  let view = null, gview = null;
+  let anim = null, settle = null;
+  let step = 0;
+  let drag = null;
+  let probe = null;         // 그래프에서 가리킨 경로 비율 (0–1)
+
+  /* ---------- 경로: 원 또는 조절점 8개를 지나는 닫힌 캐트멀–롬 곡선 ---------- */
+  const circlePts = c => Array.from({ length: 8 }, (_, k) => {
+    const th = TH0 + TAU * k / 8;
+    return [c.x + c.r * Math.cos(th), c.y + c.r * Math.sin(th)];
+  });
+  // 구심 캐트멀–롬: p1 → p2 구간을 m개로 나눈 점 (끝점 제외)
+  function crSeg(p0, p1, p2, p3, m, out, off) {
+    const kn = (a, b) => Math.max(1e-3, Math.sqrt(Math.hypot(b[0] - a[0], b[1] - a[1])));
+    const t1 = kn(p0, p1), t2 = t1 + kn(p1, p2), t3 = t2 + kn(p2, p3);
+    for (let i = 0; i < m; i++) {
+      const t = t1 + (t2 - t1) * i / m;
+      for (let c = 0; c < 2; c++) {
+        const a1 = ((t1 - t) * p0[c] + t * p1[c]) / t1;
+        const a2 = ((t2 - t) * p1[c] + (t - t1) * p2[c]) / (t2 - t1);
+        const a3 = ((t3 - t) * p2[c] + (t - t2) * p3[c]) / (t3 - t2);
+        const b1 = ((t2 - t) * a1 + t * a2) / t2;
+        const b2 = ((t3 - t) * a2 + (t - t1) * a3) / (t3 - t1);
+        out[2 * (off + i) + c] = ((t2 - t) * b1 + (t - t1) * b2) / (t2 - t1);
+      }
+    }
+  }
+  // 반시계로 매개화한 표본 (x, y 번갈아, cm, 위가 +y). 0번 = 시작점
+  let rawCache = { key: '', P: null };
+  function rawPath() {
+    const key = state.shape === 'circle' ? 'c' + state.circ.x + ',' + state.circ.y + ',' + state.circ.r : 'f' + state.ctrl.join(';');
+    if (rawCache.key === key) return rawCache.P;
+    const P = new Float64Array(2 * NS);
+    if (state.shape === 'circle') {
+      const { x, y, r } = state.circ;
+      for (let j = 0; j < NS; j++) {
+        const th = TH0 + TAU * j / NS;
+        P[2 * j] = x + r * Math.cos(th); P[2 * j + 1] = y + r * Math.sin(th);
+      }
+    } else {
+      const Q = state.ctrl, n = Q.length, m = NS / n;
+      for (let k = 0; k < n; k++) crSeg(Q[(k + n - 1) % n], Q[k], Q[(k + 1) % n], Q[(k + 2) % n], m, P, k * m);
+    }
+    rawCache = { key, P };
+    return P;
+  }
+
+  /* ---------- 물리: 종이면에 수직인 무한 직선 도선 (2차원 비오–사바르) ---------- */
+  function sources() {
+    const list = [];
+    state.wires.forEach((w, k) => { if (k < state.n) list.push({ ...w, k }); });
+    for (const g of ghosts) list.push({ ...g, k: -1 });
+    // B = μ0 I / (2π r). 거리를 cm로 쓰므로 K = μ0 I / (2π · 0.01 m), ⊗는 K < 0
+    for (const s of list) s.K = MU0 * s.I * s.d * s.a / (TAU * 0.01);
+    return list;
+  }
+  // 점 (x, y) cm의 B (T). ⊙: ẑ × r⃗ / r² (위에서 보아 반시계). 도선 안(r < a)에서는 B ∝ r
+  function fieldAt(x, y, list) {
+    let bx = 0, by = 0;
+    for (const s of list) {
+      const rx = x - s.x, ry = y - s.y, r2 = Math.max(rx * rx + ry * ry, A_W * A_W);
+      bx -= s.K * ry / r2; by += s.K * rx / r2;
+    }
+    return [bx, by];
+  }
+  // 감음 수 (선디의 방법): 경로가 점을 반시계로 감으면 +1, 시계로 감으면 −1, 밖이면 0
+  function winding(px, py, P) {
+    let wn = 0;
+    for (let j = 0; j < NS; j++) {
+      const k = (j + 1) % NS;
+      const ax = P[2 * j], ay = P[2 * j + 1], bx = P[2 * k], by = P[2 * k + 1];
+      const left = (bx - ax) * (py - ay) - (px - ax) * (by - ay);
+      if (ay <= py) { if (by > py && left > 0) wn++; }
+      else if (by <= py && left < 0) wn--;
+    }
+    return wn;
+  }
+
+  // 적분 방향으로 경로를 따라가며 B·Δs를 더한다 (조각 가운데의 B, 상태가 바뀔 때만 다시 계산)
+  let ver = 0, cache = null;
+  function compute() {
+    if (cache && cache.ver === ver) return cache;
+    const raw = rawPath();
+    let P = raw;
+    if (state.dir < 0) {                 // 시계: 같은 시작점에서 거꾸로
+      P = new Float64Array(2 * NS);
+      for (let j = 0; j < NS; j++) { const i = (NS - j) % NS; P[2 * j] = raw[2 * i]; P[2 * j + 1] = raw[2 * i + 1]; }
+    }
+    const src = sources();
+    const cum = new Float64Array(NS + 1), len = new Float64Array(NS + 1), bt = new Float64Array(NS);
+    let lo = 0, hi = 0;
+    for (let j = 0; j < NS; j++) {
+      const k = (j + 1) % NS;
+      const dx = P[2 * k] - P[2 * j], dy = P[2 * k + 1] - P[2 * j + 1], ds = Math.hypot(dx, dy);
+      const [bx, by] = fieldAt(P[2 * j] + dx / 2, P[2 * j + 1] + dy / 2, src);
+      const v = (bx * dx + by * dy) * 0.01;          // B·Δs (T·m), Δs: cm → m
+      cum[j + 1] = cum[j] + v;
+      len[j + 1] = len[j] + ds;
+      bt[j] = ds > 0 ? v / (ds * 0.01) : 0;          // 접선 성분 (T)
+      lo = Math.min(lo, cum[j + 1]); hi = Math.max(hi, cum[j + 1]);
+    }
+    let It = 0;
+    for (const s of src) { s.wn = winding(s.x, s.y, P); It += s.wn * s.d * s.I * s.a; }
+    cache = { ver, raw, P, cum, len, bt, lo, hi, src, It, loop: cum[NS], target: MU0 * It };
+    return cache;
+  }
+  // 적분 방향으로 경로 길이의 f배만큼 간 곳의 점과 단위 접선
+  function along(c, f) {
+    const L = c.len[NS] * Math.min(1, Math.max(0, f));
+    let lo = 0, hi = NS;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (c.len[mid] <= L) lo = mid; else hi = mid; }
+    const j = Math.min(lo, NS - 1), k = (j + 1) % NS, seg = c.len[j + 1] - c.len[j] || 1;
+    const t = (L - c.len[j]) / seg, P = c.P;
+    const dx = P[2 * k] - P[2 * j], dy = P[2 * k + 1] - P[2 * j + 1];
+    return { x: P[2 * j] + dx * t, y: P[2 * j + 1] + dy * t, tx: dx / seg, ty: dy / seg, cum: c.cum[j] + (c.cum[j + 1] - c.cum[j]) * t };
+  }
+  // 경로에서 가장 가까운 점과 그 점의 바깥쪽 법선 (반시계 표본 기준)
+  function nearest(x, y) {
+    const P = rawPath();
+    let best = null, bd = Infinity;
+    for (let j = 0; j < NS; j++) {
+      const k = (j + 1) % NS;
+      const ax = P[2 * j], ay = P[2 * j + 1], dx = P[2 * k] - ax, dy = P[2 * k + 1] - ay, L2 = dx * dx + dy * dy;
+      const t = L2 > 0 ? Math.min(1, Math.max(0, ((x - ax) * dx + (y - ay) * dy) / L2)) : 0;
+      const qx = ax + t * dx, qy = ay + t * dy, d = Math.hypot(x - qx, y - qy);
+      if (d < bd) { bd = d; const L = Math.sqrt(L2) || 1; best = { d, x: qx, y: qy, nx: dy / L, ny: -dx / L }; }
+    }
+    return best;
+  }
+
+  const minus = s => s.replace('-', '−');
+  const fmtTm = v => Math.abs(v) < 5e-10 ? '0.000' : minus((v * 1e6).toFixed(3));      // T·m → μT·m
+  const fmtA = v => { const r = Math.round(v * 10) / 10; return minus(Number.isInteger(r) ? String(r) : r.toFixed(1)); };
+
+  /* ---------- 배치 ---------- */
+  const X = x => view.cx + x * view.s;
+  const Y = y => view.cy - y * view.s;
+  const toWorld = (px, py) => [(px - view.cx) / view.s, -(py - view.cy) / view.s];
+  function bounds(m) {
+    const hw = view ? view.w / 2 / view.s : VIEW, hh = view ? view.h / 2 / view.s : VIEW;
+    return [hw - m, hh - m];
+  }
+  const clampV = (x, y, m) => { const [bx, by] = bounds(m); return [Math.max(-bx, Math.min(bx, x)), Math.max(-by, Math.min(by, y))]; };
+  const markerR = () => Math.min(15, Math.max(9, 0.55 * view.s));
+
+  /* ---------- 실험대 ---------- */
+  function drawStage() {
+    const { w, h } = EM.fitCanvas(stage, sctx);
+    if (w < 20 || h < 20) return;
+    const ctx = sctx;
+    const s = Math.min(w, h) / 2 / VIEW;
+    view = { w, h, s, cx: w / 2, cy: h / 2 };
+    const c = compute();
+    const fs = Math.max(13, Math.round(EM.remPx() * 0.85));
+    const mR = markerR();
+    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
+
+    const P = c.P;
+    const trace = () => {
+      ctx.beginPath();
+      for (let j = 0; j < NS; j++) { const x = X(P[2 * j]), y = Y(P[2 * j + 1]); if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+      ctx.closePath();
+    };
+
+    // B·ds 부호 띠: + 초록, − 자홍 (옅게)
+    if (state.tint) {
+      ctx.save();
+      ctx.lineWidth = 12; ctx.lineCap = 'butt'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.2;
+      const eps = 1e-3 * Math.max(...c.src.map(q => Math.abs(q.K) / 3), 1e-12);   // 거의 0인 곳은 칠하지 않는다
+      for (const sg of [1, -1]) {
+        ctx.beginPath();
+        let open = false;
+        for (let j = 0; j < NS; j++) {
+          if (sg * c.bt[j] > eps) {
+            if (!open) { ctx.moveTo(X(P[2 * j]), Y(P[2 * j + 1])); open = true; }
+            const k = (j + 1) % NS;
+            ctx.lineTo(X(P[2 * k]), Y(P[2 * k + 1]));
+          } else open = false;
+        }
+        ctx.strokeStyle = sg > 0 ? C.field : C.current; ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    // 앙페르 경로 (점선)
+    ctx.save();
+    ctx.setLineDash([10, 7]); ctx.lineWidth = 3; ctx.strokeStyle = C.path; ctx.lineJoin = 'round';
+    trace(); ctx.stroke();
+    ctx.restore();
+
+    // 적분 방향: 경로 길이의 1/4, 1/2, 3/4 지점
+    for (const f of [0.25, 0.5, 0.75]) {
+      const q = along(c, f);
+      const ux = q.tx, uy = -q.ty;
+      EM.arrowHead(ctx, X(q.x) + ux * 7, Y(q.y) + uy * 7, ux, uy, 13, C.path);
+    }
+
+    // 경로 위의 B (가운데가 경로 위에 오는 화살표, 길이 ∝ B)
+    for (let j = 0; j < NB; j++) {
+      const q = along(c, (j + 0.5) / NB);
+      const [bx, by] = fieldAt(q.x, q.y, c.src);
+      const B = Math.hypot(bx, by);
+      if (B < 1e-12) continue;
+      const len = Math.min(B_CAP, B * 1e6 * B_LEN) * s;
+      EM.arrow(ctx, X(q.x), Y(q.y), bx / B, -by / B, len, C.field, 3.5);
+    }
+
+    // 손잡이
+    if (state.shape === 'circle') {
+      const { x: ccx, y: ccy, r } = state.circ;
+      const hx = X(ccx + r * Math.cos(TH_H)), hy = Y(ccy + r * Math.sin(TH_H));
+      ctx.save();
+      ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
+      ctx.beginPath(); ctx.moveTo(X(ccx), Y(ccy)); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(X(ccx), Y(ccy), 3, 0, TAU); ctx.fillStyle = C.muted; ctx.fill();
+      ctx.beginPath(); ctx.arc(hx, hy, 10, 0, TAU);
+      ctx.fillStyle = C.path; ctx.fill();
+      ctx.lineWidth = 3; ctx.strokeStyle = C.stage; ctx.stroke();
+      const font = `600 ${fs}px ${F.ui}`, label = `r = ${r.toFixed(1)} cm`;
+      ctx.font = font;
+      let lx = hx + 18, align = 'left';
+      if (lx + ctx.measureText(label).width > w - 8) { lx = hx - 18; align = 'right'; }
+      EM.haloText(ctx, label, lx, Math.max(fs, hy - 16), C.path, font, align);
+    } else {
+      for (const [x, y] of state.ctrl) {
+        ctx.beginPath(); ctx.arc(X(x), Y(y), 6.5, 0, TAU);
+        ctx.fillStyle = C.path; ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = C.stage; ctx.stroke();
+      }
+    }
+
+    // 시작점: 경로를 가로지르는 짧은 막대
+    {
+      const Q = c.raw, k = NS - 1;
+      const tx = Q[2] - Q[2 * k], ty = Q[3] - Q[2 * k + 1], L = Math.hypot(tx, ty) || 1;
+      const nx = ty / L, ny = tx / L;          // 화면에서 바깥쪽 법선 (반시계 표본 기준, 화면 y는 아래가 +)
+      const x = X(Q[0]), y = Y(Q[1]);
+      ctx.beginPath(); ctx.moveTo(x - nx * 11, y - ny * 11); ctx.lineTo(x + nx * 11, y + ny * 11);
+      ctx.strokeStyle = C.path; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke();
+      EM.haloText(ctx, '시작', x + nx * (14 + fs * 0.9), y + ny * (14 + fs * 0.6), C.path, `600 ${Math.round(fs * 0.85)}px ${F.ui}`, 'center');
+    }
+
+    // 도선: 감싼 전류는 강조. 나타나거나 사라지는 도선은 크기로 보인다
+    for (const q of c.src) {
+      const r = mR * q.a;
+      if (r < 1) continue;
+      EM.marker(ctx, X(q.x), Y(q.y), r, q.d > 0 ? 'dot' : 'cross', q.wn !== 0);
+    }
+    if (state.n > 1) {
+      const f1 = `italic 700 ${fs + 2}px ${F.math}`, f2 = `600 ${Math.round(fs * 0.72)}px ${F.ui}`;
+      for (const q of c.src) {
+        if (q.k < 0 || q.a < 0.5) continue;
+        // 오른쪽 위에 두되, 무대 밖으로 나가면 왼쪽(아래)으로
+        ctx.font = f1;
+        const wI = ctx.measureText('I').width;
+        ctx.font = f2;
+        const tw = wI + 1 + ctx.measureText(String(q.k + 1)).width;
+        let lx = X(q.x) + mR * 0.85 + 2, ly = Y(q.y) - mR * 0.85 - 5;
+        if (lx + tw > w - 4) lx = X(q.x) - mR * 0.85 - 2 - tw;
+        if (ly < fs * 0.7) ly = Y(q.y) + mR * 0.85 + 5;
+        EM.haloText(ctx, 'I', lx, ly, C.current, f1, 'left');
+        EM.haloText(ctx, String(q.k + 1), lx + wI + 1, ly + fs * 0.38, C.current, f2, 'left');
+      }
+    }
+
+    // 그래프에서 가리킨 곳
+    if (probe != null) {
+      const q = along(c, probe);
+      ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), 7, 0, TAU);
+      ctx.fillStyle = C.stage; ctx.fill();
+      ctx.lineWidth = 3.5; ctx.strokeStyle = C.path; ctx.stroke();
+    }
+  }
+
+  /* ---------- 계기판 그래프: 경로를 따라 쌓인 ∫B·ds ---------- */
+  function niceStep(v) {
+    const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e;
+    return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * e;
+  }
+  // 글꼴이 섞인 한 줄 [[글, 글꼴, 세로 어긋남], ...]
+  function runs(ctx, items, x, y, color) {
+    ctx.fillStyle = color; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    for (const [t, font, dy = 0] of items) { ctx.font = font; ctx.fillText(t, x, y + dy); x += ctx.measureText(t).width; }
+    return x;
+  }
+  function drawGraph() {
+    const { w, h } = EM.fitCanvas(graph, gctx);
+    if (w < 40 || h < 40) return;
+    const ctx = gctx;
+    const c = compute();
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
+    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
+    const L = fs * 3.6, Rp = 12, T = fs * 2.2, Bm = fs * 3;
+    const pw = w - L - Rp, ph = h - T - Bm;
+    gview = { L, pw };
+
+    // 세로축 (μT·m): 0, 곡선 전체, μ0 I_through를 모두 담는다
+    const tgt = c.target * 1e6;
+    let lo = Math.min(0, c.lo * 1e6, tgt), hi = Math.max(0, c.hi * 1e6, tgt);
+    const minSpan = Math.max(1, 0.5 * MU0 * 1e6 * c.src.reduce((a, q) => a + q.I * q.a, 0));
+    if (hi - lo < minSpan) { if (tgt < 0 || (lo < 0 && hi <= 0)) lo = hi - minSpan; else hi = lo + minSpan; }
+    const pad = 0.08 * (hi - lo);
+    if (hi > 0) hi += pad;
+    if (lo < 0) lo -= pad;
+    const unit = niceStep((hi - lo) / 4);
+    lo = Math.floor(lo / unit + 1e-9) * unit; hi = Math.ceil(hi / unit - 1e-9) * unit;
+    const GX = f => L + f * pw;
+    const GY = v => T + (hi - v) / (hi - lo) * ph;
+    const dec = unit < 1 ? (unit < 0.1 ? 2 : 1) : 0;
+
+    // 격자와 축
+    ctx.lineWidth = 1; ctx.strokeStyle = C.line;
+    for (let v = lo; v <= hi + 1e-9; v += unit) {
+      if (Math.abs(v) < 1e-9) continue;
+      const y = Math.round(GY(v)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + pw, y); ctx.stroke();
+    }
+    for (const f of [0.25, 0.5, 0.75, 1]) {
+      const x = Math.round(GX(f)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke();
+    }
+    ctx.strokeStyle = C.muted;
+    const y0 = Math.round(GY(0)) + 0.5;
+    ctx.beginPath(); ctx.moveTo(L + 0.5, T); ctx.lineTo(L + 0.5, T + ph + 0.5); ctx.moveTo(L, y0); ctx.lineTo(L + pw, y0); ctx.stroke();
+    if (lo < 0) { ctx.beginPath(); ctx.moveTo(L, T + ph + 0.5); ctx.lineTo(L + pw, T + ph + 0.5); ctx.stroke(); }
+
+    ctx.fillStyle = C.muted; ctx.font = `500 ${fs}px ${F.num}`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (let v = lo; v <= hi + 1e-9; v += unit) ctx.fillText(minus((Math.abs(v) < 1e-9 ? 0 : v).toFixed(dec)), L - 6, GY(v));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (const [f, t] of [[0, '0'], [0.25, '0.25'], [0.5, '0.5'], [0.75, '0.75'], [1, '1']]) ctx.fillText(t, GX(f), T + ph + 5);
+    // 축 이름: s/L (오른쪽 아래), ∫B·ds (μT·m) (왼쪽 위)
+    const fM = `italic ${fs + 1}px ${F.math}`, fB = `700 ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`;
+    ctx.font = fM;
+    const sw = ctx.measureText('s / L').width;
+    runs(ctx, [['s / L', fM]], L + pw - sw, h - fs * 0.75, C.muted);
+    runs(ctx, [['∫ ', `${fs + 1}px ${F.math}`], ['B', fB], ['·d', `${fs + 1}px ${F.math}`], ['s', fB], ['  (μT·m)', fU]], 2, T - fs * 1.15, C.muted);
+
+    // μ0 I_through (점선)
+    const yt = GY(tgt);
+    ctx.save();
+    ctx.setLineDash([6, 5]); ctx.lineWidth = 2; ctx.strokeStyle = C.muted;
+    ctx.beginPath(); ctx.moveTo(L, yt); ctx.lineTo(L + pw, yt); ctx.stroke();
+    ctx.restore();
+    {
+      const fS = `500 ${Math.round(fs * 0.85)}px ${F.ui}`, fI = `italic ${fs + 2}px ${F.math}`;
+      const ly = yt + (yt - T < fs * 1.5 ? fs * 0.95 : -fs * 0.9);
+      runs(ctx, [['μ', `${fs + 2}px ${F.math}`], ['0', fS, fs * 0.32], [' I', fI], ['through', fS, fs * 0.32]], L + 8, ly, C.muted);
+    }
+
+    // 쌓인 적분 (경로 길이 비율에 대해)
+    const Ltot = c.len[NS] || 1;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(L, T - 4, pw + 4, ph + 8); ctx.clip();
+    ctx.beginPath();
+    for (let j = 0; j <= NS; j++) {
+      const x = GX(c.len[j] / Ltot), y = GY(c.cum[j] * 1e6);
+      if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y);
+    }
+    ctx.strokeStyle = C.field; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.restore();
+
+    // 한 바퀴 돈 끝점, 가리킨 곳
+    const dotAt = (x, y) => {
+      ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU);
+      ctx.fillStyle = C.path; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = C.panel; ctx.stroke();
+    };
+    if (probe != null) {
+      const q = along(c, probe), x = GX(probe);
+      ctx.save();
+      ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
+      ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke();
+      ctx.restore();
+      dotAt(x, GY(q.cum * 1e6));
+    }
+    dotAt(GX(1), GY(c.loop * 1e6));
+  }
+
+  const redraw = () => EM.requestDraw(def);
+  function changed() { ver++; updateReadouts(); redraw(); }
+
+  /* ---------- 상태 바꾸기 ---------- */
+  const lerp = (a, b, e) => a + (b - a) * e;
+  const same = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < 0.05 && a.I === b.I && a.d === b.d;
+  function cancelAnim() {
+    if (anim) { anim.cancel(); anim = null; }
+    if (settle) { const f = settle; settle = null; f(false); }
+  }
+  function applyCfg(T) {
+    state.shape = state.shapeUI = T.shape;
+    if (T.circ) state.circ = { ...T.circ };
+    if (T.ctrl) state.ctrl = T.ctrl.map(p => [...p]);
+    state.n = T.n; state.wires = copyW(T.wires); state.dir = T.dir;
+    ghosts = [];
+    changed();
+  }
+  // 지금 상태에서 배치 T로: 경로는 조절점(또는 원)을 보간, 도선 수가 바뀌면 도선은 나타나고 사라진다
+  function goTo(T, dur, then) {
+    cancelAnim();
+    const both = state.shape === 'circle' && T.shape === 'circle';
+    const c0 = { ...state.circ };
+    const q0 = state.shape === 'circle' ? circlePts(state.circ) : state.ctrl.map(p => [...p]);
+    const q1 = T.shape === 'circle' ? circlePts(T.circ) : T.ctrl;
+    const fade = T.n !== state.n;
+    const oldVis = state.wires.slice(0, state.n).map(w => ({ ...w, a: 1 }));
+    const w0 = state.wires.map(w => ({ ...w }));
+    const w1 = copyW(T.wires);
+    ghosts = fade ? oldVis.filter(o => !w1.slice(0, T.n).some(w => same(o, w))) : [];
+    const grow = w1.map((w, k) => fade && k < T.n && !oldVis.some(o => same(o, w)));
+    state.n = T.n; state.dir = T.dir; state.shapeUI = T.shape;
+    state.wires = w1.map((w, k) => fade ? w : { ...w, x: w0[k].x, y: w0[k].y });
+    if (!both) state.shape = 'free';
+    const upd = e => {
+      if (both) state.circ = { x: lerp(c0.x, T.circ.x, e), y: lerp(c0.y, T.circ.y, e), r: lerp(c0.r, T.circ.r, e) };
+      else state.ctrl = q0.map((p, k) => [lerp(p[0], q1[k][0], e), lerp(p[1], q1[k][1], e)]);
+      state.wires.forEach((w, k) => {
+        if (fade) w.a = grow[k] ? e : 1;
+        else { w.x = lerp(w0[k].x, w1[k].x, e); w.y = lerp(w0[k].y, w1[k].y, e); }
+      });
+      ghosts.forEach(g => { g.a = 1 - e; });
+      changed();
+    };
+    settle = done => {
+      ghosts = [];
+      state.wires.forEach(w => { w.a = 1; });
+      if (done && T.shape === 'circle' && !both) { state.shape = 'circle'; state.circ = { ...T.circ }; }
+      if (!done) state.shapeUI = state.shape;
+      changed();
+    };
+    anim = EM.tween(dur, upd, {
+      onDone: () => { anim = null; const f = settle; settle = null; if (f) f(true); if (then) then(); },
+    });
+  }
+  function sweepR(to, dur) {
+    const from = state.circ.r;
+    anim = EM.tween(dur, e => { state.circ = { ...state.circ, r: lerp(from, to, e) }; changed(); }, {
+      ease: 'linear', onDone: () => { anim = null; },
+    });
+  }
+
+  // 도선이 경로 위에 놓이지 않게: 가까운 쪽으로 GAP만큼 떨어뜨린다
+  function offPath(x, y) {
+    const q = nearest(x, y);
+    if (q.d >= GAP) return [x, y];
+    let ux = x - q.x, uy = y - q.y, L = Math.hypot(ux, uy);
+    if (L < 1e-6) { ux = q.nx; uy = q.ny; L = 1; }
+    return [q.x + ux / L * GAP, q.y + uy / L * GAP];
+  }
+  function placeWire(k, x, y) {
+    for (let it = 0; it < 3; it++) {
+      [x, y] = clampV(x, y, 0.7);
+      state.wires.forEach((o, i) => {
+        if (i === k || i >= state.n) return;
+        const dx = x - o.x, dy = y - o.y, d = Math.hypot(dx, dy);
+        if (d < SEP) { const ux = d > 1e-6 ? dx / d : 1, uy = d > 1e-6 ? dy / d : 0; x = o.x + ux * SEP; y = o.y + uy * SEP; }
+      });
+      [x, y] = offPath(x, y);
+    }
+    state.wires[k].x = x; state.wires[k].y = y;
+  }
+  // 경로를 고친 뒤 경로 위에 걸린 도선을 살짝 비켜 놓는다 (중심이 있던 쪽으로)
+  function settleWires() {
+    for (let k = 0; k < state.n; k++) {
+      const w = state.wires[k];
+      [w.x, w.y] = offPath(w.x, w.y);
+    }
+    changed();
+  }
+  // 새로 보이는 도선: 기본 자리 근처에서 비어 있는 곳
+  function freeSpot(k) {
+    const w = state.wires[k], [bx, by] = bounds(0.8);
+    const ok = (x, y) => Math.abs(x) <= bx && Math.abs(y) <= by && nearest(x, y).d >= GAP + 0.2 &&
+      state.wires.every((o, i) => i === k || i >= state.n || Math.hypot(x - o.x, y - o.y) >= SEP + 0.3);
+    for (let rr = 0; rr <= 8; rr += 0.6) {
+      const m = rr ? 16 : 1;
+      for (let q = 0; q < m; q++) {
+        const x = W4[k].x + rr * Math.cos(TAU * q / m), y = W4[k].y + rr * Math.sin(TAU * q / m);
+        if (ok(x, y)) { w.x = x; w.y = y; return; }
+      }
+    }
+    placeWire(k, W4[k].x, W4[k].y);
+  }
+  function setN(n) {
+    cancelAnim();
+    const old = state.n;
+    state.n = n;
+    for (let k = old; k < n; k++) {
+      Object.assign(state.wires[k], { I: W4[k].I, d: W4[k].d, a: 1 });
+      freeSpot(k);
+    }
+    changed();
+  }
+  function setShape(shape) {
+    cancelAnim();
+    if (shape === state.shape) { state.shapeUI = shape; changed(); return; }
+    if (shape === 'free') {
+      state.ctrl = circlePts(state.circ);
+      state.shape = state.shapeUI = 'free';
+      changed();
+      return;
+    }
+    // 자유 모양 → 원: 조절점의 무게중심과 평균 거리로 원을 맞춘다
+    const n = state.ctrl.length;
+    const cx = state.ctrl.reduce((a, p) => a + p[0], 0) / n, cy = state.ctrl.reduce((a, p) => a + p[1], 0) / n;
+    const r = Math.min(R_MAX, Math.max(R_MIN, state.ctrl.reduce((a, p) => a + Math.hypot(p[0] - cx, p[1] - cy), 0) / n));
+    goTo({ shape: 'circle', circ: { x: cx, y: cy, r }, ctrl: null, n: state.n, wires: state.wires, dir: state.dir }, 450, settleWires);
+  }
+
+  /* ---------- 끌기: 도선, 조절점, 원의 테두리(반지름), 경로 안(통째로 옮기기) ---------- */
+  function hitTest(px, py, tol) {
+    if (!view) return null;
+    const c = compute(), mR = markerR();
+    const vis = c.src.filter(q => q.k >= 0);
+    const dW = vis.map(q => Math.hypot(px - X(q.x), py - Y(q.y)));
+    let k = dW.findIndex(d => d <= mR);
+    if (k >= 0) return { type: 'wire', k: vis[k].k };
+    if (state.shape === 'free') {
+      let best = -1, bd = tol + 6.5;
+      state.ctrl.forEach(([x, y], i) => { const d = Math.hypot(px - X(x), py - Y(y)); if (d <= bd) { bd = d; best = i; } });
+      if (best >= 0) return { type: 'ctrl', k: best };
+    }
+    k = dW.findIndex(d => d <= mR + tol * 0.6);
+    if (k >= 0) return { type: 'wire', k: vis[k].k };
+    const [wx, wy] = toWorld(px, py);
+    if (state.shape === 'circle') {
+      const { x, y, r } = state.circ;
+      const hx = X(x + r * Math.cos(TH_H)), hy = Y(y + r * Math.sin(TH_H));
+      if (Math.hypot(px - hx, py - hy) <= 10 + tol || Math.abs(Math.hypot(wx - x, wy - y) - r) * view.s <= tol) return { type: 'rim' };
+    }
+    if (winding(wx, wy, c.raw) !== 0) return { type: 'move' };
+    return null;
+  }
+  function dragTo(px, py) {
+    const [wx, wy] = toWorld(px, py);
+    const dx = wx - drag.wx, dy = wy - drag.wy;
+    if (drag.type === 'wire') {
+      placeWire(drag.k, drag.w0.x + dx, drag.w0.y + dy);
+    } else if (drag.type === 'ctrl') {
+      const [x, y] = clampV(drag.ctrl0[drag.k][0] + dx, drag.ctrl0[drag.k][1] + dy, 0.3);
+      state.ctrl = drag.ctrl0.map((p, i) => i === drag.k ? [x, y] : [...p]);
+    } else if (drag.type === 'rim') {
+      const { x, y } = state.circ;
+      const r = drag.circ0.r + Math.hypot(wx - x, wy - y) - drag.d0;
+      state.circ = { ...state.circ, r: Math.min(R_MAX, Math.max(R_MIN, r)) };
+    } else if (state.shape === 'circle') {
+      const [x, y] = clampV(drag.circ0.x + dx, drag.circ0.y + dy, 0.5);
+      state.circ = { ...state.circ, x, y };
+    } else {
+      // 조절점이 모두 무대 안에 남도록 옮기는 양을 줄인다
+      const [bx, by] = bounds(0.3);
+      let ddx = dx, ddy = dy;
+      for (const [x, y] of drag.ctrl0) {
+        ddx = Math.max(-bx - x, Math.min(bx - x, ddx));
+        ddy = Math.max(-by - y, Math.min(by - y, ddy));
+      }
+      state.ctrl = drag.ctrl0.map(([x, y]) => [x + ddx, y + ddy]);
+    }
+    changed();
+  }
+
+  /* ---------- 계기판 글 ---------- */
+  let segs = null, rows = [];
+  function updateReadouts() {
+    const c = compute();
+    const vis = c.src.filter(q => q.k >= 0);
+    // 감싸는 전류: 도선마다 칩, 경로 밖이면 '밖'
+    const terms = [];
+    for (let k = 0; k < 4; k++) {
+      const chip = $('chip' + k), q = vis.find(v => v.k === k);
+      chip.hidden = !q;
+      if (!q) continue;
+      const v = q.wn * q.d * q.I * q.a;
+      chip.querySelector('.sym').className = 'sym ' + (q.d > 0 ? 'dot' : 'cross');
+      chip.querySelector('.lbl').innerHTML = state.n > 1 ? Ik(k + 1) : M('I');
+      chip.querySelector('b').textContent = q.wn ? (v > 0 ? '+' : '') + fmtA(v) : '밖';
+      chip.querySelector('.u').hidden = !q.wn;
+      chip.classList.toggle('on', q.wn !== 0);
+      chip.classList.toggle('out', q.wn === 0);
+      if (q.wn) terms.push(v);
+    }
+    $('encExpr').textContent = terms.length > 1
+      ? terms.map((v, i) => (i ? (v < 0 ? ' − ' : ' + ') + fmtA(Math.abs(v)) : fmtA(v))).join('') + ' ='
+      : '';
+    $('encVal').textContent = `${fmtA(c.It)} A`;
+
+    // 앙페르 법칙: 수치 적분과 μ0 I_through
+    $('loopVal').textContent = fmtTm(c.loop);
+    $('muVal').textContent = `${fmtTm(c.target)} μT·m`;
+    const err = Math.abs(c.loop - c.target);
+    $('diff').textContent = Math.abs(c.target) > 1e-12
+      ? `${(100 * err / Math.abs(c.target)).toFixed(err / Math.abs(c.target) < 0.01 ? 4 : 1)} %`
+      : `${fmtTm(err)} μT·m`;
+    $('subst').innerHTML = `${MU}${IT} = (4π×10<sup>−7</sup> T·m/A)(${fmtA(c.It)} A)`;
+    $('how').textContent = `경로를 ${NS}조각으로 나눠 조각마다 B·Δs를 더한 값`;
+
+    // 조절
+    if (!segs) return;
+    segs.shape.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.shape === state.shapeUI)));
+    segs.dir.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.dir === state.dir)));
+    segs.n.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.n === state.n)));
+    rows.forEach((row, k) => {
+      row.hidden = k >= state.n;
+      const w = state.wires[k];
+      row.querySelectorAll('[data-wd]').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.wd === w.d)));
+      const inp = row.querySelector('input');
+      if (+inp.value !== w.I) inp.value = w.I;
+      row.querySelector('output').textContent = `${w.I} A`;
+    });
+  }
+
+  const def = EM.register({
+    id: 's8',
+    steps: STEPS,
+    init(root) {
+      stage = $('stage'); graph = $('graph');
+      sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
+
+      const local = e => { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      const tolOf = e => e.pointerType === 'mouse' ? 9 : 18;
+      stage.addEventListener('pointerdown', e => {
+        const [px, py] = local(e);
+        const hit = hitTest(px, py, tolOf(e));
+        if (!hit) return;
+        cancelAnim();
+        const [wx, wy] = toWorld(px, py);
+        drag = {
+          ...hit, wx, wy, circ0: { ...state.circ }, ctrl0: state.ctrl.map(p => [...p]),
+          w0: hit.type === 'wire' ? { ...state.wires[hit.k] } : null,
+          d0: Math.hypot(wx - state.circ.x, wy - state.circ.y),
+        };
+        stage.classList.add('dragging');
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', e => {
+        const [px, py] = local(e);
+        if (drag) dragTo(px, py);
+        else if (e.pointerType === 'mouse') stage.classList.toggle('can-drag', !!hitTest(px, py, tolOf(e)));
+      });
+      const endDrag = () => {
+        if (!drag) return;
+        const moved = drag.type !== 'wire';
+        drag = null;
+        stage.classList.remove('dragging');
+        if (moved) settleWires();
+      };
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
+      stage.addEventListener('pointerleave', () => { if (!drag) stage.classList.remove('can-drag'); });
+
+      // 그래프를 가리키면 경로 위의 그 자리를 보인다
+      const probeAt = e => {
+        if (!gview) return;
+        const r = graph.getBoundingClientRect();
+        probe = Math.min(1, Math.max(0, (e.clientX - r.left - gview.L) / gview.pw));
+        redraw();
+      };
+      const noProbe = () => { probe = null; redraw(); };
+      graph.addEventListener('pointerdown', probeAt);
+      graph.addEventListener('pointermove', probeAt);
+      graph.addEventListener('pointerleave', noProbe);
+      graph.addEventListener('pointercancel', noProbe);
+
+      // 조절
+      const grp = label => [...root.querySelectorAll(`.opt .seg[aria-label="${label}"] button`)];
+      segs = { shape: grp('경로 모양'), dir: grp('적분 방향'), n: grp('도선 수') };
+      segs.shape.forEach(b => b.addEventListener('click', () => setShape(b.dataset.shape)));
+      segs.dir.forEach(b => b.addEventListener('click', () => { state.dir = +b.dataset.dir; changed(); }));
+      segs.n.forEach(b => b.addEventListener('click', () => setN(+b.dataset.n)));
+      rows = [...root.querySelectorAll('.wire-row')];
+      rows.forEach((row, k) => {
+        row.querySelectorAll('[data-wd]').forEach(b => b.addEventListener('click', () => { state.wires[k].d = +b.dataset.wd; changed(); }));
+        row.querySelector('input').addEventListener('input', e => { state.wires[k].I = +e.target.value; changed(); });
+      });
+      $('tintChk').addEventListener('change', e => { state.tint = e.target.checked; redraw(); });
+      $('resetBtn').addEventListener('click', () => goTo(STEPS[step].cfg, 450));
+    },
+    enterStep(i, { forward, initial }) {
+      step = i;
+      const S = STEPS[i];
+      cancelAnim();
+      probe = null;
+      if (initial) { applyCfg(S.cfg); return; }
+      if (S.sweep && forward) goTo({ ...S.cfg, circ: { ...S.cfg.circ, r: S.sweep } }, 700, () => sweepR(S.cfg.circ.r, 2600));
+      else goTo(S.cfg, forward ? (S.dur || 700) : 450);
+    },
+    hide() { cancelAnim(); },
+    draw() { drawStage(); drawGraph(); },
+  });
+})();
+
+/* ================= 화면: 유한한 솔레노이드 (Knight 그림 29.32, 슬라이드 22 · 25) ================= */
+(() => {
+  const { m: M } = EM;
+  const MNI = `μ<sub>0</sub>${M('nI')}`;
+  COIL('s9', [
+    { N: 40, poles: true, cap: `길이가 유한한 솔레노이드의 바깥 자기장은 약하지만 0은 아니고, 막대자석의 자기장과 닮았다. 자기력선이 나오는 오른쪽 끝이 N극, 들어가는 왼쪽 끝이 S극이다.` },
+    { N: 40, poles: true, axis: true, dimLines: true, sweep: true, cap: `축 위의 자기장을 그래프로 본다. 가운데에서는 ${M('B')} ≈ ${MNI} (${M('n')} = ${M('N')}/${M('L')})이고, 끝에서는 그 절반쯤이다. ${M('B')} = ${MNI}는 긴 솔레노이드의 가운데에서만 맞는다.` },
+    { anim: 'L', poles: true, axis: true, dims: 'L', cap: `단위 길이당 감은 수 ${M('n')}을 그대로 두고 솔레노이드를 늘인다. 길수록 안쪽은 더 고르고 바깥은 더 약하며, ${M('B')} ≈ ${MNI}인 구간이 길어진다.` },
+    { anim: 'R', poles: true, axis: true, dims: 'R', cap: `${M('n')}을 그대로 두고 지름을 키워도 가운데 자기장은 거의 그대로다. ${M('B')} = ${MNI}에는 지름도 길이도 없다. 평행판 축전기가 고른 전기장을 만들듯, 솔레노이드는 고른 자기장을 만든다.` },
+  ]);
 })();
 
 
