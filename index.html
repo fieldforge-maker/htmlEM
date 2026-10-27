@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>전자기학 수업 시뮬레이션</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap">
+<style>
+/* 레이아웃: 왼쪽 정렬 한 단. 장마다 카드 하나, 그 안에 화면 번호 목록 (각 번호는 그 화면으로 바로 연다).
+   색과 글꼴은 장 페이지(ch29.html)와 같다. */
+:root {
+  --paper: #F5F6FA;
+  --panel: #FFFFFF;
+  --ink: #1C1B29;
+  --muted: #5D6075;
+  --line: #DADCE7;
+  --accent: #6B2D9E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #F1E9F8;
+  --font-ui: "IBM Plex Sans KR", "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121119;
+    --panel: #1B1A26;
+    --ink: #ECEBF4;
+    --muted: #A3A2B6;
+    --line: #33314A;
+    --accent: #BC92EA;
+    --accent-ink: #1B1027;
+    --accent-soft: #2B2240;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121119;
+  --panel: #1B1A26;
+  --ink: #ECEBF4;
+  --muted: #A3A2B6;
+  --line: #33314A;
+  --accent: #BC92EA;
+  --accent-ink: #1B1027;
+  --accent-soft: #2B2240;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 0.4vw + 12px, 18px);
+  line-height: 1.6;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.page {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding-block: clamp(28px, 6vw, 64px) 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 28px;
+}
+.hero { display: grid; gap: 6px; }
+.eyebrow { margin: 0; font-size: .8em; font-weight: 600; letter-spacing: .04em; color: var(--accent); }
+h1 { margin: 0; font-size: clamp(1.7em, 3vw + 1em, 2.4em); font-weight: 700; letter-spacing: -.02em; line-height: 1.2; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 38rem; }
+
+.chapter { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.chapter-head {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px;
+  padding: 18px 20px; text-decoration: none; border-bottom: 1px solid var(--line);
+}
+.chapter-head:hover .go { color: var(--accent); }
+.chapter-no {
+  font-family: var(--font-num); font-weight: 600; font-size: .85em; letter-spacing: .03em;
+  color: var(--accent-ink); background: var(--accent); padding: .15em .55em; border-radius: 4px;
+}
+.chapter-title { font-size: 1.3em; font-weight: 700; }
+.chapter-meta { color: var(--muted); font-size: .85em; }
+.go { margin-left: auto; font-weight: 600; color: var(--muted); white-space: nowrap; }
+
+.groups { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 18px 24px; padding: 18px 20px 20px; }
+.group h2 { margin: 0 0 6px; font-size: .78em; font-weight: 600; letter-spacing: .04em; color: var(--muted); }
+.group ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.group a {
+  display: flex; align-items: center; gap: .6em; padding: .3em .45em; margin-inline: -.45em;
+  border-radius: 6px; text-decoration: none;
+}
+.group a:hover { background: var(--accent-soft); color: var(--accent); }
+.n {
+  flex: none; width: 1.75em; height: 1.75em; display: grid; place-items: center; border-radius: 50%;
+  border: 1px solid var(--line); font-family: var(--font-num); font-size: .8em; color: var(--muted);
+}
+.group a:hover .n { border-color: var(--accent); color: var(--accent); }
+.extra { font-size: .78em; color: var(--muted); }
+
+.foot { margin: 0; font-size: .8em; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="hero">
+    <p class="eyebrow">일반물리학 · 전자기학</p>
+    <h1>전자기학 수업 시뮬레이션</h1>
+    <p class="lede">교실 시연용 인터랙티브 화면입니다. 장을 열거나, 번호를 눌러 그 화면부터 엽니다.</p>
+  </header>
+
+  <main>
+    <article class="chapter" aria-labelledby="ch29-title">
+      <a class="chapter-head" href="ch29.html">
+        <span class="chapter-no">CH29.</span>
+        <span class="chapter-title" id="ch29-title">자기장의 원천</span>
+        <span class="chapter-meta">Knight 29장 · 화면 8개</span>
+        <span class="go">열기 →</span>
+      </a>
+      <div class="groups">
+        <section class="group" aria-labelledby="g-ampere">
+          <h2 id="g-ampere">앙페르 법칙</h2>
+          <ol>
+            <li><a href="ch29.html#s8"><span class="n">1</span>앙페르 법칙</a></li>
+          </ol>
+        </section>
+        <section class="group" aria-labelledby="g-solenoid">
+          <h2 id="g-solenoid">솔레노이드</h2>
+          <ol>
+            <li><a href="ch29.html#s4"><span class="n">2</span>자기력선</a></li>
+            <li><a href="ch29.html#s7"><span class="n">3</span>보강과 상쇄</a></li>
+            <li><a href="ch29.html#s5"><span class="n">4</span>직사각형 경로</a></li>
+            <li><a href="ch29.html#s9"><span class="n">5</span>유한한 솔레노이드</a></li>
+            <li><a href="ch29.html#s6"><span class="n">6</span>둘레 방향 외부장 <span class="extra">심화</span></a></li>
+          </ol>
+        </section>
+        <section class="group" aria-labelledby="g-toroid">
+          <h2 id="g-toroid">토로이드</h2>
+          <ol>
+            <li><a href="ch29.html#s1"><span class="n">7</span>앙페르 경로</a></li>
+            <li><a href="ch29.html#s2"><span class="n">8</span>나선 감기와 외부장 <span class="extra">심화</span></a></li>
+          </ol>
+        </section>
+      </div>
+    </article>
+  </main>
+
+  <p class="foot">화면 안에서는 ← → 키나 프레젠터 리모컨으로 단계를 넘기고, F 키로 전체 화면을 켭니다.</p>
+</div>
+</body>
+</html>
