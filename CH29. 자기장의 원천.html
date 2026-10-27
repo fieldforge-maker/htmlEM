@@ -1,0 +1,905 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CH29. 자기장의 원천</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* 레이아웃: 왼쪽은 실험대(캔버스)와 그 아래 단계 레일, 오른쪽은 계기판(감싼 전류, 앙페르 법칙, B(r) 그래프, 조절).
+   색은 교과서 그림의 관례를 따른다: B 초록, 전류 자홍, 앙페르 경로 청록 점선, 토러스 황갈색. 강조색은 PPT 29.4의 보라. */
+:root {
+  --paper: #F5F6FA;
+  --panel: #FFFFFF;
+  --stage: #FFFFFF;
+  --veil: rgba(255, 255, 255, 0.88);
+  --ink: #1C1B29;
+  --muted: #5D6075;
+  --line: #DADCE7;
+  --accent: #6B2D9E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #F1E9F8;
+  --field: #17894D;
+  --current: #C2185B;
+  --path: #0A86AD;
+  --enc: #DD8400;
+  --enc-soft: #FFF0D2;
+  --torus-1: #EAD8BC;
+  --torus-2: #CBAE88;
+  --wire: #8C92A4;
+  --wire-hi: #EEF0F5;
+  --font-ui: "IBM Plex Sans KR", "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-math: "STIX Two Text", "Cambria Math", Cambria, "Times New Roman", serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121119;
+    --panel: #1B1A26;
+    --stage: #17161F;
+    --veil: rgba(23, 22, 31, 0.88);
+    --ink: #ECEBF4;
+    --muted: #A3A2B6;
+    --line: #33314A;
+    --accent: #BC92EA;
+    --accent-ink: #1B1027;
+    --accent-soft: #2B2240;
+    --field: #4CD48E;
+    --current: #FF6FA3;
+    --path: #43C9EF;
+    --enc: #FFB53D;
+    --enc-soft: #3A2C10;
+    --torus-1: #6E5C45;
+    --torus-2: #4B3E2E;
+    --wire: #9298AB;
+    --wire-hi: #D2D6E0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121119;
+  --panel: #1B1A26;
+  --stage: #17161F;
+  --veil: rgba(23, 22, 31, 0.88);
+  --ink: #ECEBF4;
+  --muted: #A3A2B6;
+  --line: #33314A;
+  --accent: #BC92EA;
+  --accent-ink: #1B1027;
+  --accent-soft: #2B2240;
+  --field: #4CD48E;
+  --current: #FF6FA3;
+  --path: #43C9EF;
+  --enc: #FFB53D;
+  --enc-soft: #3A2C10;
+  --torus-1: #6E5C45;
+  --torus-2: #4B3E2E;
+  --wire: #9298AB;
+  --wire-hi: #D2D6E0;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 0.5vw + 10.5px, 20px);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--path); outline-offset: 2px; }
+
+.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+
+/* 머리띠 */
+.top {
+  display: flex; align-items: center; gap: 16px; min-width: 0;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+h1 { margin: 0; flex: none; font-size: 1.12em; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: .5em; }
+.chapter {
+  font-family: var(--font-num); font-weight: 600; font-size: .8em; letter-spacing: .03em;
+  color: var(--accent-ink); background: var(--accent); padding: .12em .5em; border-radius: 4px;
+}
+.tabs { flex: 1; min-width: 0; display: flex; align-items: center; gap: 4px; overflow-x: auto; scrollbar-width: thin; padding-block: 2px; }
+.tab-group { flex: none; font-size: .7em; font-weight: 600; letter-spacing: .04em; color: var(--muted); padding-right: .3em; }
+.tab-group + .tab-group, .tab + .tab-group { margin-left: .5em; padding-left: .9em; border-left: 1px solid var(--line); }
+.tab {
+  flex: none; display: flex; align-items: center; gap: .45em;
+  font-size: .8em; padding: .38em .75em .38em .45em; white-space: nowrap;
+  border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer;
+}
+.tab:hover:not(:disabled) { border-color: var(--line); color: var(--ink); }
+.tab-no {
+  font-family: var(--font-num); font-size: .88em; width: 1.7em; height: 1.7em;
+  display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line);
+}
+.tab[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tab[aria-current="page"] .tab-no { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tab:disabled { cursor: default; opacity: .5; }
+.tools { flex: none; display: flex; gap: 6px; }
+.icon-btn {
+  width: 2.2em; height: 2.2em; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink);
+}
+.icon-btn:hover { border-color: var(--muted); }
+
+/* 화면 */
+.screen {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 29vw, 440px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "head panel" "stage panel" "steps panel";
+  gap: 12px 18px;
+  padding-block: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.screen-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .9em; min-width: 0; }
+.eyebrow { margin: 0; font-size: .78em; font-weight: 600; color: var(--accent); letter-spacing: .02em; }
+h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+.question { margin: .15em 0 0; flex-basis: 100%; color: var(--muted); }
+
+.stage-wrap {
+  grid-area: stage; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto;
+  background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+.canvas-box { position: relative; min-height: 0; }
+#stage { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+#stage.can-drag { cursor: grab; }
+#stage.dragging { cursor: grabbing; }
+.hint {
+  position: absolute; top: 10px; left: 10px; margin: 0; pointer-events: none;
+  font-size: .76em; font-weight: 600; color: var(--path); background: var(--veil); border-radius: 6px; padding: .3em .65em;
+}
+.legend { display: flex; flex-wrap: wrap; gap: .2em 1.1em; padding: .35em 12px .6em; font-size: .76em; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: .4em; }
+.key-path { display: inline-block; width: 1.8em; border-top: 3px dashed var(--path); }
+.key-field { display: inline-block; width: 1.6em; height: 3px; background: var(--field); position: relative; }
+.key-field::after {
+  content: ""; position: absolute; right: -2px; top: 50%; transform: translateY(-50%);
+  border-left: 8px solid var(--field); border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+}
+
+/* 수식 */
+.m { font-family: var(--font-math); font-style: italic; }
+.mv { font-family: var(--font-math); font-weight: 700; font-style: normal; }
+.eq { font-family: var(--font-math); }
+sub, sup { font-size: .7em; line-height: 0; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 .15em; font-family: var(--font-math); line-height: 1.2; }
+.frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 .2em .05em; }
+.frac > span:last-child { padding: .05em .2em 0; }
+.sym {
+  display: inline-block; position: relative; width: 1em; height: 1em; vertical-align: -.15em;
+  border: 2px solid var(--current); border-radius: 50%; background: var(--stage);
+}
+.sym.dot::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: .28em; height: .28em; border-radius: 50%; background: var(--current);
+}
+.sym.cross::before, .sym.cross::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: .62em; height: 2px; background: var(--current);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.sym.cross::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+
+/* 계기판 */
+.panel { grid-area: panel; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; transition: opacity .25s; }
+.card h3 { margin: 0 0 .5em; font-size: .76em; font-weight: 600; color: var(--muted); letter-spacing: .04em; }
+.panel.idle .live { opacity: .4; }
+.enc-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 1.05em; }
+.chip {
+  display: inline-flex; align-items: center; gap: .4em; padding: .2em .6em;
+  border: 1px solid var(--line); border-radius: 6px; transition: background .2s, border-color .2s;
+}
+.chip b { font-family: var(--font-num); font-weight: 600; min-width: 1.4em; text-align: right; }
+.chip.on { background: var(--enc-soft); border-color: var(--enc); }
+.op { color: var(--muted); }
+.enc-total { margin: .55em 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: .35em; }
+.enc-total .num { font-size: .92em; color: var(--muted); }
+.enc-total strong { font-family: var(--font-num); font-size: 1.25em; font-weight: 600; color: var(--enc); }
+.law { margin: 0; font-size: 1.08em; }
+.result { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-top: .45em; font-size: 1.08em; }
+.readout { display: flex; align-items: baseline; gap: .25em; }
+.big { font-family: var(--font-num); font-size: 2.1em; font-weight: 600; line-height: 1.05; color: var(--field); font-variant-numeric: tabular-nums; }
+.unit { color: var(--muted); }
+.subst { margin: .35em 0 0; font-size: .8em; color: var(--muted); font-family: var(--font-math); }
+.graph-box { position: relative; height: clamp(160px, 24vh, 250px); }
+#graph { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.note { margin: .5em 0 0; font-size: .82em; color: var(--ink); background: var(--accent-soft); border-radius: 6px; padding: .45em .65em; }
+.ctrl-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.ctrl { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 8px; margin-bottom: .55em; min-width: 0; }
+.ctrl label { font-size: .86em; }
+.ctrl output { font-family: var(--font-num); font-size: .86em; color: var(--muted); }
+.ctrl input[type="range"] { grid-column: 1 / -1; width: 100%; margin: .2em 0 0; accent-color: var(--accent); }
+.toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .84em; }
+.toggles label { display: inline-flex; align-items: center; gap: .35em; cursor: pointer; }
+.toggles input { width: 1.05em; height: 1.05em; accent-color: var(--accent); }
+.btn { font-size: .84em; padding: .3em .8em; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.geo { margin: .6em 0 0; font-size: .78em; color: var(--muted); }
+
+/* 단계 레일 */
+.steps {
+  grid-area: steps; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+}
+.nav-btn {
+  width: 2.7em; height: 2.7em; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+.nav-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.nav-btn:disabled { opacity: .35; cursor: default; }
+.step-body { min-width: 0; }
+.step-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dots { display: flex; gap: 6px; }
+.dot-btn {
+  width: 2em; height: 2em; border-radius: 50%; cursor: pointer; font-family: var(--font-num); font-size: .72em;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+.dot-btn.done { border-color: var(--accent); color: var(--accent); }
+.dot-btn[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.kbd-hint { margin-left: auto; font-size: .7em; color: var(--muted); }
+#caption { margin: .4em 0 0; font-size: 1.1em; line-height: 1.6; min-height: 3.2em; text-wrap: pretty; }
+
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  .app { height: auto; min-height: 100%; }
+  .top { flex-wrap: wrap; }
+  .tabs { order: 3; flex-basis: 100%; }
+  .tools { margin-left: auto; }
+  .screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: "head" "stage" "steps" "panel";
+  }
+  .canvas-box { aspect-ratio: 1 / 1; max-height: 78vh; max-width: 100%; }
+  .panel { overflow: visible; }
+  .kbd-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .chip { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1><span class="chapter">CH29.</span>자기장의 원천</h1>
+    <nav class="tabs" aria-label="화면 목록">
+      <span class="tab-group">토로이드</span>
+      <button class="tab" type="button" aria-current="page" title="예제 29.6 · 슬라이드 17–18"><span class="tab-no">1</span>앙페르 경로</button>
+      <button class="tab" type="button" disabled title="제작 예정 · 슬라이드 18"><span class="tab-no">2</span>나선 감기와 외부장</button>
+      <button class="tab" type="button" disabled title="제작 예정"><span class="tab-no">3</span>펼치면 솔레노이드</button>
+      <span class="tab-group">솔레노이드</span>
+      <button class="tab" type="button" disabled title="제작 예정 · 슬라이드 20, 22, 25"><span class="tab-no">4</span>자기력선과 축 위 B</button>
+      <button class="tab" type="button" disabled title="제작 예정 · 슬라이드 20–21"><span class="tab-no">5</span>직사각형 경로</button>
+      <button class="tab" type="button" disabled title="제작 예정 · 슬라이드 22"><span class="tab-no">6</span>둘레 방향 외부장</button>
+      <button class="tab" type="button" disabled title="제작 예정 · 슬라이드 23–24"><span class="tab-no">7</span>보강과 상쇄</button>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="어두운 화면으로 바꾸기">
+        <svg id="icoMoon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="icoSun" hidden viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button class="icon-btn" id="fsBtn" type="button" aria-label="전체 화면">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="screen" id="t1">
+    <div class="screen-head">
+      <p class="eyebrow">예제 29.6 · 슬라이드 17–18</p>
+      <h2>토로이드 안팎의 자기장</h2>
+      <p class="question">도선을 <span class="m">N</span>번 감은 토로이드에서 중심으로부터 <span class="m">r</span>만큼 떨어진 곳의 자기장은?</p>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="canvas-box" id="canvasBox">
+        <canvas id="stage" aria-label="위에서 본 토로이드와 원형 앙페르 경로"></canvas>
+        <p class="hint" id="hint" hidden>원을 끌거나 아무 곳이나 눌러 반지름 r 바꾸기</p>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sym dot"></i>종이면에서 나오는 전류</span>
+        <span><i class="sym cross"></i>종이면으로 들어가는 전류</span>
+        <span><i class="key-path"></i>앙페르 경로</span>
+        <span><i class="key-field"></i>자기장 <b class="mv">B</b></span>
+      </div>
+    </div>
+
+    <aside class="panel" id="panel" aria-label="계산과 조절">
+      <section class="card live">
+        <h3>경로가 감싸는 전류</h3>
+        <div class="enc-row">
+          <span class="chip" id="chipDot"><i class="sym dot"></i><b id="cntDot">0</b>개</span>
+          <span class="op">−</span>
+          <span class="chip" id="chipCross"><i class="sym cross"></i><b id="cntCross">0</b>개</span>
+        </div>
+        <p class="enc-total"><span class="eq"><span class="m">I</span><sub>enc</sub> =</span> <span class="num" id="encExpr"></span> <strong id="encVal">–</strong></p>
+      </section>
+
+      <section class="card live">
+        <h3>앙페르의 법칙</h3>
+        <p class="law eq">∮ <b class="mv">B</b>·d<b class="mv">s</b> = <span class="m">B</span>(2π<span class="m">r</span>) = μ<sub>0</sub><span class="m">I</span><sub>enc</sub></p>
+        <div class="result">
+          <span class="eq"><span class="m">B</span> = <span class="frac"><span>μ<sub>0</sub><span class="m">I</span><sub>enc</sub></span><span>2π<span class="m">r</span></span></span></span>
+          <span class="readout"><span class="big" id="bVal">–</span><span class="unit">μT</span></span>
+        </div>
+        <p class="subst" id="subst"></p>
+      </section>
+
+      <section class="card">
+        <h3><span class="m">B</span>(<span class="m">r</span>) 그래프</h3>
+        <div class="graph-box" id="graphBox"><canvas id="graph" aria-label="반지름에 따른 자기장 크기 그래프"></canvas></div>
+        <p class="note" id="ratioNote" hidden>안쪽 벽 <span class="num" id="bInner"></span> μT, 바깥 벽 <span class="num" id="bOuter"></span> μT. 두 값의 비는 <span class="m">c</span>/<span class="m">b</span> = 14/8 = 1.75</p>
+      </section>
+
+      <section class="card">
+        <h3>조절</h3>
+        <div class="ctrl">
+          <label for="rIn">경로 반지름 <span class="m">r</span></label><output id="rOut" for="rIn"></output>
+          <input type="range" id="rIn" min="0.5" max="20" step="0.1" value="11">
+        </div>
+        <div class="ctrl-pair">
+          <div class="ctrl">
+            <label for="nIn">감은 수 <span class="m">N</span></label><output id="nOut" for="nIn"></output>
+            <input type="range" id="nIn" min="8" max="40" step="4" value="32">
+          </div>
+          <div class="ctrl">
+            <label for="iIn">전류 <span class="m">I</span></label><output id="iOut" for="iIn"></output>
+            <input type="range" id="iIn" min="1" max="4" step="0.5" value="3">
+          </div>
+        </div>
+        <div class="toggles">
+          <label><input type="checkbox" id="arrowsChk">토러스 안 <b class="mv">B</b> 화살표</label>
+          <label><input type="checkbox" id="curveChk">이론 곡선</label>
+          <button class="btn" id="clearBtn" type="button">그래프 지우기</button>
+        </div>
+        <p class="geo">토러스 안쪽 반지름 <span class="m">b</span> = 8 cm, 바깥쪽 반지름 <span class="m">c</span> = 14 cm</p>
+      </section>
+    </aside>
+
+    <footer class="steps">
+      <button class="nav-btn" id="prev" type="button" aria-label="이전 단계">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="step-body">
+        <div class="step-top">
+          <div class="dots" id="dots" role="group" aria-label="단계"></div>
+          <span class="kbd-hint">← → 또는 리모컨으로 단계 이동 · F 전체 화면</span>
+        </div>
+        <p id="caption" aria-live="polite"></p>
+      </div>
+      <button class="nav-btn primary" id="next" type="button" aria-label="다음 단계">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const TAU = Math.PI * 2;
+  const MU0 = 4e-7 * Math.PI;
+  const GEO = { b: 8, c: 14, rMax: 20 };   // cm
+  const B_AXIS = 400e-6;                     // 그래프 세로축 최댓값 (T)
+  const root = document.documentElement;
+  const $ = id => document.getElementById(id);
+
+  const state = { step: 0, r: 11, N: 32, I: 3, arrows: false, theory: false, showRatio: false };
+  const trace = new Uint8Array(400);         // 경로가 지나간 r 구간 기록
+
+  const M = s => `<span class="m">${s}</span>`;
+  const DOT = '<i class="sym dot"></i>', CROSS = '<i class="sym cross"></i>';
+  const IENC = `${M('I')}<sub>enc</sub>`;
+  const FRAC_NI = `<span class="frac"><span>μ<sub>0</sub>${M('NI')}</span><span>2π${M('r')}</span></span>`;
+  const STEPS = [
+    { cap: `토로이드를 위에서 본 모습이다. 도선은 토러스를 ${M('N')}번 촘촘히 감는다. 안쪽 벽에서는 전류가 종이면에서 나오고 ${DOT}, 바깥 벽에서는 종이면으로 들어간다 ${CROSS}.` },
+    { r: 11, dur: 600, cap: `토러스 안쪽에 반지름 ${M('r')}인 원형 앙페르 경로를 잡는다. 원형 대칭이라 경로 위 어디서나 ${M('B')}의 크기는 같고 방향은 경로의 접선 방향이다. 그래서 ∮<b class="mv">B</b>·d<b class="mv">s</b> = ${M('B')}(2π${M('r')})이다.` },
+    { r: 11, dur: 300, cap: `이 경로가 감싸는 전류는 안쪽 벽의 ${DOT} ${M('N')}개다. ${IENC} = ${M('NI')}이므로 ${M('B')} = ${FRAC_NI}이다.` },
+    { r: 5, dur: 1300, cap: `경로를 구멍 안으로 줄이면 감싸는 전류가 없다. ${IENC} = 0이므로 ${M('B')} = 0이다.` },
+    { r: 17.5, dur: 1800, cap: `경로를 토러스 바깥으로 키우면 ${DOT} ${M('N')}개와 ${CROSS} ${M('N')}개를 함께 감싼다. ${IENC} = ${M('NI')} − ${M('NI')} = 0이므로 ${M('B')} = 0이다. 이상적인 토로이드의 결론이다.` },
+    { sweep: true, arrows: true, cap: `경로를 중심에서 바깥까지 훑으면 ${M('B')}(${M('r')}) 그래프가 그려진다. 자기장은 토러스 안에만 있고 ${M('B')} ∝ 1/${M('r')}이라 균일하지 않다. 안쪽 벽의 자기장이 바깥 벽보다 ${M('c')}/${M('b')}배 세다.` },
+  ];
+
+  const stage = $('stage'), graph = $('graph');
+  const sctx = stage.getContext('2d'), gctx = graph.getContext('2d');
+  let C = {}, F = {};
+  let view = { cx: 0, cy: 0, s: 1 };
+
+  function readTheme() {
+    const cs = getComputedStyle(root);
+    const g = n => cs.getPropertyValue(n).trim();
+    C = {
+      stage: g('--stage'), panel: g('--panel'), ink: g('--ink'), muted: g('--muted'), line: g('--line'),
+      field: g('--field'), current: g('--current'), path: g('--path'), enc: g('--enc'), encSoft: g('--enc-soft'),
+      t1: g('--torus-1'), t2: g('--torus-2'), wire: g('--wire'), wireHi: g('--wire-hi'),
+    };
+    F = { ui: g('--font-ui'), math: g('--font-math'), num: g('--font-num') };
+  }
+
+  /* 물리 */
+  const Bof = r => (r > GEO.b && r < GEO.c) ? MU0 * state.N * state.I / (TAU * r / 100) : 0;
+  const enclosed = r => ({ dot: r > GEO.b ? state.N : 0, cross: r > GEO.c ? state.N : 0 });
+  const microT = B => { const v = B * 1e6; return v === 0 ? '0' : v >= 100 ? v.toFixed(0) : v.toFixed(1); };
+
+  /* 그리기 도구 */
+  function fitCanvas(cv, ctx) {
+    const rect = cv.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const w = Math.max(1, Math.round(rect.width * dpr)), h = Math.max(1, Math.round(rect.height * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: rect.width, h: rect.height };
+  }
+  function arrowHead(ctx, x, y, ux, uy, size, color) {
+    const px = -uy, py = ux;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - ux * size + px * size * 0.55, y - uy * size + py * size * 0.55);
+    ctx.lineTo(x - ux * size - px * size * 0.55, y - uy * size - py * size * 0.55);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+  function arrow(ctx, x, y, ux, uy, len, color, width) {
+    if (len < 2) return;
+    const head = Math.min(len * 0.5, 7 + width * 1.6);
+    const x1 = x + ux * len / 2, y1 = y + uy * len / 2;
+    ctx.beginPath();
+    ctx.moveTo(x - ux * len / 2, y - uy * len / 2);
+    ctx.lineTo(x1 - ux * head * 0.7, y1 - uy * head * 0.7);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+    ctx.stroke();
+    arrowHead(ctx, x1, y1, ux, uy, head, color);
+  }
+  function haloText(ctx, text, x, y, color, font, align = 'left') {
+    ctx.font = font; ctx.textAlign = align; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = C.stage;
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
+  const remPx = () => parseFloat(getComputedStyle(document.body).fontSize) || 16;
+
+  /* 실험대: 위에서 본 토로이드 */
+  function drawStage() {
+    const { w, h } = fitCanvas(stage, sctx);
+    if (w < 20 || h < 20) return;
+    const ctx = sctx;
+    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
+    const s = Math.min(w, h) / 2 / 21.5;
+    const cx = w / 2, cy = h / 2;
+    view = { cx, cy, s };
+    const { b, c } = GEO, N = state.N, step = state.step;
+    const pathOn = step >= 1, encOn = step >= 2;
+    const P = (r, th) => [cx + r * s * Math.cos(th), cy + r * s * Math.sin(th)];
+    const th0 = -Math.PI / 2;
+    const fs = Math.max(13, Math.round(remPx() * 0.85));
+
+    // 토러스 몸통 (관 모양 음영)
+    const g = ctx.createRadialGradient(cx, cy, b * s, cx, cy, c * s);
+    g.addColorStop(0, C.t2); g.addColorStop(0.5, C.t1); g.addColorStop(1, C.t2);
+    ctx.beginPath();
+    ctx.arc(cx, cy, c * s, 0, TAU);
+    ctx.arc(cx, cy, b * s, 0, TAU, true);
+    ctx.fillStyle = g; ctx.fill();
+
+    // 감은 도선과 윗면의 전류 방향(바깥쪽)
+    const wireW = Math.max(2.5, s * 0.2);
+    ctx.lineCap = 'round';
+    for (let k = 0; k < N; k++) {
+      const th = th0 + TAU * k / N;
+      const [x1, y1] = P(b, th), [x2, y2] = P(c, th);
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+      ctx.strokeStyle = C.wire; ctx.lineWidth = wireW; ctx.stroke();
+      ctx.strokeStyle = C.wireHi; ctx.lineWidth = Math.max(1, wireW * 0.3); ctx.stroke();
+      const [xm, ym] = P(b + 0.66 * (c - b), th);
+      arrowHead(ctx, xm, ym, Math.cos(th), Math.sin(th), Math.max(6, s * 0.4), C.current);
+    }
+
+    // 토러스 안의 자기장 (길이 ∝ B ∝ 1/r)
+    if (state.arrows) {
+      for (const f of [0.25, 0.5, 0.75]) {
+        const rr = b + f * (c - b);
+        const len = Bof(rr) / B_AXIS * 5 * s;
+        for (let j = 0; j < 12; j++) {
+          const th = th0 + TAU * (j + 0.5) / 12;
+          const [x, y] = P(rr, th);
+          arrow(ctx, x, y, Math.sin(th), -Math.cos(th), len, C.field, 3);
+        }
+      }
+    }
+
+    // 치수 b, c
+    const dim = (r, th, label) => {
+      const [x, y] = P(r, th);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y);
+      ctx.strokeStyle = C.muted; ctx.lineWidth = 1.5; ctx.stroke();
+      arrowHead(ctx, x, y, Math.cos(th), Math.sin(th), 9, C.muted);
+      const [lx, ly] = P(b * 0.55, th);   // 두 라벨 모두 구멍 안에 둔다
+      haloText(ctx, label, lx - 11 * Math.sin(th), ly + 11 * Math.cos(th), C.muted, `italic ${fs + 3}px ${F.math}`, 'center');
+    };
+    dim(b, Math.PI * 0.8, 'b');
+    dim(c, Math.PI * 0.64, 'c');
+    ctx.beginPath(); ctx.arc(cx, cy, 3, 0, TAU); ctx.fillStyle = C.muted; ctx.fill();
+
+    // 안쪽 벽 ⊙, 바깥 벽 ⊗
+    const mR = Math.min(0.4 * TAU * b * s / N, 0.55 * s, 12);
+    const marker = (x, y, kind, hl) => {
+      if (hl) {
+        ctx.beginPath(); ctx.arc(x, y, mR + 6, 0, TAU);
+        ctx.globalAlpha = 0.3; ctx.fillStyle = C.enc; ctx.fill(); ctx.globalAlpha = 1;
+      }
+      ctx.beginPath(); ctx.arc(x, y, mR, 0, TAU);
+      ctx.fillStyle = hl ? C.encSoft : C.stage; ctx.fill();
+      ctx.lineWidth = Math.max(1.6, mR * 0.18); ctx.strokeStyle = C.current; ctx.stroke();
+      if (kind === 'dot') {
+        ctx.beginPath(); ctx.arc(x, y, mR * 0.3, 0, TAU); ctx.fillStyle = C.current; ctx.fill();
+      } else {
+        const d = mR * 0.5;
+        ctx.beginPath();
+        ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d);
+        ctx.moveTo(x + d, y - d); ctx.lineTo(x - d, y + d);
+        ctx.stroke();
+      }
+      if (hl) {
+        ctx.beginPath(); ctx.arc(x, y, mR + 2.5, 0, TAU);
+        ctx.lineWidth = 2.5; ctx.strokeStyle = C.enc; ctx.stroke();
+      }
+    };
+    for (let k = 0; k < N; k++) {
+      const th = th0 + TAU * k / N;
+      marker(...P(b, th), 'dot', encOn && state.r > b);
+      marker(...P(c, th), 'cross', encOn && state.r > c);
+    }
+
+    if (!pathOn) return;
+
+    // 앙페르 경로
+    const r = state.r, R = r * s;
+    ctx.save();
+    ctx.setLineDash([10, 7]); ctx.lineWidth = 3; ctx.strokeStyle = C.path;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, TAU); ctx.stroke();
+    ctx.restore();
+    // 적분 방향: 반시계 (⊙ 전류에 대한 오른손 규칙)
+    for (let q = 0; q < 4; q++) {
+      const th = q * Math.PI / 2 + Math.PI / 4;
+      const [x, y] = P(r, th);
+      const ux = Math.sin(th), uy = -Math.cos(th);
+      arrowHead(ctx, x + ux * 7, y + uy * 7, ux, uy, 13, C.path);
+    }
+    // 경로 위의 B: 접선 방향, 크기 일정
+    const Bp = Bof(r);
+    if (Bp > 0) {
+      const len = Bp / B_AXIS * 5 * s;
+      for (let q = 0; q < 8; q++) {
+        const th = q * Math.PI / 4 + Math.PI / 8;
+        const [x, y] = P(r, th);
+        arrow(ctx, x, y, Math.sin(th), -Math.cos(th), len, C.field, 3.5);
+      }
+    }
+    // 반지름 손잡이
+    const hth = -Math.PI * 0.22;
+    const [hx, hy] = P(r, hth);
+    ctx.save();
+    ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(hx, hy, 10, 0, TAU);
+    ctx.fillStyle = C.path; ctx.fill();
+    ctx.lineWidth = 3; ctx.strokeStyle = C.stage; ctx.stroke();
+
+    const font = `600 ${fs}px ${F.ui}`;
+    const label = `r = ${r.toFixed(1)} cm`;
+    ctx.font = font;
+    const tw = Math.max(ctx.measureText(label).width, ctx.measureText('B = 0').width);
+    let lx = hx + 18, align = 'left';
+    if (lx + tw > w - 8) { lx = hx - 18; align = 'right'; }
+    const ly = Math.max(fs, hy - 16);
+    haloText(ctx, label, lx, ly, C.path, font, align);
+    if (Bp === 0) haloText(ctx, 'B = 0', lx, ly + fs * 1.35, C.field, `700 ${fs}px ${F.ui}`, align);
+  }
+
+  /* 계기판 그래프: B(r) */
+  function drawGraph() {
+    const { w, h } = fitCanvas(graph, gctx);
+    if (w < 40 || h < 40) return;
+    const ctx = gctx;
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
+    const fs = Math.max(11, Math.round(remPx() * 0.68));
+    const L = fs * 3.6, Rp = 10, T = fs * 2, Bm = fs * 3;
+    const pw = w - L - Rp, ph = h - T - Bm;
+    const { b, c, rMax } = GEO;
+    const X = r => L + r / rMax * pw;
+    const Y = B => T + ph - B / B_AXIS * ph;
+
+    // 토러스 내부 구간
+    ctx.globalAlpha = 0.5; ctx.fillStyle = C.t1;
+    ctx.fillRect(X(b), T, X(c) - X(b), ph);
+    ctx.globalAlpha = 1;
+
+    // 격자와 축
+    ctx.lineWidth = 1; ctx.strokeStyle = C.line;
+    for (let v = 100; v <= 400; v += 100) {
+      const y = Math.round(Y(v * 1e-6)) + 0.5;
+      ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + pw, y); ctx.stroke();
+    }
+    ctx.strokeStyle = C.muted;
+    ctx.beginPath(); ctx.moveTo(L + 0.5, T); ctx.lineTo(L + 0.5, T + ph + 0.5); ctx.lineTo(L + pw, T + ph + 0.5); ctx.stroke();
+
+    ctx.fillStyle = C.muted; ctx.font = `500 ${fs}px ${F.num}`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (let v = 0; v <= 400; v += 100) ctx.fillText(String(v), L - 6, Y(v * 1e-6));
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let r = 0; r <= rMax; r += 5) ctx.fillText(String(r), X(r), T + ph + 5);
+    ctx.font = `500 ${fs}px ${F.ui}`;
+    ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+    ctx.fillText('r (cm)', L + pw, h - 2);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('B (μT)', 2, T - fs * 1.1);
+
+    // 구간 이름과 b, c 위치
+    ctx.textAlign = 'center';
+    ctx.fillText('구멍', X(b / 2), T + fs);
+    ctx.fillText('토러스 안', X((b + c) / 2), T + fs);
+    ctx.fillText('바깥', X((c + rMax) / 2), T + fs);
+    ctx.font = `italic ${fs + 2}px ${F.math}`;
+    ctx.fillText('b', X(b), T - fs * 0.7);
+    ctx.fillText('c', X(c), T - fs * 0.7);
+
+    // 이론 곡선
+    if (state.theory) {
+      ctx.save();
+      ctx.setLineDash([6, 5]); ctx.lineWidth = 2; ctx.strokeStyle = C.muted;
+      ctx.beginPath();
+      ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(b), Y(0));
+      ctx.moveTo(X(b), Y(Bof(b + 1e-6)));
+      for (let r = b; r <= c; r += 0.05) ctx.lineTo(X(r), Y(Bof(Math.min(Math.max(r, b + 1e-6), c - 1e-6))));
+      ctx.moveTo(X(c), Y(0)); ctx.lineTo(X(rMax), Y(0));
+      ctx.stroke();
+      ctx.setLineDash([2, 4]); ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(X(b), Y(0)); ctx.lineTo(X(b), Y(Bof(b + 1e-6)));
+      ctx.moveTo(X(c), Y(0)); ctx.lineTo(X(c), Y(Bof(c - 1e-6)));
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 경로가 지나간 구간만 그려지는 곡선
+    const n = trace.length, bw = rMax / n, eps = 1e-6;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      if (!trace[i]) continue;
+      const r0 = i * bw, r1 = (i + 1) * bw;
+      const cuts = [r0];
+      if (b > r0 && b < r1) cuts.push(b);
+      if (c > r0 && c < r1) cuts.push(c);
+      cuts.push(r1);
+      for (let j = 0; j < cuts.length - 1; j++) {
+        const a = cuts[j], z = cuts[j + 1];
+        ctx.moveTo(X(a), Y(Bof(a + eps)));
+        ctx.lineTo(X(z), Y(Bof(z - eps)));
+      }
+    }
+    ctx.strokeStyle = C.field; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    ctx.stroke();
+
+    // 지금 경로의 위치
+    if (state.step >= 1) {
+      const x = X(state.r), y = Y(Bof(state.r));
+      ctx.save();
+      ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
+      ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke();
+      ctx.restore();
+      ctx.beginPath(); ctx.arc(x, y, 6, 0, TAU);
+      ctx.fillStyle = C.path; ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = C.panel; ctx.stroke();
+    }
+  }
+
+  let raf = 0;
+  function requestDraw() {
+    if (raf) return;
+    raf = requestAnimationFrame(() => { raf = 0; drawStage(); drawGraph(); });
+  }
+
+  /* 상태 변경 */
+  function markTrace(a, z) {
+    const n = trace.length;
+    const bin = r => Math.min(n - 1, Math.max(0, Math.floor(r / GEO.rMax * n)));
+    for (let i = bin(Math.min(a, z)), j = bin(Math.max(a, z)); i <= j; i++) trace[i] = 1;
+  }
+  function setR(v, mark = true) {
+    v = Math.min(GEO.rMax, Math.max(0.5, v));
+    if (mark && state.step >= 1) markTrace(state.r, v);
+    state.r = v;
+    updateReadouts();
+    requestDraw();
+  }
+
+  function updateReadouts() {
+    const idle = state.step === 0;
+    const { dot, cross } = enclosed(state.r);
+    const Ienc = (dot - cross) * state.I;
+    const hl = state.step >= 2;
+    $('cntDot').textContent = idle ? '–' : dot;
+    $('cntCross').textContent = idle ? '–' : cross;
+    $('chipDot').classList.toggle('on', hl && dot > 0);
+    $('chipCross').classList.toggle('on', hl && cross > 0);
+    $('encExpr').textContent = idle ? '' : `(${dot} − ${cross}) × ${state.I.toFixed(1)} A =`;
+    $('encVal').textContent = idle ? '–' : `${Ienc} A`;
+    $('bVal').textContent = idle ? '–' : microT(Bof(state.r));
+    $('subst').innerHTML = idle ? '경로를 정하면 계산합니다.'
+      : Ienc > 0 ? `= (4π×10<sup>−7</sup> T·m/A)(${Ienc} A) ÷ (2π × ${(state.r / 100).toFixed(3)} m)`
+      : `${IENC} = 0 이므로 ${M('B')} = 0`;
+    $('rOut').textContent = `${state.r.toFixed(1)} cm`;
+    $('rIn').value = state.r;
+    $('nOut').textContent = state.N;
+    $('iOut').textContent = `${state.I.toFixed(1)} A`;
+    const k = MU0 * state.N * state.I / TAU * 100;
+    $('bInner').textContent = microT(k / GEO.b);
+    $('bOuter').textContent = microT(k / GEO.c);
+  }
+
+  let dots = [];
+  function updateUI() {
+    const i = state.step, last = STEPS.length - 1;
+    dots.forEach((d, k) => {
+      if (k === i) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current');
+      d.classList.toggle('done', k < i);
+    });
+    $('prev').disabled = i === 0;
+    $('next').disabled = i === last;
+    $('panel').classList.toggle('idle', i === 0);
+    $('hint').hidden = i === 0;
+    $('rIn').disabled = i === 0;
+    $('ratioNote').hidden = !state.showRatio;
+    $('arrowsChk').checked = state.arrows;
+    $('curveChk').checked = state.theory;
+    stage.classList.toggle('can-drag', i >= 1);
+    updateReadouts();
+    requestDraw();
+  }
+
+  /* 애니메이션 */
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let anim = 0;
+  function cancelAnim() { if (anim) { cancelAnimationFrame(anim); anim = 0; } }
+  function animateR(to, dur, done, linear = false) {
+    cancelAnim();
+    const from = state.r;
+    if (reduceMotion.matches || dur <= 0 || Math.abs(to - from) < 1e-3) { setR(to); if (done) done(); return; }
+    const t0 = performance.now();
+    const tick = now => {
+      const t = Math.min(1, (now - t0) / dur);
+      const e = linear ? t : (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+      setR(from + (to - from) * e);
+      if (t < 1) anim = requestAnimationFrame(tick);
+      else { anim = 0; if (done) done(); }
+    };
+    anim = requestAnimationFrame(tick);
+  }
+
+  function goStep(i) {
+    i = Math.max(0, Math.min(STEPS.length - 1, i));
+    const forward = i === state.step + 1;
+    state.step = i;
+    const S = STEPS[i];
+    cancelAnim();
+    state.arrows = !!S.arrows;
+    state.showRatio = false;
+    $('caption').innerHTML = S.cap;
+    updateUI();
+    if (S.sweep) {
+      trace.fill(0);
+      setR(0.5, false);
+      animateR(GEO.rMax, 4500, () => { state.showRatio = true; updateUI(); }, true);
+    } else if (S.r != null) {
+      animateR(S.r, forward ? S.dur : 450);
+    }
+  }
+
+  /* 입력 */
+  const dotsBox = $('dots');
+  dots = STEPS.map((_, k) => {
+    const d = document.createElement('button');
+    d.type = 'button'; d.className = 'dot-btn'; d.textContent = k + 1;
+    d.setAttribute('aria-label', `${k + 1}단계`);
+    d.addEventListener('click', () => goStep(k));
+    dotsBox.appendChild(d);
+    return d;
+  });
+  $('prev').addEventListener('click', () => goStep(state.step - 1));
+  $('next').addEventListener('click', () => goStep(state.step + 1));
+
+  let dragging = false;
+  const rFromEvent = e => {
+    const rect = stage.getBoundingClientRect();
+    return Math.hypot(e.clientX - rect.left - view.cx, e.clientY - rect.top - view.cy) / view.s;
+  };
+  stage.addEventListener('pointerdown', e => {
+    if (state.step < 1) return;
+    cancelAnim();
+    dragging = true;
+    stage.classList.add('dragging');
+    stage.setPointerCapture(e.pointerId);
+    setR(rFromEvent(e));
+  });
+  stage.addEventListener('pointermove', e => { if (dragging) setR(rFromEvent(e)); });
+  const endDrag = () => { dragging = false; stage.classList.remove('dragging'); };
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+
+  $('rIn').addEventListener('input', e => { cancelAnim(); setR(+e.target.value); });
+  $('nIn').addEventListener('input', e => { state.N = +e.target.value; updateReadouts(); requestDraw(); });
+  $('iIn').addEventListener('input', e => { state.I = +e.target.value; updateReadouts(); requestDraw(); });
+  $('arrowsChk').addEventListener('change', e => { state.arrows = e.target.checked; requestDraw(); });
+  $('curveChk').addEventListener('change', e => { state.theory = e.target.checked; requestDraw(); });
+  $('clearBtn').addEventListener('click', () => { trace.fill(0); requestDraw(); });
+
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else if (root.requestFullscreen) root.requestFullscreen().catch(() => {});
+    } catch (_) { /* 전체 화면을 지원하지 않는 환경 */ }
+  }
+  $('fsBtn').addEventListener('click', toggleFullscreen);
+
+  document.addEventListener('keydown', e => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    const t = e.target;
+    if (t instanceof HTMLInputElement && t.type === 'range') return;
+    if (t instanceof HTMLButtonElement && (e.key === ' ' || e.key === 'Enter')) return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goStep(state.step + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goStep(state.step - 1); }
+    else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+    else if (/^[1-9]$/.test(e.key) && +e.key <= STEPS.length) goStep(+e.key - 1);
+  });
+
+  /* 테마 */
+  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : darkQuery.matches;
+  function syncTheme() {
+    readTheme();
+    const dark = isDark();
+    $('icoMoon').hidden = dark;
+    $('icoSun').hidden = !dark;
+    $('themeBtn').setAttribute('aria-label', dark ? '밝은 화면으로 바꾸기' : '어두운 화면으로 바꾸기');
+    requestDraw();
+  }
+  try { const saved = localStorage.getItem('ch29-theme'); if (saved === 'light' || saved === 'dark') root.dataset.theme = saved; } catch (_) { /* 저장소 없음 */ }
+  $('themeBtn').addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    root.dataset.theme = next;
+    try { localStorage.setItem('ch29-theme', next); } catch (_) { /* 저장소 없음 */ }
+  });
+  new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  darkQuery.addEventListener('change', syncTheme);
+
+  new ResizeObserver(requestDraw).observe($('canvasBox'));
+  new ResizeObserver(requestDraw).observe($('graphBox'));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(requestDraw);
+
+  syncTheme();
+  goStep(0);
+})();
+</script>
+</body>
+</html>
