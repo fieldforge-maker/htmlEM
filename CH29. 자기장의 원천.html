@@ -1036,6 +1036,7 @@ sub, sup { font-size: .7em; line-height: 0; }
             <output></output>
           </div>
           <div class="toggles">
+            <label><input type="checkbox" id="s8-fieldChk"><span>벡터장</span></label>
             <label><input type="checkbox" id="s8-tintChk" checked><span><b class="mv">B</b>·d<b class="mv">s</b> 부호 띠</span></label>
             <button class="btn" id="s8-resetBtn" type="button">처음 배치로</button>
           </div>
@@ -1173,13 +1174,13 @@ const EM = (() => {
     ctx.fillStyle = color;
     ctx.fill();
   }
-  // (x, y)를 가운데로 하는 길이 len의 화살표
+  // 꼬리가 (x, y)인 길이 len의 화살표 (벡터는 그 위치에서 시작한다)
   function arrow(ctx, x, y, ux, uy, len, color, width) {
     if (len < 2) return;
     const head = Math.min(len * 0.5, 7 + width * 1.6);
-    const x1 = x + ux * len / 2, y1 = y + uy * len / 2;
+    const x1 = x + ux * len, y1 = y + uy * len;
     ctx.beginPath();
-    ctx.moveTo(x - ux * len / 2, y - uy * len / 2);
+    ctx.moveTo(x, y);
     ctx.lineTo(x1 - ux * head * 0.7, y1 - uy * head * 0.7);
     ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
     ctx.stroke();
@@ -1578,13 +1579,12 @@ const EM3D = (() => {
       this.items.push({ k: 1, st, P, ux: D[0], uy: D[1], size: size * (0.55 + 0.45 * Math.min(1, D[2])), color,
         z: P[2] + (st.zb ?? 0.3), p });
     }
-    // p가 가운데인 화살표 (len: 세계 길이, minPx: 화면에서 가장 짧은 길이)
+    // p에서 시작하는 화살표 (len: 세계 길이, minPx: 화면에서 가장 짧은 길이)
     arrow(p, d, len, color, width, st = {}, minPx = 0) {
-      const e = mul(unit(d), len / 2);
-      const A = this.cam.P(sub(p, e)), B = this.cam.P(add(p, e));
+      const A = this.cam.P(p), B = this.cam.P(add(p, mul(unit(d), len)));
       const dx = B[0] - A[0], dy = B[1] - A[1], l = Math.hypot(dx, dy);
       if (l < 1e-6) return;
-      this.items.push({ k: 2, st, x: (A[0] + B[0]) / 2, y: (A[1] + B[1]) / 2, ux: dx / l, uy: dy / l, len: Math.max(l, minPx),
+      this.items.push({ k: 2, st, x: A[0], y: A[1], ux: dx / l, uy: dy / l, len: Math.max(l, minPx),
         color, width, z: (A[2] + B[2]) / 2 + (st.zb || 0), p });
     }
     // 직접 그리는 점(구슬, 강조 고리 따위): fn(ctx, x, y, mode)
@@ -2577,7 +2577,7 @@ const ROWS = (() => {
   function vec(ctx, x, y, vx, vy, color, width) {
     const len = Math.hypot(vx, vy);
     if (len < 2) return;
-    EM.arrow(ctx, x + vx / 2, y + vy / 2, vx / len, vy / len, len, color, width);
+    EM.arrow(ctx, x, y, vx / len, vy / len, len, color, width);
   }
 
   return { pitch0, wireR, body, row, fadeEdges, vec };
@@ -3702,7 +3702,7 @@ const ROWS = (() => {
       for (const fy of [-0.5, 0, 0.5]) {
         const y = cy + fy * hh;
         for (let x = cx - gap * Math.ceil(cx / gap) + gap / 2; x < w; x += gap) {
-          if (q && x + len / 2 + mg > q.x0 && x - len / 2 - mg < q.x1 && y + mg > q.y0 && y - mg < q.y1) continue;
+          if (q && x + len + mg > q.x0 && x - mg < q.x1 && y + mg > q.y0 && y - mg < q.y1) continue;
           EM.arrow(ctx, x, y, 1, 0, len, C.field, 3);
         }
       }
@@ -4818,7 +4818,8 @@ const ROWS = (() => {
   const IT = `${M('I')}<sub>through</sub>`;
   const Ik = k => `${M('I')}<sub>${k}</sub>`;
   const STEPS = [
-    { cfg: ring(6), cap: `긴 직선 도선 ${DOT}의 자기장은 도선을 중심으로 한 원의 접선 방향이고 크기는 ${M('B')} = ${EM.frac(`${MU}${M('I')}`, `2π${M('r')}`)}이다. 이 원을 따라 적분하면 ${LOOP} = ${M('B')}(2π${M('r')}) = ${MU}${M('I')}이다.` },
+    { cfg: ring(6), reveal: 0, field: true, cap: `긴 직선 도선 ${DOT} 둘레의 자기장을 화살표로 그렸다. 자기장은 도선을 중심으로 한 원의 접선 방향이고 도선에서 멀수록 약하다. 크기는 ${M('B')} = ${EM.frac(`${MU}${M('I')}`, `2π${M('r')}`)}이다.` },
+    { cfg: ring(6), draw: true, field: true, dur: 300, cap: `이 자기장 위에 반지름 ${M('r')}인 원형 앙페르 고리를 그린다. 고리 위에서 ${M('B')}는 접선 방향이고 크기가 같으므로 ${LOOP} = ${M('B')}(2π${M('r')}) = ${MU}${M('I')}이다.` },
     { cfg: ring(9), sweep: 4, cap: `반지름을 바꿔도 결과는 같다. ${M('B')}는 1/${M('r')}에 비례해 약해지고 둘레 2π${M('r')}은 ${M('r')}에 비례해 길어지므로 곱은 늘 ${MU}${M('I')}이다.` },
     { cfg: { shape: 'free', circ: null, ctrl: FREE, n: 1, wires: solo(3, 2.5), dir: 1 }, dur: 1800, cap: `경로를 아무 모양으로 찌그러뜨리고 도선을 한쪽으로 옮겨도 ${LOOP} = ${MU}${M('I')}이다. 경로 위 ${M('B')}의 크기와 방향은 곳곳에서 다르지만 한 바퀴 더한 값은 그대로다.` },
     { cfg: FOUR, dur: 900, cap: `도선이 여럿이면 경로를 뚫고 지나가는 전류만 센다. 오른손 네 손가락을 적분 방향으로 감을 때 엄지 쪽(${DOT})이 +, 반대쪽(${CROSS})이 −이다. ${IT} = ${Ik(2)} − ${Ik(3)} + ${Ik(4)}이고, 경로 밖의 ${Ik(1)}은 들어가지 않는다.` },
@@ -4830,12 +4831,14 @@ const ROWS = (() => {
   const state = {
     shape: 'circle', shapeUI: 'circle', circ: { x: 0, y: 0, r: 6 }, ctrl: FREE.map(p => [...p]),
     n: 1, wires: copyW(solo(0, 0)), dir: 1, tint: true,
+    reveal: 1,                // 그려진 고리의 비율 (0: 고리 없음, 1: 다 그림)
+    field: false,             // 벡터장 화살표
   };
   let ghosts = [];          // 단계 전환 때 사라지는 중인 도선 (a: 1 → 0)
 
   let stage, graph, sctx, gctx;
   let view = null, gview = null;
-  let anim = null, settle = null;
+  let anim = null, settle = null, drawing = null;
   let step = 0;
   let drag = null;
   let probe = null;         // 그래프에서 가리킨 경로 비율 (0–1)
@@ -4991,97 +4994,133 @@ const ROWS = (() => {
     const mR = markerR();
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
 
+    // 벡터장: 격자점마다 그 점에서 시작하는 B (길이 ∝ B, 칸보다 길지 않게)
+    if (state.field) {
+      const g = 1.6, cap = 0.85 * g, hw = w / 2 / s, hh = h / 2 / s;
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      for (let i = Math.ceil(-hw / g - 0.5); i <= Math.floor(hw / g - 0.5); i++) {
+        for (let j = Math.ceil(-hh / g - 0.5); j <= Math.floor(hh / g - 0.5); j++) {
+          const x = (i + 0.5) * g, y = (j + 0.5) * g;
+          if (c.src.some(q => q.a > 0.5 && Math.hypot(x - q.x, y - q.y) < 1)) continue;
+          const [bx, by] = fieldAt(x, y, c.src);
+          const B = Math.hypot(bx, by), len = Math.min(cap, B * 1e6 * B_LEN) * s;
+          if (len < 4) continue;
+          EM.arrow(ctx, X(x), Y(y), bx / B, -by / B, len, C.field, 2);
+        }
+      }
+      ctx.restore();
+    }
+
+    // 고리는 시작점에서 적분 방향으로 reveal만큼만 그린다
+    const rv = state.reveal, full = rv >= 1, Ltot = c.len[NS] || 1;
     const P = c.P;
     const trace = () => {
       ctx.beginPath();
+      if (!full) {
+        let j = 0;
+        for (; j <= NS && c.len[j] / Ltot <= rv; j++) { const x = X(P[2 * (j % NS)]), y = Y(P[2 * (j % NS) + 1]); if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
+        const q = along(c, rv);
+        ctx.lineTo(X(q.x), Y(q.y));
+        return;
+      }
       for (let j = 0; j < NS; j++) { const x = X(P[2 * j]), y = Y(P[2 * j + 1]); if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y); }
       ctx.closePath();
     };
 
-    // B·ds 부호 띠: + 초록, − 자홍 (옅게)
-    if (state.tint) {
-      ctx.save();
-      ctx.lineWidth = 12; ctx.lineCap = 'butt'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.2;
-      const eps = 1e-3 * Math.max(...c.src.map(q => Math.abs(q.K) / 3), 1e-12);   // 거의 0인 곳은 칠하지 않는다
-      for (const sg of [1, -1]) {
-        ctx.beginPath();
-        let open = false;
-        for (let j = 0; j < NS; j++) {
-          if (sg * c.bt[j] > eps) {
-            if (!open) { ctx.moveTo(X(P[2 * j]), Y(P[2 * j + 1])); open = true; }
-            const k = (j + 1) % NS;
-            ctx.lineTo(X(P[2 * k]), Y(P[2 * k + 1]));
-          } else open = false;
+    if (rv > 0) {
+      // B·ds 부호 띠: + 초록, − 자홍 (옅게)
+      if (state.tint && full) {
+        ctx.save();
+        ctx.lineWidth = 12; ctx.lineCap = 'butt'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.2;
+        const eps = 1e-3 * Math.max(...c.src.map(q => Math.abs(q.K) / 3), 1e-12);   // 거의 0인 곳은 칠하지 않는다
+        for (const sg of [1, -1]) {
+          ctx.beginPath();
+          let open = false;
+          for (let j = 0; j < NS; j++) {
+            if (sg * c.bt[j] > eps) {
+              if (!open) { ctx.moveTo(X(P[2 * j]), Y(P[2 * j + 1])); open = true; }
+              const k = (j + 1) % NS;
+              ctx.lineTo(X(P[2 * k]), Y(P[2 * k + 1]));
+            } else open = false;
+          }
+          ctx.strokeStyle = sg > 0 ? C.field : C.current; ctx.stroke();
         }
-        ctx.strokeStyle = sg > 0 ? C.field : C.current; ctx.stroke();
+        ctx.restore();
       }
-      ctx.restore();
-    }
 
-    // 앙페르 경로 (점선)
-    ctx.save();
-    ctx.setLineDash([10, 7]); ctx.lineWidth = 3; ctx.strokeStyle = C.path; ctx.lineJoin = 'round';
-    trace(); ctx.stroke();
-    ctx.restore();
-
-    // 적분 방향: 경로 길이의 1/4, 1/2, 3/4 지점
-    for (const f of [0.25, 0.5, 0.75]) {
-      const q = along(c, f);
-      const ux = q.tx, uy = -q.ty;
-      EM.arrowHead(ctx, X(q.x) + ux * 7, Y(q.y) + uy * 7, ux, uy, 13, C.path);
-    }
-
-    // 경로 위의 B (가운데가 경로 위에 오는 화살표, 길이 ∝ B)
-    for (let j = 0; j < NB; j++) {
-      const q = along(c, (j + 0.5) / NB);
-      const [bx, by] = fieldAt(q.x, q.y, c.src);
-      const B = Math.hypot(bx, by);
-      if (B < 1e-12) continue;
-      const len = Math.min(B_CAP, B * 1e6 * B_LEN) * s;
-      EM.arrow(ctx, X(q.x), Y(q.y), bx / B, -by / B, len, C.field, 3.5);
-    }
-
-    // 손잡이
-    if (state.shape === 'circle') {
-      const { x: ccx, y: ccy, r } = state.circ;
-      const hx = X(ccx + r * Math.cos(TH_H)), hy = Y(ccy + r * Math.sin(TH_H));
+      // 앙페르 경로 (점선)
       ctx.save();
-      ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
-      ctx.beginPath(); ctx.moveTo(X(ccx), Y(ccy)); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.setLineDash([10, 7]); ctx.lineWidth = 3; ctx.strokeStyle = C.path; ctx.lineJoin = 'round';
+      trace(); ctx.stroke();
       ctx.restore();
-      ctx.beginPath(); ctx.arc(X(ccx), Y(ccy), 3, 0, TAU); ctx.fillStyle = C.muted; ctx.fill();
-      ctx.beginPath(); ctx.arc(hx, hy, 10, 0, TAU);
-      ctx.fillStyle = C.path; ctx.fill();
-      ctx.lineWidth = 3; ctx.strokeStyle = C.stage; ctx.stroke();
-      const font = `600 ${fs}px ${F.ui}`, label = `r = ${r.toFixed(1)} cm`;
-      ctx.font = font;
-      let lx = hx + 18, align = 'left';
-      if (lx + ctx.measureText(label).width > w - 8) { lx = hx - 18; align = 'right'; }
-      EM.haloText(ctx, label, lx, Math.max(fs, hy - 16), C.path, font, align);
-    } else {
-      for (const [x, y] of state.ctrl) {
-        ctx.beginPath(); ctx.arc(X(x), Y(y), 6.5, 0, TAU);
-        ctx.fillStyle = C.path; ctx.fill();
-        ctx.lineWidth = 2; ctx.strokeStyle = C.stage; ctx.stroke();
-      }
-    }
 
-    // 시작점: 경로를 가로지르는 짧은 막대
-    {
-      const Q = c.raw, k = NS - 1;
-      const tx = Q[2] - Q[2 * k], ty = Q[3] - Q[2 * k + 1], L = Math.hypot(tx, ty) || 1;
-      const nx = ty / L, ny = tx / L;          // 화면에서 바깥쪽 법선 (반시계 표본 기준, 화면 y는 아래가 +)
-      const x = X(Q[0]), y = Y(Q[1]);
-      ctx.beginPath(); ctx.moveTo(x - nx * 11, y - ny * 11); ctx.lineTo(x + nx * 11, y + ny * 11);
-      ctx.strokeStyle = C.path; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke();
-      EM.haloText(ctx, '시작', x + nx * (14 + fs * 0.9), y + ny * (14 + fs * 0.6), C.path, `600 ${Math.round(fs * 0.85)}px ${F.ui}`, 'center');
+      // 적분 방향: 경로 길이의 1/4, 1/2, 3/4 지점
+      for (const f of [0.25, 0.5, 0.75]) {
+        if (f > rv) continue;
+        const q = along(c, f);
+        const ux = q.tx, uy = -q.ty;
+        EM.arrowHead(ctx, X(q.x) + ux * 7, Y(q.y) + uy * 7, ux, uy, 13, C.path);
+      }
+
+      // 경로 위의 B (경로 위의 점에서 시작하는 화살표, 길이 ∝ B)
+      for (let j = 0; j < NB; j++) {
+        if ((j + 0.5) / NB > rv) continue;
+        const q = along(c, (j + 0.5) / NB);
+        const [bx, by] = fieldAt(q.x, q.y, c.src);
+        const B = Math.hypot(bx, by);
+        if (B < 1e-12) continue;
+        const len = Math.min(B_CAP, B * 1e6 * B_LEN) * s;
+        EM.arrow(ctx, X(q.x), Y(q.y), bx / B, -by / B, len, C.field, 3.5);
+      }
+
+      // 그리는 중이면 펜 끝, 다 그렸으면 손잡이
+      if (!full) {
+        const q = along(c, rv);
+        ctx.beginPath(); ctx.arc(X(q.x), Y(q.y), 7, 0, TAU);
+        ctx.fillStyle = C.path; ctx.fill();
+        ctx.lineWidth = 2.5; ctx.strokeStyle = C.stage; ctx.stroke();
+      } else if (state.shape === 'circle') {
+        const { x: ccx, y: ccy, r } = state.circ;
+        const hx = X(ccx + r * Math.cos(TH_H)), hy = Y(ccy + r * Math.sin(TH_H));
+        ctx.save();
+        ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
+        ctx.beginPath(); ctx.moveTo(X(ccx), Y(ccy)); ctx.lineTo(hx, hy); ctx.stroke();
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(X(ccx), Y(ccy), 3, 0, TAU); ctx.fillStyle = C.muted; ctx.fill();
+        ctx.beginPath(); ctx.arc(hx, hy, 10, 0, TAU);
+        ctx.fillStyle = C.path; ctx.fill();
+        ctx.lineWidth = 3; ctx.strokeStyle = C.stage; ctx.stroke();
+        const font = `600 ${fs}px ${F.ui}`, label = `r = ${r.toFixed(1)} cm`;
+        ctx.font = font;
+        let lx = hx + 18, align = 'left';
+        if (lx + ctx.measureText(label).width > w - 8) { lx = hx - 18; align = 'right'; }
+        EM.haloText(ctx, label, lx, Math.max(fs, hy - 16), C.path, font, align);
+      } else {
+        for (const [x, y] of state.ctrl) {
+          ctx.beginPath(); ctx.arc(X(x), Y(y), 6.5, 0, TAU);
+          ctx.fillStyle = C.path; ctx.fill();
+          ctx.lineWidth = 2; ctx.strokeStyle = C.stage; ctx.stroke();
+        }
+      }
+
+      // 시작점: 경로를 가로지르는 짧은 막대
+      {
+        const Q = c.raw, k = NS - 1;
+        const tx = Q[2] - Q[2 * k], ty = Q[3] - Q[2 * k + 1], L = Math.hypot(tx, ty) || 1;
+        const nx = ty / L, ny = tx / L;          // 화면에서 바깥쪽 법선 (반시계 표본 기준, 화면 y는 아래가 +)
+        const x = X(Q[0]), y = Y(Q[1]);
+        ctx.beginPath(); ctx.moveTo(x - nx * 11, y - ny * 11); ctx.lineTo(x + nx * 11, y + ny * 11);
+        ctx.strokeStyle = C.path; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke();
+        EM.haloText(ctx, '시작', x + nx * (14 + fs * 0.9), y + ny * (14 + fs * 0.6), C.path, `600 ${Math.round(fs * 0.85)}px ${F.ui}`, 'center');
+      }
     }
 
     // 도선: 감싼 전류는 강조. 나타나거나 사라지는 도선은 크기로 보인다
     for (const q of c.src) {
       const r = mR * q.a;
       if (r < 1) continue;
-      EM.marker(ctx, X(q.x), Y(q.y), r, q.d > 0 ? 'dot' : 'cross', q.wn !== 0);
+      EM.marker(ctx, X(q.x), Y(q.y), r, q.d > 0 ? 'dot' : 'cross', full && q.wn !== 0);
     }
     if (state.n > 1) {
       const f1 = `italic 700 ${fs + 2}px ${F.math}`, f2 = `600 ${Math.round(fs * 0.72)}px ${F.ui}`;
@@ -5173,6 +5212,9 @@ const ROWS = (() => {
     runs(ctx, [['s / L', fM]], L + pw - sw, h - fs * 0.75, C.muted);
     runs(ctx, [['∫ ', `${fs + 1}px ${F.math}`], ['B', fB], ['·d', `${fs + 1}px ${F.math}`], ['s', fB], ['  (μT·m)', fU]], 2, T - fs * 1.15, C.muted);
 
+    const rv = state.reveal;
+    if (rv <= 0) return;          // 고리가 없으면 축만
+
     // μ0 I_through (점선)
     const yt = GY(tgt);
     ctx.save();
@@ -5190,10 +5232,11 @@ const ROWS = (() => {
     ctx.save();
     ctx.beginPath(); ctx.rect(L, T - 4, pw + 4, ph + 8); ctx.clip();
     ctx.beginPath();
-    for (let j = 0; j <= NS; j++) {
+    for (let j = 0; j <= NS && c.len[j] / Ltot <= rv; j++) {
       const x = GX(c.len[j] / Ltot), y = GY(c.cum[j] * 1e6);
       if (j) ctx.lineTo(x, y); else ctx.moveTo(x, y);
     }
+    if (rv < 1) { const q = along(c, rv); ctx.lineTo(GX(rv), GY(q.cum * 1e6)); }
     ctx.strokeStyle = C.field; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.stroke();
     ctx.restore();
@@ -5212,7 +5255,8 @@ const ROWS = (() => {
       ctx.restore();
       dotAt(x, GY(q.cum * 1e6));
     }
-    dotAt(GX(1), GY(c.loop * 1e6));
+    if (rv >= 1) dotAt(GX(1), GY(c.loop * 1e6));
+    else dotAt(GX(rv), GY(along(c, rv).cum * 1e6));
   }
 
   const redraw = () => EM.requestDraw(def);
@@ -5353,13 +5397,14 @@ const ROWS = (() => {
     const dW = vis.map(q => Math.hypot(px - X(q.x), py - Y(q.y)));
     let k = dW.findIndex(d => d <= mR);
     if (k >= 0) return { type: 'wire', k: vis[k].k };
-    if (state.shape === 'free') {
+    if (state.shape === 'free' && state.reveal >= 1) {
       let best = -1, bd = tol + 6.5;
       state.ctrl.forEach(([x, y], i) => { const d = Math.hypot(px - X(x), py - Y(y)); if (d <= bd) { bd = d; best = i; } });
       if (best >= 0) return { type: 'ctrl', k: best };
     }
     k = dW.findIndex(d => d <= mR + tol * 0.6);
     if (k >= 0) return { type: 'wire', k: vis[k].k };
+    if (state.reveal < 1) return null;
     const [wx, wy] = toWorld(px, py);
     if (state.shape === 'circle') {
       const { x, y, r } = state.circ;
@@ -5511,18 +5556,30 @@ const ROWS = (() => {
         row.querySelector('input').addEventListener('input', e => { state.wires[k].I = +e.target.value; changed(); });
       });
       $('tintChk').addEventListener('change', e => { state.tint = e.target.checked; redraw(); });
+      $('fieldChk').addEventListener('change', e => { state.field = e.target.checked; redraw(); });
       $('resetBtn').addEventListener('click', () => goTo(STEPS[step].cfg, 450));
     },
     enterStep(i, { forward, initial }) {
       step = i;
       const S = STEPS[i];
       cancelAnim();
+      if (drawing) { drawing.cancel(); drawing = null; }
       probe = null;
+      state.field = !!S.field;
+      $('fieldChk').checked = state.field;
+      // 고리 그리기: 앞으로 올 때만 시작점부터 한 바퀴 그려 나간다
+      state.reveal = S.reveal ?? (S.draw && forward ? 0 : 1);
+      const draw = () => {
+        drawing = EM.tween(2600, e => { state.reveal = e; redraw(); }, { ease: 'linear', onDone: () => { drawing = null; changed(); } });
+      };
       if (initial) { applyCfg(S.cfg); return; }
       if (S.sweep && forward) goTo({ ...S.cfg, circ: { ...S.cfg.circ, r: S.sweep } }, 700, () => sweepR(S.cfg.circ.r, 2600));
-      else goTo(S.cfg, forward ? (S.dur || 700) : 450);
+      else goTo(S.cfg, forward ? (S.dur || 700) : 450, S.draw && forward ? draw : undefined);
     },
-    hide() { cancelAnim(); },
+    hide() {
+      cancelAnim();
+      if (drawing) { drawing.cancel(); drawing = null; state.reveal = 1; }
+    },
     draw() { drawStage(); drawGraph(); },
   });
 })();
