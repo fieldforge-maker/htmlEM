@@ -321,6 +321,7 @@ sub, sup { font-size: .7em; line-height: 0; }
 #s3 .kv dd:last-child, #s3 .kv dd + dd { color: var(--muted); text-align: left; }
 #s3 .s3-walls { margin-top: .7em; padding-top: .55em; border-top: 1px solid var(--line); }
 
+#s4 .s4-under { margin-top: .5em; }
 
 /* 화면 5: 변별 기여 표와 범례 */
 #s5 .key-contrib { display: inline-block; width: 1.8em; height: 8px; border-radius: 4px; background: var(--field); opacity: .45; }
@@ -350,12 +351,12 @@ sub, sup { font-size: .7em; line-height: 0; }
       <span class="tab-group">토로이드</span>
       <button class="tab" type="button" data-screen="s1" title="예제 29.6 · 슬라이드 17–18"><span class="tab-no">1</span><span class="tab-label">앙페르 경로</span></button>
       <button class="tab" type="button" data-screen="s2" title="슬라이드 18"><span class="tab-no">2</span><span class="tab-label">나선 감기와 외부장</span></button>
-      <button class="tab" type="button" data-screen="s3" title="토로이드와 솔레노이드 잇기"><span class="tab-no">3</span><span class="tab-label">펼치면 솔레노이드</span></button>
+      <button class="tab" type="button" data-screen="s3" title="토로이드와 솔레노이드 잇기" hidden><span class="tab-no">–</span><span class="tab-label">펼치면 솔레노이드</span></button>
       <span class="tab-group">솔레노이드</span>
-      <button class="tab" type="button" data-screen="s4" title="슬라이드 20, 22, 25"><span class="tab-no">4</span><span class="tab-label">자기력선과 축 위 B</span></button>
-      <button class="tab" type="button" data-screen="s5" title="슬라이드 20–21"><span class="tab-no">5</span><span class="tab-label">직사각형 경로</span></button>
-      <button class="tab" type="button" data-screen="s6" title="슬라이드 22"><span class="tab-no">6</span><span class="tab-label">둘레 방향 외부장</span></button>
-      <button class="tab" type="button" data-screen="s7" title="슬라이드 23–24"><span class="tab-no">7</span><span class="tab-label">보강과 상쇄</span></button>
+      <button class="tab" type="button" data-screen="s4" title="슬라이드 20, 22, 25"><span class="tab-no">3</span><span class="tab-label">자기력선과 축 위 B</span></button>
+      <button class="tab" type="button" data-screen="s5" title="슬라이드 20–21"><span class="tab-no">4</span><span class="tab-label">직사각형 경로</span></button>
+      <button class="tab" type="button" data-screen="s6" title="슬라이드 22"><span class="tab-no">5</span><span class="tab-label">둘레 방향 외부장</span></button>
+      <button class="tab" type="button" data-screen="s7" title="슬라이드 23–24"><span class="tab-no">6</span><span class="tab-label">보강과 상쇄</span></button>
     </nav>
     <div class="tools">
       <button class="icon-btn" id="themeBtn" type="button" aria-label="어두운 화면으로 바꾸기">
@@ -608,6 +609,7 @@ sub, sup { font-size: .7em; line-height: 0; }
         <summary><span>축 위 <span class="m">B</span>(<span class="m">x</span>)</span></summary>
         <div class="fold-body">
           <div class="graph-box"><canvas id="s4-graph" aria-label="솔레노이드 축 위의 자기장 크기 그래프"></canvas></div>
+          <div class="toggles s4-under"><label><input type="checkbox" id="s4-probeChk"><b class="mv">B</b> 측정점</label></div>
         </div>
       </details>
 
@@ -2618,7 +2620,7 @@ const ROWS = (() => {
   const N_FIX = 2;                   // 5–6단계에서 고정하는 n (회/cm)
   const LINE_W = 2.5;                // 자기력선 굵기 (px)
 
-  const state = { N: 40, L: 20, R: 3, I: 2, wash: true, probe: 0 };
+  const state = { N: 40, L: 20, R: 3, I: 2, wash: true, probe: 0, showProbe: false };
   let fit = { L: 20, R: 3 };         // 화면에 맞추는 크기 (cm). 애니메이션 동안은 고정해 크기 변화가 보이게 한다
   let coarse = false;                // 움직이는 동안은 거친 격자로 빠르게
 
@@ -2627,7 +2629,7 @@ const ROWS = (() => {
     { N: 1, cap: `도선 고리 하나를 축을 지나는 면으로 자른 모습이다. 위쪽 단면에서는 전류가 나오고 ${DOT}, 아래쪽에서는 들어간다 ${CROSS}. 자기력선은 고리를 꿰뚫고 돌아오는 닫힌 곡선이고, 중심에서 ${M('B')} = ${EM.frac(`μ<sub>0</sub>${M('I')}`, `2${M('R')}`)}이다.` },
     { N: 5, cap: `고리 5개를 띄엄띄엄 감았다. 도선 가까이에서는 자기력선이 도선마다 원을 그리고, 감은 틈 사이로 자기력선이 새어 나간다.` },
     { N: 40, cap: `40번 촘촘히 감으면 도선마다의 원은 사라진다. 안쪽 자기장은 축에 나란하고 고르며, 바깥 자기장은 매우 약하다. 자기력선이 나오는 오른쪽 끝이 N극이다.` },
-    { N: 40, sweep: true, cap: `측정점이 축을 따라 가운데에서 끝으로 간다. 가운데에서는 ${M('B')} ≈ ${MNI} (${M('n')} = ${M('N')}/${M('L')})이고, 끝에서는 그 절반쯤이다. ${M('B')} = ${MNI}는 긴 솔레노이드의 가운데에서만 맞는다.` },
+    { N: 40, sweep: true, cap: `축 위의 자기장을 그래프로 본다. 가운데에서는 ${M('B')} ≈ ${MNI} (${M('n')} = ${M('N')}/${M('L')})이고, 끝에서는 그 절반쯤이다. ${M('B')} = ${MNI}는 긴 솔레노이드의 가운데에서만 맞는다.` },
     { anim: 'L', cap: `단위 길이당 감은 수 ${M('n')}을 그대로 두고 솔레노이드를 늘인다. 길수록 안쪽은 더 고르고 바깥은 더 약하며, ${M('B')} ≈ ${MNI}인 구간이 길어진다.` },
     { anim: 'R', cap: `${M('n')}을 그대로 두고 지름을 키워도 가운데 자기장은 거의 그대로다. ${M('B')} = ${MNI}에는 지름도 길이도 없다. 평행판 축전기가 고른 전기장을 만들듯, 솔레노이드는 고른 자기장을 만든다.` },
   ];
@@ -3019,8 +3021,8 @@ const ROWS = (() => {
       ctx.fillRect(X(-L / 2), Y(-R) - bw, L * s, 2 * bw);
     }
 
-    // 축 (4단계부터, 측정점이 움직이는 길)
-    if (step >= 3) {
+    // 축 (4단계부터, 측정점을 켜면 언제나)
+    if (step >= 3 || state.showProbe) {
       ctx.save();
       ctx.setLineDash([6, 6]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.muted;
       ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
@@ -3028,7 +3030,7 @@ const ROWS = (() => {
     }
 
     // 자기력선
-    ctx.globalAlpha = step === 3 ? 0.4 : 1;
+    ctx.globalAlpha = step === 3 && state.showProbe ? 0.4 : 1;
     ctx.lineWidth = LINE_W; ctx.strokeStyle = C.field; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.beginPath();
     for (const ln of fld.lines) {
@@ -3085,8 +3087,8 @@ const ROWS = (() => {
       }
     }
 
-    // 측정점 (4단계부터)
-    if (step >= 3) {
+    // 측정점 (체크박스로 켤 때만)
+    if (state.showProbe) {
       const px = X(state.probe);
       ctx.beginPath(); ctx.arc(px, cy, 8, 0, TAU);
       ctx.fillStyle = C.path; ctx.fill();
@@ -3213,7 +3215,7 @@ const ROWS = (() => {
     }
 
     // 측정점
-    if (step >= 3) {
+    if (state.showProbe) {
       const x = X(state.probe), y = Y(axisB(state.probe));
       ctx.save();
       ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.path;
@@ -3294,7 +3296,7 @@ const ROWS = (() => {
       stage = $('stage'); graph = $('graph');
       sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
 
-      // 측정점 끌기 (4단계부터)
+      // 측정점 끌기 (켜져 있을 때만)
       let dragging = false;
       const xFromEvent = e => {
         const rect = stage.getBoundingClientRect();
@@ -3302,7 +3304,7 @@ const ROWS = (() => {
         return Math.max(-lim, Math.min(lim, (e.clientX - rect.left - view.cx) / view.s));
       };
       stage.addEventListener('pointerdown', e => {
-        if (step < 3) return;
+        if (!state.showProbe) return;
         if (STEPS[step].sweep) stopAnim();
         dragging = true;
         stage.classList.add('dragging');
@@ -3330,6 +3332,12 @@ const ROWS = (() => {
       $('iIn').addEventListener('input', e => { state.I = +e.target.value; updateReadouts(); redraw(); });
       $('washChk').checked = state.wash;
       $('washChk').addEventListener('change', e => { state.wash = e.target.checked; redraw(); });
+      $('probeChk').checked = state.showProbe;
+      $('probeChk').addEventListener('change', e => {
+        state.showProbe = e.target.checked;
+        stage.classList.toggle('can-drag', state.showProbe);
+        redraw();
+      });
     },
     enterStep(i, { forward }) {
       step = i;
@@ -3337,7 +3345,7 @@ const ROWS = (() => {
       stopAnim();
       clearTimeout(refineTimer);
       coarse = false;
-      stage.classList.toggle('can-drag', i >= 3);
+      stage.classList.toggle('can-drag', state.showProbe);
       if (S.anim === 'L') {
         // n 고정, L 10 → 40 cm (N = nL). 화면은 40 cm에 맞춰 두어 길어지는 것이 보이게
         fit = { L: 40, R: 3 };
