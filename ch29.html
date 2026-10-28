@@ -1037,6 +1037,7 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <div class="toggles">
             <label><input type="checkbox" id="s8-fieldChk"><span>벡터장</span></label>
+            <label><input type="checkbox" id="s8-linesChk"><span>자기력선</span></label>
             <label><input type="checkbox" id="s8-tintChk" checked><span><b class="mv">B</b>·d<b class="mv">s</b> 부호 띠</span></label>
             <button class="btn" id="s8-resetBtn" type="button">처음 배치로</button>
           </div>
@@ -4798,6 +4799,8 @@ const ROWS = (() => {
   const TH0 = -Math.PI / 2;         // 시작점: 원의 맨 아래
   const TH_H = Math.PI * 0.22;      // 반지름 손잡이 (위 오른쪽)
   const R_MIN = 1.5, R_MAX = 10.5;
+  // 자기력선 간격: 3 A 도선 하나일 때 이웃한 원의 반지름 비가 1.28이 되도록 (전류가 작으면 성겨진다)
+  const LINE_DPSI = MU0 * 3 / (TAU * 0.01) * Math.log(1.28);
 
   // 자유 모양의 조절점 (반시계 차례, 0번이 시작점)
   const FREE = [[-0.5, -7], [5.5, -5.5], [7, -0.5], [6.5, 5], [1, 6], [-5, 7.5], [-9, 2], [-6.5, -4]];
@@ -4833,12 +4836,14 @@ const ROWS = (() => {
     n: 1, wires: copyW(solo(0, 0)), dir: 1, tint: true,
     reveal: 1,                // 그려진 고리의 비율 (0: 고리 없음, 1: 다 그림)
     field: false,             // 벡터장 화살표
+    lines: false,             // 자기력선 (단계와 상관없이 켜 둔 대로)
   };
   let ghosts = [];          // 단계 전환 때 사라지는 중인 도선 (a: 1 → 0)
 
   let stage, graph, sctx, gctx;
   let view = null, gview = null;
   let anim = null, settle = null, drawing = null;
+  let linesCache = null;     // 자기력선 모양 (상태나 크기가 바뀔 때만 다시 계산)
   let step = 0;
   let drag = null;
   let probe = null;         // 그래프에서 가리킨 경로 비율 (0–1)
@@ -5012,6 +5017,8 @@ const ROWS = (() => {
       ctx.restore();
     }
 
+    if (state.lines) drawLines(ctx, w, h, s, c.src);
+
     // 고리는 시작점에서 적분 방향으로 reveal만큼만 그린다
     const rv = state.reveal, full = rv >= 1, Ltot = c.len[NS] || 1;
     const P = c.P;
@@ -5146,6 +5153,77 @@ const ROWS = (() => {
       ctx.fillStyle = C.stage; ctx.fill();
       ctx.lineWidth = 3.5; ctx.strokeStyle = C.path; ctx.stroke();
     }
+  }
+
+  /* ---------- 자기력선 ----------
+     B = ẑ × ∇ψ, ψ = Σ K ln r (도선 안에서는 B ∝ r에 맞춘 꼴)이므로 자기력선은 ψ의 등고선이다.
+     등고선 간격을 일정하게 두면 선의 밀도가 B의 세기에 비례한다. 마칭 스퀘어로 긋는다. */
+  function lineGeometry(w, h, s, src) {
+    const key = `${ver}|${w}|${h}`;
+    if (linesCache && linesCache.key === key) return linesCache;
+    const live = src.filter(q => q.K !== 0);
+    const cell = 4, nx = Math.ceil(w / cell) + 1, ny = Math.ceil(h / cell) + 1;
+    const psi = new Float64Array(nx * ny), a2 = A_W * A_W, la = Math.log(A_W);
+    for (let j = 0; j < ny; j++) {
+      const y = -(j * cell - view.cy) / s;
+      for (let i = 0; i < nx; i++) {
+        const x = (i * cell - view.cx) / s;
+        let v = 0;
+        for (const q of live) {
+          const r2 = (x - q.x) * (x - q.x) + (y - q.y) * (y - q.y);
+          v += q.K * (r2 > a2 ? 0.5 * Math.log(r2) : la + 0.5 * (r2 / a2 - 1));
+        }
+        psi[j * nx + i] = v;
+      }
+    }
+    const path = new Path2D();
+    const BIN = 90, heads = new Map();          // 칸(약 90 px)마다 칸 가운데에 가장 가까운 곳에 화살촉 하나
+    const pts = [];
+    for (let j = 0; j + 1 < ny; j++) {
+      for (let i = 0; i + 1 < nx; i++) {
+        const v0 = psi[j * nx + i], v1 = psi[j * nx + i + 1], v2 = psi[(j + 1) * nx + i + 1], v3 = psi[(j + 1) * nx + i];
+        const lo = Math.min(v0, v1, v2, v3), hi = Math.max(v0, v1, v2, v3);
+        const x0 = i * cell, y0 = j * cell;
+        for (let k = Math.ceil(lo / LINE_DPSI); k * LINE_DPSI <= hi; k++) {
+          const L = k * LINE_DPSI;
+          pts.length = 0;
+          // 위, 오른쪽, 아래, 왼쪽 변에서 높이 L을 지나는 곳
+          if ((v0 - L) * (v1 - L) < 0) pts.push(x0 + cell * (L - v0) / (v1 - v0), y0);
+          if ((v1 - L) * (v2 - L) < 0) pts.push(x0 + cell, y0 + cell * (L - v1) / (v2 - v1));
+          if ((v3 - L) * (v2 - L) < 0) pts.push(x0 + cell * (L - v3) / (v2 - v3), y0 + cell);
+          if ((v0 - L) * (v3 - L) < 0) pts.push(x0, y0 + cell * (L - v0) / (v3 - v0));
+          for (let p = 0; p + 3 < pts.length; p += 4) {
+            path.moveTo(pts[p], pts[p + 1]); path.lineTo(pts[p + 2], pts[p + 3]);
+            const mx = (pts[p] + pts[p + 2]) / 2, my = (pts[p + 1] + pts[p + 3]) / 2;
+            const bi = Math.floor(mx / BIN), bj = Math.floor(my / BIN), id = bj * 1000 + bi;
+            const dc = Math.hypot(mx - (bi + 0.5) * BIN, my - (bj + 0.5) * BIN);
+            const old = heads.get(id);
+            if (!old || dc < old[2]) heads.set(id, [mx, my, dc]);
+          }
+        }
+      }
+    }
+    linesCache = { key, path, heads: [...heads.values()] };
+    return linesCache;
+  }
+  function drawLines(ctx, w, h, s, src) {
+    const g = lineGeometry(w, h, s, src);
+    const mR = markerR();
+    ctx.save();
+    ctx.globalAlpha = 0.75;
+    ctx.strokeStyle = C.field; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+    ctx.stroke(g.path);
+    // 화살촉: 그 자리의 B 방향 (도선 표시와 겹치는 곳은 뺀다)
+    for (const [px, py] of g.heads) {
+      const [x, y] = toWorld(px, py);
+      if (src.some(q => q.a > 0.5 && Math.hypot(px - X(q.x), py - Y(q.y)) < mR + 6)) continue;
+      const [bx, by] = fieldAt(x, y, src);
+      const B = Math.hypot(bx, by);
+      if (B < 1e-12) continue;
+      const ux = bx / B, uy = -by / B;
+      EM.arrowHead(ctx, px + ux * 4, py + uy * 4, ux, uy, 8, C.field);
+    }
+    ctx.restore();
   }
 
   /* ---------- 계기판 그래프: 경로를 따라 쌓인 ∫B·ds ---------- */
@@ -5557,6 +5635,7 @@ const ROWS = (() => {
       });
       $('tintChk').addEventListener('change', e => { state.tint = e.target.checked; redraw(); });
       $('fieldChk').addEventListener('change', e => { state.field = e.target.checked; redraw(); });
+      $('linesChk').addEventListener('change', e => { state.lines = e.target.checked; redraw(); });
       $('resetBtn').addEventListener('click', () => goTo(STEPS[step].cfg, 450));
     },
     enterStep(i, { forward, initial }) {
