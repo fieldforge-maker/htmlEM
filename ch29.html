@@ -355,6 +355,9 @@ sub, sup { font-size: .7em; line-height: 0; }
 #s8 .wire-row output { font-family: var(--font-num); font-size: .86em; color: var(--muted); text-align: right; }
 #s8 .seg .sym { vertical-align: -.16em; }
 #s8 .toggles { margin-top: .3em; }
+#s8 .law-card { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .45em 14px .55em; }
+#s8 .law-big { margin: 0; text-align: center; white-space: nowrap; font-family: var(--font-math); font-size: min(2.16em, 7.4vw); line-height: 1.35; }
+#s8 .view-toggles { flex: none; padding: 0 4px; font-size: .95em; gap: 6px 18px; }
 
 #s9 .s9-under { margin-top: .5em; }
 
@@ -936,6 +939,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     </div>
 
     <aside class="panel" id="s8-panel" aria-label="그래프, 계산과 조절">
+      <section class="law-card" aria-label="앙페르 법칙">
+        <p class="law-big">∮ <b class="mv">B</b>·d<b class="mv">s</b> = μ<sub>0</sub><span class="m">I</span><sub>through</sub></p>
+      </section>
+      <div class="view-toggles toggles" role="group" aria-label="보기">
+        <label><input type="checkbox" id="s8-fieldChk"><span>벡터장</span></label>
+        <label><input type="checkbox" id="s8-linesChk"><span>자기력선</span></label>
+      </div>
+
       <details class="fold" open>
         <summary><span>경로를 따라 쌓인 ∮<b class="mv">B</b>·d<b class="mv">s</b></span></summary>
         <div class="fold-body">
@@ -957,9 +968,8 @@ sub, sup { font-size: .7em; line-height: 0; }
       </details>
 
       <details class="fold">
-        <summary>앙페르 법칙</summary>
+        <summary>수치로 확인</summary>
         <div class="fold-body">
-          <p class="law eq">∮ <b class="mv">B</b>·d<b class="mv">s</b> = μ<sub>0</sub><span class="m">I</span><sub>through</sub></p>
           <div class="result">
             <span>∮ <b class="mv">B</b>·d<b class="mv">s</b> 수치 적분</span>
             <span class="readout"><span class="big" id="s8-loopVal">–</span><span class="unit">μT·m</span></span>
@@ -1005,7 +1015,7 @@ sub, sup { font-size: .7em; line-height: 0; }
               <button type="button" data-wd="1" aria-pressed="true" aria-label="나옴"><i class="sym dot"></i></button>
               <button type="button" data-wd="-1" aria-pressed="false" aria-label="들어감"><i class="sym cross"></i></button>
             </div>
-            <input type="range" min="1" max="5" step="1" value="3" aria-label="I1 크기">
+            <input type="range" min="1" max="5" step="1" value="1" aria-label="I1 크기">
             <output></output>
           </div>
           <div class="wire-row" data-k="1">
@@ -1014,7 +1024,7 @@ sub, sup { font-size: .7em; line-height: 0; }
               <button type="button" data-wd="1" aria-pressed="true" aria-label="나옴"><i class="sym dot"></i></button>
               <button type="button" data-wd="-1" aria-pressed="false" aria-label="들어감"><i class="sym cross"></i></button>
             </div>
-            <input type="range" min="1" max="5" step="1" value="4" aria-label="I2 크기">
+            <input type="range" min="1" max="5" step="1" value="1" aria-label="I2 크기">
             <output></output>
           </div>
           <div class="wire-row" data-k="2">
@@ -1032,12 +1042,10 @@ sub, sup { font-size: .7em; line-height: 0; }
               <button type="button" data-wd="1" aria-pressed="true" aria-label="나옴"><i class="sym dot"></i></button>
               <button type="button" data-wd="-1" aria-pressed="false" aria-label="들어감"><i class="sym cross"></i></button>
             </div>
-            <input type="range" min="1" max="5" step="1" value="3" aria-label="I4 크기">
+            <input type="range" min="1" max="5" step="1" value="1" aria-label="I4 크기">
             <output></output>
           </div>
           <div class="toggles">
-            <label><input type="checkbox" id="s8-fieldChk"><span>벡터장</span></label>
-            <label><input type="checkbox" id="s8-linesChk"><span>자기력선</span></label>
             <label><input type="checkbox" id="s8-tintChk" checked><span><b class="mv">B</b>·d<b class="mv">s</b> 부호 띠</span></label>
             <button class="btn" id="s8-resetBtn" type="button">처음 배치로</button>
           </div>
@@ -4795,23 +4803,23 @@ const ROWS = (() => {
   const A_W = 0.5;                  // 도선 반지름 (cm). 그 안에서는 B ∝ r
   const GAP = 0.8;                  // 도선과 경로 사이의 최소 거리 (cm)
   const SEP = 1.3;                  // 도선끼리의 최소 거리 (cm)
-  const B_LEN = 0.1, B_CAP = 2.6;   // 화살표 길이 (cm/μT)와 최대 길이 (cm)
+  const B_LEN = 0.3, B_CAP = 2.6;   // 화살표 길이 (cm/μT)와 최대 길이 (cm)
   const TH0 = -Math.PI / 2;         // 시작점: 원의 맨 아래
   const TH_H = Math.PI * 0.22;      // 반지름 손잡이 (위 오른쪽)
   const R_MIN = 1.5, R_MAX = 10.5;
-  // 자기력선 간격: 3 A 도선 하나일 때 이웃한 원의 반지름 비가 1.28이 되도록 (전류가 작으면 성겨진다)
-  const LINE_DPSI = MU0 * 3 / (TAU * 0.01) * Math.log(1.28);
+  // 자기력선 간격: 1 A 도선 하나일 때 이웃한 원의 반지름 비가 1.28이 되도록 (전류가 크면 촘촘해진다)
+  const LINE_DPSI = MU0 * 1 / (TAU * 0.01) * Math.log(1.28);
 
   // 자유 모양의 조절점 (반시계 차례, 0번이 시작점)
   const FREE = [[-0.5, -7], [5.5, -5.5], [7, -0.5], [6.5, 5], [1, 6], [-5, 7.5], [-9, 2], [-6.5, -4]];
   // 나이트 그림 29.25: I1은 밖, I2 ⊙ · I3 ⊗ · I4 ⊙는 안
   const W4 = [
-    { x: 9.5, y: -6.5, I: 5, d: 1 }, { x: -4.5, y: 2, I: 4, d: 1 },
-    { x: 0.5, y: -3.5, I: 1, d: -1 }, { x: 3, y: 2.5, I: 3, d: 1 },
+    { x: 9.5, y: -6.5, I: 1, d: 1 }, { x: -4.5, y: 2, I: 1, d: 1 },
+    { x: 0.5, y: -3.5, I: 1, d: -1 }, { x: 3, y: 2.5, I: 1, d: 1 },
   ];
   const NEAR1 = { x: 7.92, y: -1.37 };  // 5단계: 경로에서 1 cm까지 다가온 I1
   // 도선 하나 (나머지 자리는 도선 수를 늘릴 때 쓴다)
-  const solo = (x, y) => [{ x, y, I: 3, d: 1 }, ...W4.slice(1)];
+  const solo = (x, y) => [{ x, y, I: 1, d: 1 }, ...W4.slice(1)];
   const ring = r => ({ shape: 'circle', circ: { x: 0, y: 0, r }, ctrl: null, n: 1, wires: solo(0, 0), dir: 1 });
   const FOUR = { shape: 'free', circ: null, ctrl: FREE, n: 4, wires: W4, dir: 1 };
   const NEAR = { ...FOUR, wires: [{ ...W4[0], ...NEAR1 }, ...W4.slice(1)] };
@@ -5164,6 +5172,7 @@ const ROWS = (() => {
     const live = src.filter(q => q.K !== 0);
     const cell = 4, nx = Math.ceil(w / cell) + 1, ny = Math.ceil(h / cell) + 1;
     const psi = new Float64Array(nx * ny), a2 = A_W * A_W, la = Math.log(A_W);
+    let pmin = Infinity, pmax = -Infinity;
     for (let j = 0; j < ny; j++) {
       const y = -(j * cell - view.cy) / s;
       for (let i = 0; i < nx; i++) {
@@ -5174,11 +5183,17 @@ const ROWS = (() => {
           v += q.K * (r2 > a2 ? 0.5 * Math.log(r2) : la + 0.5 * (r2 / a2 - 1));
         }
         psi[j * nx + i] = v;
+        if (v < pmin) pmin = v;
+        if (v > pmax) pmax = v;
       }
     }
-    const path = new Path2D();
-    const BIN = 90, heads = new Map();          // 칸(약 90 px)마다 칸 가운데에 가장 가까운 곳에 화살촉 하나
-    const pts = [];
+    // 1) 칸마다 등고선 조각. 조각의 끝은 '어느 높이의 어느 변'이라는 번호로 이웃 조각과 이어진다
+    const k0 = Math.ceil(pmin / LINE_DPSI);
+    const H = (k, i, j) => (((k - k0) * ny + j) * nx + i) * 2;         // 가로 변: (i, j)–(i+1, j)
+    const V = (k, i, j) => (((k - k0) * ny + j) * nx + i) * 2 + 1;     // 세로 변: (i, j)–(i, j+1)
+    const segId = [], segXY = [], byEdge = new Map();
+    const link = (id, n) => { const l = byEdge.get(id); if (l) l.push(n); else byEdge.set(id, [n]); };
+    const cr = [];
     for (let j = 0; j + 1 < ny; j++) {
       for (let i = 0; i + 1 < nx; i++) {
         const v0 = psi[j * nx + i], v1 = psi[j * nx + i + 1], v2 = psi[(j + 1) * nx + i + 1], v3 = psi[(j + 1) * nx + i];
@@ -5186,24 +5201,68 @@ const ROWS = (() => {
         const x0 = i * cell, y0 = j * cell;
         for (let k = Math.ceil(lo / LINE_DPSI); k * LINE_DPSI <= hi; k++) {
           const L = k * LINE_DPSI;
-          pts.length = 0;
-          // 위, 오른쪽, 아래, 왼쪽 변에서 높이 L을 지나는 곳
-          if ((v0 - L) * (v1 - L) < 0) pts.push(x0 + cell * (L - v0) / (v1 - v0), y0);
-          if ((v1 - L) * (v2 - L) < 0) pts.push(x0 + cell, y0 + cell * (L - v1) / (v2 - v1));
-          if ((v3 - L) * (v2 - L) < 0) pts.push(x0 + cell * (L - v3) / (v2 - v3), y0 + cell);
-          if ((v0 - L) * (v3 - L) < 0) pts.push(x0, y0 + cell * (L - v0) / (v3 - v0));
-          for (let p = 0; p + 3 < pts.length; p += 4) {
-            path.moveTo(pts[p], pts[p + 1]); path.lineTo(pts[p + 2], pts[p + 3]);
-            const mx = (pts[p] + pts[p + 2]) / 2, my = (pts[p + 1] + pts[p + 3]) / 2;
-            const bi = Math.floor(mx / BIN), bj = Math.floor(my / BIN), id = bj * 1000 + bi;
-            const dc = Math.hypot(mx - (bi + 0.5) * BIN, my - (bj + 0.5) * BIN);
-            const old = heads.get(id);
-            if (!old || dc < old[2]) heads.set(id, [mx, my, dc]);
+          cr.length = 0;
+          // 위, 오른쪽, 아래, 왼쪽 변에서 높이 L을 지나는 곳 [x, y, 변 번호]
+          if ((v0 - L) * (v1 - L) < 0) cr.push(x0 + cell * (L - v0) / (v1 - v0), y0, H(k, i, j));
+          if ((v1 - L) * (v2 - L) < 0) cr.push(x0 + cell, y0 + cell * (L - v1) / (v2 - v1), V(k, i + 1, j));
+          if ((v3 - L) * (v2 - L) < 0) cr.push(x0 + cell * (L - v3) / (v2 - v3), y0 + cell, H(k, i, j + 1));
+          if ((v0 - L) * (v3 - L) < 0) cr.push(x0, y0 + cell * (L - v0) / (v3 - v0), V(k, i, j));
+          for (let p = 0; p + 5 < cr.length; p += 6) {
+            const n = segId.length / 2;
+            segId.push(cr[p + 2], cr[p + 5]);
+            segXY.push(cr[p], cr[p + 1], cr[p + 3], cr[p + 4]);
+            link(cr[p + 2], n); link(cr[p + 5], n);
           }
         }
       }
     }
-    linesCache = { key, path, heads: [...heads.values()] };
+    // 2) 조각을 이어 선(닫힌 고리 또는 화면 끝에서 끊긴 선)으로 만든다
+    const nseg = segId.length / 2, used = new Uint8Array(nseg), lines = [];
+    const walk = (startId, pts, front) => {
+      let id = startId;
+      for (;;) {
+        const next = (byEdge.get(id) || []).find(t => !used[t]);
+        if (next === undefined) return id;
+        used[next] = 1;
+        const far = segId[2 * next] === id ? 1 : 0;
+        const x = segXY[4 * next + 2 * far], y = segXY[4 * next + 2 * far + 1];
+        if (front) pts.unshift(x, y); else pts.push(x, y);
+        id = segId[2 * next + far];
+      }
+    };
+    for (let n = 0; n < nseg; n++) {
+      if (used[n]) continue;
+      used[n] = 1;
+      const pts = [segXY[4 * n], segXY[4 * n + 1], segXY[4 * n + 2], segXY[4 * n + 3]];
+      const end = walk(segId[2 * n + 1], pts, false);
+      const closed = end === segId[2 * n];
+      if (!closed) walk(segId[2 * n], pts, true);
+      lines.push({ pts, closed });
+    }
+    // 3) 그리기 경로와, 선의 길이를 따라 같은 간격(SP px)으로 놓은 화살촉 자리
+    const SP = 120, path = new Path2D(), heads = [];
+    for (const { pts, closed } of lines) {
+      const m = pts.length / 2;
+      path.moveTo(pts[0], pts[1]);
+      for (let q = 1; q < m; q++) path.lineTo(pts[2 * q], pts[2 * q + 1]);
+      if (closed) path.closePath();
+      const cum = [0];
+      for (let q = 1; q < m; q++) cum.push(cum[q - 1] + Math.hypot(pts[2 * q] - pts[2 * q - 2], pts[2 * q + 1] - pts[2 * q - 1]));
+      let total = cum[m - 1];
+      if (closed) total += Math.hypot(pts[0] - pts[2 * m - 2], pts[1] - pts[2 * m - 1]);
+      if (total < 0.4 * SP) continue;
+      const cnt = closed ? Math.max(1, Math.round(total / SP)) : Math.max(1, Math.floor(total / SP));
+      const gap = closed ? total / cnt : SP, first = closed ? gap / 2 : (total - (cnt - 1) * SP) / 2;
+      let q = 1;
+      for (let c = 0; c < cnt; c++) {
+        const at = first + c * gap;
+        while (q < m - 1 && cum[q] < at) q++;
+        if (cum[q] < at) continue;              // 닫힌 고리의 마지막 한 칸(끝→처음)은 건너뛴다
+        const t = (at - cum[q - 1]) / ((cum[q] - cum[q - 1]) || 1);
+        heads.push([pts[2 * q - 2] + t * (pts[2 * q] - pts[2 * q - 2]), pts[2 * q - 1] + t * (pts[2 * q + 1] - pts[2 * q - 1])]);
+      }
+    }
+    linesCache = { key, path, heads };
     return linesCache;
   }
   function drawLines(ctx, w, h, s, src) {
