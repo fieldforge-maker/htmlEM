@@ -339,7 +339,7 @@ sub, sup { font-size: .7em; line-height: 0; }
 .step-top { display: flex; align-items: center; gap: 10px; }
 .dots { display: flex; flex-wrap: wrap; gap: 6px; }
 .dot-btn {
-  width: 2em; height: 2em; border-radius: 50%; cursor: pointer; font-family: var(--font-num); font-size: .72em;
+  width: 2em; height: 2em; padding: 0; white-space: nowrap; border-radius: 50%; cursor: pointer; font-family: var(--font-num); font-size: .72em;
   border: 1px solid var(--line); background: transparent; color: var(--muted);
 }
 .dot-btn.done { border-color: var(--accent); color: var(--accent); }
@@ -385,7 +385,7 @@ sub, sup { font-size: .7em; line-height: 0; }
     <nav class="tabs" aria-label="화면 목록">
       <button class="tab" type="button" data-screen="s1" title="Griffiths 7.2.1 그림 7.21 · Knight 30.5 · 슬라이드 6, 28"><span class="tab-no">1</span><span class="tab-label">세 실험 비교</span></button>
       <span class="tab-group">관점과 유도 전기장</span>
-      <button class="tab" type="button" data-screen="s2" title="Knight 31.1 · Knight 30.2 · 슬라이드 14–15, 28"><span class="tab-no">2</span><span class="tab-label">갈릴레이 장 변환</span></button>
+      <button class="tab" type="button" data-screen="s2" title="Knight 31.1 그림 31.3–31.10 · 예제 31.2 · Knight 30.2 · 슬라이드 14–15, 28"><span class="tab-no">2</span><span class="tab-label">갈릴레이 장 변환</span></button>
       <button class="tab" type="button" data-screen="s3" title="Knight 30.6 그림 30.30–30.32 · Serway 예제 30.4 · 슬라이드 27–33"><span class="tab-no">3</span><span class="tab-label">유도 전기장</span></button>
       <span class="tab-group">선속 규칙 퀴즈</span>
       <button class="tab" type="button" data-screen="s4" title="슬라이드 4 · Serway 그림 30.2 · Griffiths 그림 7.14"><span class="tab-no">4</span><span class="tab-label">스위치와 선속</span></button>
@@ -497,11 +497,11 @@ sub, sup { font-size: .7em; line-height: 0; }
 
     <div class="stage-wrap">
       <div class="canvas-box">
-        <canvas id="s2-stage" aria-label="자기장 속을 지나는 전하, 막대 또는 고리. 관성계 S와 S′ 사이를 오가며 본다."></canvas>
+        <canvas id="s2-stage" aria-label="자기장 속을 지나는 전하, 막대 또는 고리. 관성계 A와 B 사이를 오가며 본다."></canvas>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="관성계">
-            <button type="button" data-frame="0" aria-pressed="true">S · 자석과 함께</button>
-            <button type="button" data-frame="1" aria-pressed="false">S′ · 물체와 함께</button>
+            <button type="button" data-frame="0" aria-pressed="true">A · 자석과 함께</button>
+            <button type="button" data-frame="1" aria-pressed="false">B · 물체와 함께</button>
           </div>
         </div>
       </div>
@@ -516,9 +516,9 @@ sub, sup { font-size: .7em; line-height: 0; }
 
     <aside class="panel" id="s2-panel" aria-label="공식, 두 관성계의 값과 조절">
       <section class="law-card" aria-label="갈릴레이 장 변환">
-        <p class="law-big"><b class="mv">E</b>′ = <b class="mv">E</b> + <b class="mv">V</b>×<b class="mv">B</b></p>
-        <p class="law-sub"><b class="mv">B</b>′ = <b class="mv">B</b> − <b class="mv">V</b>×<b class="mv">E</b>/<span class="m">c</span><sup>2</sup></p>
-        <p class="law-note">S′이 S에 대해 속도 <b class="mv">V</b>로 움직일 때 (<span class="m">V</span> ≪ <span class="m">c</span>)</p>
+        <p class="law-big"><b class="mv">E</b><sub>B</sub> = <b class="mv">E</b><sub>A</sub> + <b class="mv">v</b><sub>BA</sub>×<b class="mv">B</b><sub>A</sub></p>
+        <p class="law-sub"><b class="mv">B</b><sub>B</sub> = <b class="mv">B</b><sub>A</sub> − <b class="mv">v</b><sub>BA</sub>×<b class="mv">E</b><sub>A</sub>/<span class="m">c</span><sup>2</sup></p>
+        <p class="law-note"><b class="mv">v</b><sub>BA</sub>: A에 대한 관성계 B의 속도 (<span class="m">v</span> ≪ <span class="m">c</span>)</p>
       </section>
       <section class="quiz" hidden></section>
 
@@ -1845,11 +1845,11 @@ const KIT = (() => {
 })();
 
 /* ================= 화면 2: 갈릴레이 장 변환 (Knight 31.1, 30.2) =================
-   자석이 정지한 관성계 S와, 물체와 함께 속도 𝐕(= 𝐯)로 움직이는 관성계 S′.
+   기호는 나이트 31.1을 따른다: 자석이 정지한 관성계 A, 물체와 함께 𝐯_BA(= 𝐯)로 움직이는 관성계 B.
    갈아타는 동안의 관성계는 S에 대해 β𝐕로 움직인다고 보고 힘을 나눈다:
-     물체의 속도 𝐯′ = (1 − β)𝐯 → 자기력 q𝐯′×𝐁 (초록),  𝐄′ = β𝐕×𝐁 → 전기력 q𝐄′ (주황).  합은 늘 q𝐯×𝐁.
-   B′ = B − 𝐕×𝐄/c²: 자석 장면에서는 S에 𝐄가 없어 𝐁′ = 𝐁. '홀로 움직이는 전하'에서는 S′(전하가 정지)에 쿨롱 𝐄만 있고
-   S(전하가 𝐯로 움직임)에서는 𝐁 = 𝐯×𝐄/c²가 생긴다. */
+     물체의 속도 (1 − β)𝐯 → 자기력 (초록),  𝐄 = β𝐯×𝐁 → 전기력 (주황).  합은 늘 q𝐯×𝐁.
+   𝐁_B = 𝐁_A − 𝐯_BA×𝐄_A/c²: 자석 장면에서는 A에 𝐄가 없어 𝐁_B = 𝐁_A. '홀로 움직이는 전하'에서는 B(전하가 정지)에 쿨롱 𝐄만 있고
+   A(전하가 𝐯로 움직임)에서는 𝐁 = 𝐯×𝐄/c²가 생긴다. */
 (() => {
   'use strict';
   const { TAU, C, F, m: M, mv: MV } = EM;
@@ -1888,7 +1888,7 @@ const KIT = (() => {
     }
     const v = vis(), b = state.beta;
     state.x += v * dt;
-    // S′에서는 카메라가 물체를 따라가며 가운데로 천천히 맞춘다 (S에서는 카메라가 자석에 붙어 정지)
+    // B에서는 카메라가 물체를 따라가며 가운데로 천천히 맞춘다 (A에서는 카메라가 자석에 붙어 정지)
     const centre = state.obj === 'loop' ? state.x + LW / 2 : state.x;
     state.camX += b * (v + 1.6 * (centre - state.camX)) * dt;
     if (state.sep < 1) state.sep = Math.min(1, state.sep + dt / 1.4);
@@ -1927,7 +1927,7 @@ const KIT = (() => {
     return y0;
   }
   function fonts(fs) {
-    return { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${fs + 2}px ${F.math}`, mb: `700 ${fs + 2}px ${F.math}`, m: `${fs + 2}px ${F.math}` };
+    return { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${fs + 2}px ${F.math}`, mb: `700 ${fs + 2}px ${F.math}`, m: `${fs + 2}px ${F.math}`, sub: `500 ${Math.round(fs * 0.72)}px ${F.ui}`, dy: fs * 0.38 };
   }
 
   function drawStage() {
@@ -1951,7 +1951,7 @@ const KIT = (() => {
         if (obj === 'loop') { ctx.moveTo(xR, Y(BAND)); ctx.lineTo(xR, Y(-BAND)); }
         ctx.stroke();
         KIT.bField(ctx, 0, Y(BAND), xR, Y(-BAND), SP * s, 0.3 * s, 'in', C.field, X(0), Y(BAND));
-        // 갈아탄 관성계에서 보이는 전기장 𝐄′ = β𝐕×𝐁 (위쪽, 자석과 함께 움직인다)
+        // 갈아탄 관성계에서 보이는 전기장 β𝐯×𝐁 (위쪽, 자석과 함께 움직인다)
         if (b > 0.02) {
           ctx.save();
           ctx.globalAlpha = 0.55;
@@ -1980,7 +1980,7 @@ const KIT = (() => {
         ctx.stroke();
         EM.runs(ctx, [['자석에 붙은 눈금', f.uiS]], 10, yb + 1.15 * s, C.muted);
       }
-      // S′에서 본 자석의 속도
+      // B에서 본 자석의 속도
       if (b > 0.05) {
         ctx.save();
         ctx.globalAlpha = Math.min(1, b * 1.3);
@@ -2013,8 +2013,8 @@ const KIT = (() => {
 
     // 관성계 표
     const tag = b < 0.5
-      ? (obj === 'free' ? '관성계 S · 실험실 (전하가 움직인다)' : '관성계 S · 자석이 정지')
-      : (obj === 'free' ? '관성계 S′ · 전하가 정지' : `관성계 S′ · ${obj === 'q' ? '전하' : obj === 'rod' ? '막대' : '고리'}가 정지`);
+      ? (obj === 'free' ? '관성계 A · 실험실 (전하가 움직인다)' : '관성계 A · 자석이 정지')
+      : (obj === 'free' ? '관성계 B · 전하가 정지' : `관성계 B · ${obj === 'q' ? '전하' : obj === 'rod' ? '막대' : '고리'}가 정지`);
     ctx.font = `700 ${fs}px ${F.ui}`;
     const tw = ctx.measureText(tag).width, px = 12, py = 12, ph = fs * 2;
     ctx.fillStyle = b < 0.5 ? C.panel : C.accentSoft;
@@ -2029,14 +2029,14 @@ const KIT = (() => {
     const b = state.beta, lf = Lf(), lw = Math.max(2.6, 0.12 * s);
     const vL = (1 - b) * Lv();
     if (vL > 0.15) KIT.vArrow(ctx, X(x) + r * s, Y(y), 1, 0, vL * s, C.ink, Math.max(0.8, s / 30));
-    if (label && vL > 0.6) EM.runs(ctx, [['v', f.mb], [b > 0.05 ? '′' : '', f.m]], X(x) + (r + vL + 0.35) * s, Y(y), C.ink, { halo: true });
-    if (label && vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['′ = 0', f.m]], X(x) + (r + 0.4) * s, Y(y), C.ink, { halo: true });
+    if (label && vL > 0.6) EM.runs(ctx, [['v', f.mb]], X(x) + (r + vL + 0.35) * s, Y(y), C.ink, { halo: true });
+    if (label && vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x) + (r + 0.4) * s, Y(y), C.ink, { halo: true });
     const top = stack(X, Y, s, x, y + r, 1, [[(1 - b) * lf, C.field], [b * lf, C.efield]], lw);
     if (label) {
       const items = [];
-      if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], [b > 0.05 ? '′' : '', f.m, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
+      if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
       if (1 - b > 0.12 && b > 0.12) items.push(['  +  ', f.m]);
-      if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['′', f.m, 0, C.efield]);
+      if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['B', f.sub, f.dy, C.efield]);
       EM.runs(ctx, items, X(x) + 0.5 * s, Y(top) + 0.2 * s, C.muted, { halo: true });
     }
     return top;
@@ -2066,22 +2066,22 @@ const KIT = (() => {
       KIT.charge(ctx, X(x), Y(-ROD + 0.55 + k * 0.78), qr, -1);
     }
     ctx.restore();
-    // 시험 전하 (가운데): 위로 자기력 + 전기력 𝐄′, 아래로 갈라진 전하가 만든 전기력
+    // 시험 전하 (가운데): 위로 자기력 + 전기력 𝐄_B, 아래로 갈라진 전하가 만든 전기력
     const r = 0.5, lf = Lf(), lw = Math.max(2.6, 0.12 * s);
     const yq = 0;
     stack(X, Y, s, x, yq + r, 1, [[(1 - b) * lf, C.field], [b * lf, C.efield]], lw);
     stack(X, Y, s, x, yq - r, -1, [[sep * lf, C.efield]], lw);
     KIT.charge(ctx, X(x), Y(yq), r * s, 1);
     const items = [];
-    if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], [b > 0.05 ? '′' : '', f.m, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
+    if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
     if (1 - b > 0.12 && b > 0.12) items.push(['  +  ', f.m]);
-    if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['′', f.m, 0, C.efield]);
+    if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['B', f.sub, f.dy, C.efield]);
     EM.runs(ctx, items, X(x) + (ROD_W / 2 + 0.5) * s, Y(r + lf * 0.6), C.muted, { halo: true });
     if (sep > 0.05) EM.runs(ctx, [['갈라진 전하의 전기력', f.uiS]], X(x) + (ROD_W / 2 + 0.5) * s, Y(-r - lf * 0.6), C.efield, { halo: true });
     // 속도
     const vL = (1 - b) * Lv();
     if (vL > 0.15) KIT.vArrow(ctx, X(x) - (ROD_W / 2 + 0.4 + vL) * s, Y(-ROD - 1), 1, 0, vL * s, C.ink, Math.max(0.8, s / 30));
-    if (vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['′ = 0', f.m]], X(x), Y(-ROD - 1), C.ink, { align: 'center', halo: true });
+    if (vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x), Y(-ROD - 1), C.ink, { align: 'center', halo: true });
     // 양 끝 전위차
     if (sep > 0.3) {
       const xb = X(x) - (ROD_W / 2 + 1.1) * s;
@@ -2119,7 +2119,7 @@ const KIT = (() => {
       const items = [];
       if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
       if (1 - b > 0.12 && b > 0.12) items.push(['  +  ', f.m]);
-      if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['′', f.m, 0, C.efield]);
+      if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['B', f.sub, f.dy, C.efield]);
       EM.runs(ctx, items, X(xL) - 0.7 * s, Y(1.3), C.muted, { align: 'right', halo: true });
     }
     // 고리의 속도
@@ -2162,8 +2162,8 @@ const KIT = (() => {
     if (vL > 0.15) KIT.vArrow(ctx, X(x) + r * s, Y(0), 1, 0, vL * s, C.ink, Math.max(0.8, s / 30));
     KIT.charge(ctx, X(x), Y(0), r * s, 1);
     if (vL > 0.6) EM.runs(ctx, [['v', f.mb]], X(x) + (r + vL + 0.35) * s, Y(0), C.ink, { halo: true });
-    else EM.runs(ctx, [['v', f.mb], ['′ = 0', f.m]], X(x) + (r + 0.4) * s, Y(0) - 0.9 * s, C.ink, { halo: true });
-    EM.runs(ctx, [['B', f.mb], [' = ', f.m], ['v', f.mb], ['×', f.m], ['E', f.mb], ['/', f.m], ['c', f.mi], ['²', f.m]], X(x), Y(-VIEWY + 1.1), C.field, { align: 'center', halo: true });
+    else EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x), Y(0) + (r + 0.9) * s, C.ink, { align: 'center', halo: true });
+    EM.runs(ctx, b < 0.5 ? [['B', f.mb], [' = ', f.m], ['v', f.mb], ['×', f.m], ['E', f.mb], ['/', f.m], ['c', f.mi], ['²', f.m]] : [['B', f.mb], [' = 0  (쿨롱 전기장만)', f.uiS]], X(x), Y(-VIEWY + 1.1), b < 0.5 ? C.field : C.muted, { align: 'center', halo: true });
   }
 
   /* ---------- 계기판 ---------- */
@@ -2171,10 +2171,10 @@ const KIT = (() => {
   function updateReadouts() {
     const V = state.V, B = state.B, E = V * B;
     const vTxt = `${V} m/s`, eTxt = `${EM.fmt(E, 2)} V/m`, bTxt = `${B.toFixed(1)} T`;
-    const H = (a, b2) => `<thead><tr><th></th><th data-f="0">S · ${a}</th><th data-f="1">S′ · ${b2}</th></tr></thead>`;
+    const H = (a, b2) => `<thead><tr><th></th><th data-f="0">A · ${a}</th><th data-f="1">B · ${b2}</th></tr></thead>`;
     const row = (k, a, b2) => `<tr><th>${k}</th>${cell(a, 0)}${cell(b2, 1)}</tr>`;
     let html = '', note = '';
-    const F_B = `<span class="c-b">자기력<br>${M('vB')} = ${eTxt}</span>`, F_E = `<span class="c-e">전기력<br>${M('E')}′ = ${eTxt}</span>`;
+    const F_B = `<span class="c-b">자기력<br>${M('vB')} = ${eTxt}</span>`, F_E = `<span class="c-e">전기력<br>${M('E')}<sub>B</sub> = ${eTxt}</span>`;
     if (state.obj === 'q' || state.obj === 'rod') {
       const who = state.obj === 'q' ? '전하' : '막대';
       html = H('자석', who) + '<tbody>' +
@@ -2182,17 +2182,17 @@ const KIT = (() => {
         row(`전기장 ${MV('E')}`, '0', `<span class="c-e">${M('vB')} = ${eTxt}</span>`) +
         row(`자기장 ${MV('B')}`, bTxt, bTxt) +
         row('힘 ÷ q', F_B, F_E) +
-        (state.obj === 'rod' ? row(`양 끝 Δ${M('V')}`, `${M('vlB')} = ${EM.fmt(V * 0.1 * B, 2)} V`, `${M('E')}′${M('l')} = ${EM.fmt(V * 0.1 * B, 2)} V`) : '') +
+        (state.obj === 'rod' ? row(`양 끝 Δ${M('V')}`, `${M('vlB')} = ${EM.fmt(V * 0.1 * B, 2)} V`, `${M('E')}<sub>B</sub>${M('l')} = ${EM.fmt(V * 0.1 * B, 2)} V`) : '') +
         '</tbody>';
       note = state.obj === 'q'
-        ? `힘(가속도)은 두 관성계에서 같다. 무엇을 전기장, 무엇을 자기장이라 부를지가 다를 뿐이다. S에 ${MV('E')}가 없으므로 ${MV('B')}′ = ${MV('B')}.`
-        : `S: 자기력이 전하를 가르는 운동 기전력. S′: 바깥 전기장 ${MV('E')}′ 속 도체의 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')}.`;
+        ? `모든 관성계의 실험자는 가속도, 곧 힘에 대해 일치한다. 무엇을 전기장, 무엇을 자기장이라 부를지가 다를 뿐이다. A에 ${MV('E')}가 없으므로 <b class="mv">B</b><sub>B</sub> = <b class="mv">B</b><sub>A</sub>.`
+        : `A: 자기력이 전하를 가르는 운동 기전력. B: 바깥 전기장 <b class="mv">E</b><sub>B</sub> 속 도체의 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')}.`;
     } else if (state.obj === 'loop') {
       html = H('자석 (실험 1)', '고리 (실험 2)') + '<tbody>' +
         row('고리의 속도', vTxt, '0') +
         row('자석의 속도', '0', `−${vTxt}`) +
         row('왼쪽 변을 미는 힘 ÷ q', F_B, F_E) +
-        row('ℰ', `${M('vBh')} = ${EM.fmt(V * B * 0.08, 2)} V`, `${M('E')}′${M('h')} = ${EM.fmt(V * B * 0.08, 2)} V`) +
+        row('ℰ', `${M('vBh')} = ${EM.fmt(V * B * 0.08, 2)} V`, `${M('E')}<sub>B</sub>${M('h')} = ${EM.fmt(V * B * 0.08, 2)} V`) +
         '</tbody>';
       note = `실험 2는 실험 1을 고리와 함께 움직이며 본 것이다. 그런데 실험 3(자기장의 세기가 변함)은 어떤 관성계로 갈아타도 '움직이는 고리'로 바꿀 수 없다.`;
     } else {
@@ -2209,8 +2209,8 @@ const KIT = (() => {
     $('bOut').textContent = `${B.toFixed(1)} T`;
     objSegs.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.obj === state.obj)));
     frameSegs.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.frame === state.frame)));
-    frameSegs[0].textContent = state.obj === 'free' ? 'S · 실험실' : 'S · 자석과 함께';
-    frameSegs[1].textContent = state.obj === 'free' ? 'S′ · 전하와 함께' : 'S′ · 물체와 함께';
+    frameSegs[0].textContent = state.obj === 'free' ? 'A · 실험실' : 'A · 자석과 함께';
+    frameSegs[1].textContent = state.obj === 'free' ? 'B · 전하와 함께' : 'B · 물체와 함께';
     updateTableHighlight();
   }
   function updateTableHighlight() {
@@ -2225,7 +2225,7 @@ const KIT = (() => {
     place();
     updateReadouts();
   }
-  // 물체를 처음 자리에: S에서는 무대 왼쪽, S′에서는 가운데
+  // 물체를 처음 자리에: A에서는 무대 왼쪽, B에서는 가운데
   function place() {
     if (state.obj === 'loop') { state.x = L0; state.camX = state.beta > 0.5 ? L0 + LW / 2 : 2; return; }
     state.x = state.beta > 0.5 ? state.camX : state.camX - 0.55 * view.halfW;
@@ -2235,24 +2235,36 @@ const KIT = (() => {
   const flowLoop = EM.loop(dt => { flowPhase += dt * 2.2 * state.V / 10; });
 
   let objSegs = [], frameSegs = [];
+  // 나이트 31.1의 기호: 𝐄_B = 𝐄_A + 𝐯_BA×𝐁_A, 𝐁_B = 𝐁_A − 𝐯_BA×𝐄_A/c²
+  const sb = (x, k) => `${MV(x)}<sub>${k}</sub>`;
+  const EB = sb('E', 'B'), EA = sb('E', 'A'), BB = sb('B', 'B'), BA = sb('B', 'A'), VBA = sb('v', 'BA');
   const QZ = {
-    q: `전하와 함께 움직이는 관성계 S′에서 잰 자기장 ${MV('B')}′은 어떻게 될까?`,
-    choices: [`0이다 (자석이 움직이니까)`, `${MV('B')}와 같다`, `${MV('B')}보다 세다`, `${MV('B')}와 방향이 반대다`],
+    q: `전하와 함께 움직이는 관성계 B에서 잰 자기장 ${BB}는 어떻게 될까?`,
+    choices: [`0이다 (자석이 움직이니까)`, `${BA}와 같다`, `${BA}보다 세다`, `${BA}와 방향이 반대다`],
     answer: 1,
-    why: `${MV('B')}′ = ${MV('B')} − ${MV('V')}×${MV('E')}/${M('c')}<sup>2</sup>에서 S에는 전기장이 없으므로(${MV('E')} = 0) ${MV('B')}′ = ${MV('B')}. 고르게 퍼진 자기장은 자석이 움직여도 각 점에서 그대로다. 관성계를 바꾸면 달라지는 것은 전기장 ${MV('E')}′ = ${MV('V')}×${MV('B')}뿐이다.`,
+    why: `${BB} = ${BA} − ${VBA}×${EA}/${M('c')}<sup>2</sup>에서 A에는 전기장이 없으므로(${EA} = 0) ${BB} = ${BA}. 관성계를 바꾸어 달라지는 것은 전기장 ${EB} = ${VBA}×${BA}뿐이다.`,
+  };
+  const QR = {
+    tag: '계산해 보기',
+    q: `나이트 예제 31.2: 실험실 자석의 1.0 T 자기장이 위를 향한다. 로켓이 땅과 나란히 1000 m/s로 자석 극 사이를 지난다. 로켓의 과학자가 잰 장은?`,
+    choices: [`${EB} = 0, ${BB} = 1.0 T`, `${EB} = 1000 V/m, ${BB} = 1.0 T`, `${EB} = 1000 V/m, ${BB} = 0`, `${EB} = 1.0×10<sup>−3</sup> V/m, ${BB} = 1.0 T`],
+    answer: 1,
+    why: `${EB} = ${VBA}×${BA}: 크기 (1000 m/s)(1.0 T) = 1000 V/m, 방향은 ${VBA}와 ${BA} 모두에 수직. ${EA} = 0이므로 ${BB} = ${BA} = 1.0 T. 자기장은 그대로이고 전기장이 '덤으로' 생긴다.`,
   };
   const STEPS = [
-    { obj: 'q', frame: 0, cap: `자석이 정지한 관성계 S. 전하 ${M('q')}가 속도 ${MV('v')}로 자기장 속을 지나며 자기력 ${MV('F')} = ${M('q')}${MV('v')}×${MV('B')}(위쪽)를 받는다. 전기장은 없다.` },
-    { obj: 'q', frame: 1, cap: `전하와 함께 움직이는 관성계 S′으로 갈아탄다. S′에서 전하는 정지해 있으니 자기력은 0이다. 그런데 ${M('V')} ≪ ${M('c')}이면 두 관성계에서 가속도, 곧 힘이 같아야 한다. 그러니 S′에는 전하를 위로 미는 전기장 ${MV('E')}′ = ${MV('v')}×${MV('B')}가 있다. 갈아타는 동안 힘의 크기는 그대로이고 초록(자기력)이 주황(전기력)으로 바뀐다.` },
-    { obj: 'q', frame: 1, quiz: QZ, cap: `S′에서 전기장이 새로 나타났다. 자기장은 어떻게 될까?` },
-    { obj: 'q', frame: 1, quiz: QZ, reveal: true, cap: `일반적으로 S′이 S에 대해 속도 ${MV('V')}로 움직이면 ${MV('E')}′ = ${MV('E')} + ${MV('V')}×${MV('B')}, ${MV('B')}′ = ${MV('B')} − ${MV('V')}×${MV('E')}/${M('c')}<sup>2</sup>(갈릴레이 장 변환, ${M('V')} ≪ ${M('c')}). 전기장과 자기장은 따로따로가 아니라 관찰자에 따라 서로 섞여 보이는 하나의 전자기장이다.` },
-    { obj: 'rod', frame: 0, cap: `도체 막대가 자기장 속을 움직인다(S). 양전하는 자기력 ${M('q')}${MV('v')}×${MV('B')}에 밀려 위로 모이고 아래에는 음전하가 남는다. 쌓인 전하의 전기력이 자기력과 같아지면 멈춘다: ${M('qE')} = ${M('qvB')}, Δ${M('V')} = ${M('vlB')} (운동 기전력, 나이트 30.2).` },
-    { obj: 'rod', frame: 1, cap: `막대와 함께 보면(S′) 막대는 정지해 있고, 바깥 전기장 ${MV('E')}′ = ${MV('v')}×${MV('B')} 속에 놓인 도체일 뿐이다. 도체 속 전기장이 0이 될 때까지 전하가 갈라진다 — 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')} = ${M('E')}′${M('l')} = ${M('vlB')}.` },
-    { obj: 'loop', frame: 0, cap: `그리피스의 실험 1을 자석이 정지한 관성계 S에서 본다. 고리의 왼쪽 변에 있는 전하를 미는 것은 자기력 ${M('q')}${MV('v')}×${MV('B')}이다.` },
-    { obj: 'loop', frame: 1, cap: `같은 실험을 고리와 함께 보면(S′) 자석이 왼쪽으로 움직이는 실험 2가 된다. 자석 영역 안에 ${MV('E')}′ = ${MV('v')}×${MV('B')}가 있어 왼쪽 변의 전하를 민다. 실험 2는 실험 1을 다른 관성계에서 본 것이다. 그러나 실험 3처럼 자기장의 세기 자체가 변하는 경우는 어떤 관성계로 갈아타도 없앨 수 없다 → 다음 화면(유도 전기장).` },
-    { obj: 'free', frame: 0, cap: `거꾸로 보기: 홀로 움직이는 전하. 전하가 정지한 S′에는 쿨롱 전기장만 있다. 전하가 ${MV('v')}로 움직이는 실험실 S에서는 ${MV('B')} = ${MV('v')}×${MV('E')}/${M('c')}<sup>2</sup>인 자기장도 있다(위 • 나옴, 아래 × 들어감): 점전하의 비오–사바르 법칙. 갈릴레이 장 변환은 ${M('V')} ≪ ${M('c')}에서만 맞고, 정확한 식은 아인슈타인의 상대성 이론(로런츠 변환)이 준다.` },
+    { obj: 'q', frame: 0, cap: `자석이 정지한 관성계 A(나이트의 앨릭). 전하 ${M('q')}가 속도 ${MV('v')}로 자기장 속을 지나며 자기력 ${MV('F')} = ${M('q')}${MV('v')}×${BA}(위쪽)를 받는다. 전기장은 없다.` },
+    { obj: 'q', frame: 1, cap: `전하와 함께 달리는 관성계 B(브리트니, ${VBA} = ${MV('v')})로 갈아탄다. B에서 전하는 정지해 있으니 자기력은 0이다. 그런데 갈릴레이 변환에서 두 관성계의 가속도는 같으므로 힘도 같아야 한다. 정지한 전하에 힘을 주는 것은 전기장이므로 B에는 ${EB} = ${VBA}×${BA}가 있다. 갈아타는 동안 힘의 크기는 그대로이고 초록(자기력)이 주황(전기력)으로 바뀐다.` },
+    { obj: 'q', frame: 1, quiz: QZ, cap: `B에서 전기장이 새로 나타났다. 자기장은 어떻게 될까?` },
+    { obj: 'q', frame: 1, quiz: QZ, reveal: true, cap: `일반적으로 B가 A에 대해 ${VBA}로 움직이면 ${EB} = ${EA} + ${VBA}×${BA}, ${BB} = ${BA} − ${VBA}×${EA}/${M('c')}<sup>2</sup> (갈릴레이 장 변환, 나이트 식 31.10). 두 식은 같은 점의 장을 각 관성계에 정지한 실험자가 잰 값이다. 전기장과 자기장은 따로 있는 것이 아니라, 하나의 전자기장이 관찰자에 따라 다른 얼굴을 보인다.` },
+    { obj: 'q', frame: 1, quiz: QR, cap: `나이트 예제 31.2로 확인해 보자.` },
+    { obj: 'q', frame: 1, quiz: QR, reveal: true, cap: `로켓에서는 자기장 1.0 T와 함께 1000 V/m의 전기장을 잰다. 실험실에서 1000 m/s는 빠르지만 ${M('c')}에 비하면 아주 느리다.` },
+    { obj: 'rod', frame: 0, cap: `도체 막대가 자기장 속을 움직인다(A). 양전하는 자기력 ${M('q')}${MV('v')}×${MV('B')}에 밀려 위로 모이고 아래에는 음전하가 남는다. 쌓인 전하의 전기력이 자기력과 같아지면 멈춘다: ${M('qE')} = ${M('qvB')}, Δ${M('V')} = ${M('vlB')} (운동 기전력, 나이트 30.2).` },
+    { obj: 'rod', frame: 1, cap: `막대와 함께 보면(B) 막대는 정지해 있고, 바깥 전기장 ${EB} = ${MV('v')}×${MV('B')} 속에 놓인 도체일 뿐이다. 도체 속 전기장이 0이 될 때까지 전하가 갈라진다 — 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')} = ${M('E')}<sub>B</sub>${M('l')} = ${M('vlB')}.` },
+    { obj: 'loop', frame: 0, cap: `나이트 그림 31.10(a) = 그리피스의 실험 1. 실험실 A에서 고리가 자기장 속으로 움직이고, 앞쪽 변의 전하를 미는 것은 자기력 ${M('q')}${MV('v')}×${MV('B')}이다: 운동 기전력.` },
+    { obj: 'loop', frame: 1, cap: `고리와 함께 보면(B, 그림 31.10(b)) 자석이 왼쪽으로 움직이는 실험 2가 된다. 정지한 전하를 미는 것은 ${EB} = ${MV('v')}×${MV('B')}이고, 이것이 바로 패러데이 법칙의 유도 전기장이다: 자기장이 '변하는' 것은 고리의 관성계 B에서뿐이므로 유도 전기장도 B에서만 보인다. 그러나 실험 3처럼 자기장의 세기 자체가 변하면 어떤 관성계로 갈아타도 없앨 수 없다 → 다음 화면(유도 전기장).` },
+    { obj: 'free', frame: 0, cap: `홀로 움직이는 전하(나이트 그림 31.7). 전하가 정지한 관성계에는 쿨롱 전기장만 있다. 전하가 ${MV('v')}로 움직이는 관성계에서는 ${MV('B')} = ${MV('v')}×${MV('E')}/${M('c')}<sup>2</sup>인 자기장도 있다(위 • 나옴, 아래 × 들어감): 점전하의 비오–사바르 법칙은 쿨롱 전기장을 움직이는 관성계로 변환한 것이다.` },
+    { obj: 'free', frame: 1, cap: `거의 상대성(나이트 31.1 끝): 나란히 달리는 두 전하에 이 변환을 쓰면 전하가 정지한 관성계의 전기장이 (1 − ${M('v')}<sup>2</sup>/${M('c')}<sup>2</sup>)배로 나와 쿨롱 법칙과 어긋난다. 갈릴레이 장 변환은 ${M('v')}<sup>2</sup>/${M('c')}<sup>2</sup>을 0으로 둘 수 있을 때(${M('v')} < 10<sup>7</sup> m/s)만 맞고, 정확한 식은 아인슈타인의 상대성 이론(36장)이 준다.` },
   ];
-
   const def = EM.register({
     id: 's2',
     steps: STEPS,
