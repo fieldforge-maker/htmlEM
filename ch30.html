@@ -253,6 +253,15 @@ sub, sup { font-size: .7em; line-height: 0; }
   width: 1.75em; height: 1.75em; border-radius: 50%; display: grid; place-items: center;
   border: 1px solid var(--line); font-family: var(--font-num); font-size: .8em; color: var(--muted);
 }
+.quiz-choices.grid { grid-template-columns: 1fr 1fr; }
+.quiz-choices.grid .quiz-choice { position: relative; display: block; padding: .25em .3em; }
+.quiz-choices.grid .quiz-choice .qk { position: absolute; top: .3em; left: .3em; }
+.quiz-fig { display: block; width: 100%; height: auto; overflow: visible; }
+.quiz-q .quiz-fig { max-width: 10em; margin: .3em auto 0; }
+.quiz-fig text { font-family: var(--font-math); font-size: 12px; fill: var(--ink); }
+.quiz-fig .ax { stroke: var(--ink); stroke-width: 1.1; fill: none; }
+.quiz-fig .dsh { stroke-width: 1; stroke-dasharray: 3 2.5; fill: none; }
+.quiz-fig .arc { stroke: var(--muted); stroke-width: 1; fill: none; }
 .quiz-choice.picked { border-color: var(--accent); }
 .quiz-choice.picked .qk { border-color: var(--accent); color: var(--accent); font-weight: 600; }
 .quiz.revealed .quiz-choice { cursor: default; opacity: .42; }
@@ -1044,6 +1053,7 @@ const EM = (() => {
       Z.tag.textContent = Q.tag || '생각해 보기';
       Z.q.innerHTML = Q.q;
       Z.list.innerHTML = '';
+      Z.list.classList.toggle('grid', !!Q.grid);
       Z.items = Q.choices.map((c, k) => {
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'quiz-choice';
@@ -2251,6 +2261,43 @@ const KIT = (() => {
     answer: 1,
     why: `${EB} = ${VBA}×${BA}: 크기 (1000 m/s)(1.0 T) = 1000 V/m, 방향은 ${VBA}와 ${BA} 모두에 수직. ${EA} = 0이므로 ${BB} = ${BA} = 1.0 T. 자기장은 그대로이고 전기장이 '덤으로' 생긴다.`,
   };
+  // Stop to Think 31.1: 비스듬한 xyz 축 위의 벡터 그림 (y 위, x 오른쪽, z 왼쪽 아래)
+  const FX = 62, FY = 52;
+  const ax = (L = 1) => `<line class="ax" x1="${FX}" y1="${FY + 46 * L}" x2="${FX}" y2="${FY - 44 * L}"/><line class="ax" x1="${FX}" y1="${FY}" x2="${FX + 48 * L}" y2="${FY}"/><line class="ax" x1="${FX + 26 * L}" y1="${FY - 24 * L}" x2="${FX - 38 * L}" y2="${FY + 35 * L}"/>` +
+    `<text x="${FX + 48 * L + 3}" y="${FY + 4}">x</text><text x="${FX + 3}" y="${FY - 44 * L + 2}">y</text><text x="${FX - 38 * L - 8}" y="${FY + 35 * L + 4}">z</text>`;
+  const vec = (x, y, col, id) => {
+    const L = Math.hypot(x - FX, y - FY), ux = (x - FX) / L, uy = (y - FY) / L, h = 7, w = 3.6;
+    return `<line x1="${FX}" y1="${FY}" x2="${x - ux * h * 0.8}" y2="${y - uy * h * 0.8}" stroke="${col}" stroke-width="2.4"/>` +
+      `<path d="M${x} ${y}L${x - ux * h - uy * w} ${y - uy * h + ux * w}L${x - ux * h + uy * w} ${y - uy * h - ux * w}Z" fill="${col}"/>`;
+  };
+  const lab = (t, k, x, y, col) => `<text x="${x}" y="${y}" fill="${col}" style="font-weight:700">${t}<tspan font-size="8" dy="3">${k}</tspan></text>`;
+  const svg = (inner, h = 100) => `<svg class="quiz-fig" viewBox="0 0 124 ${h}" aria-hidden="true">${inner}</svg>`;
+  const cE = 'var(--efield)', cB = 'var(--field)';
+  const EZ = [FX - 30, FY + 27.6];                     // z축 방향의 E
+  const opt = k => {
+    let g = ax();
+    if (k < 2) {
+      const yb = k === 0 ? FY + 13 : FY - 13;
+      g += `<path class="dsh" stroke="${cB}" d="M${FX + 40} ${FY}V${yb}"/><path class="arc" d="M${FX + 22} ${FY}A22 22 0 0 ${k === 0 ? 1 : 0} ${FX + 21} ${k === 0 ? FY + 6.8 : FY - 6.8}"/>`;
+      g += vec(...EZ, cE) + vec(FX + 40, yb, cB) + lab('E', 'B', EZ[0] - 16, EZ[1] - 6, cE) + lab('B', 'B', FX + 32, k === 0 ? yb + 14 : yb - 6, cB);
+    } else {
+      const up = k === 2 ? -1 : 1, ex = FX - 28, ey = FY + 25.8 + up * 13;
+      g += `<path class="dsh" stroke="${cE}" d="M${ex} ${ey}V${FY + 25.8}"/><path class="arc" d="M${FX - 14} ${FY + 12.9}A19 19 0 0 ${k === 2 ? 1 : 0} ${FX - 16.6} ${FY + 9.5 + (k === 2 ? 0 : 7)}"/>`;
+      g += vec(ex, ey, cE) + vec(FX + 40, FY, cB) + lab('E', 'B', ex - 16, ey + (k === 2 ? -4 : 12), cE) + lab('B', 'B', FX + 30, FY - 7, cB);
+    }
+    return svg(g);
+  };
+  const frameA = svg(ax() + vec(...EZ, cE) + vec(FX + 40, FY, cB) + lab('E', 'A', EZ[0] - 16, EZ[1] - 6, cE) + lab('B', 'A', FX + 30, FY - 7, cB) +
+    `<path d="M${FX + 30} ${FY - 34}h28" stroke="var(--ink)" stroke-width="5"/><path d="M${FX + 30} ${FY - 34}h28" stroke="var(--panel)" stroke-width="2"/><path d="M${FX + 64} ${FY - 34}l-8 -5v10z" fill="var(--panel)" stroke="var(--ink)" stroke-width="1.6"/>` +
+    lab('v', 'BA', FX + 34, FY - 41, 'var(--ink)'), 100);
+  const QT = {
+    tag: 'Stop to Think 31.1',
+    grid: true,
+    q: `관성계 A에 ${EA}(${M('z')} 방향)와 ${BA}(${M('x')} 방향)가 있고, 관성계 B는 A에 대해 ${M('x')} 방향으로 ${VBA}로 움직인다. B에서 잰 장을 바르게 그린 것은?${frameA}`,
+    choices: [0, 1, 2, 3].map(opt),
+    answer: 1,
+    why: `${VBA} ∥ ${BA}이므로 ${VBA}×${BA} = 0 → ${EB} = ${EA} (그대로 ${M('z')} 방향). ${BB} = ${BA} − ${VBA}×${EA}/${M('c')}<sup>2</sup>에서 x̂×ẑ = −ŷ이므로 −${VBA}×${EA}/${M('c')}<sup>2</sup>는 +${M('y')} 방향: ${BB}는 ${M('x')}축에서 위로 기운다 → (b). 실제 기울기는 ${M('vE')}/${M('c')}<sup>2</sup>로 아주 작고, 그림은 과장한 것이다.`,
+  };
   const STEPS = [
     { obj: 'q', frame: 0, cap: `자석이 정지한 관성계 A(나이트의 앨릭). 전하 ${M('q')}가 속도 ${MV('v')}로 자기장 속을 지나며 자기력 ${MV('F')} = ${M('q')}${MV('v')}×${BA}(위쪽)를 받는다. 전기장은 없다.` },
     { obj: 'q', frame: 1, cap: `전하와 함께 달리는 관성계 B(브리트니, ${VBA} = ${MV('v')})로 갈아탄다. B에서 전하는 정지해 있으니 자기력은 0이다. 그런데 갈릴레이 변환에서 두 관성계의 가속도는 같으므로 힘도 같아야 한다. 정지한 전하에 힘을 주는 것은 전기장이므로 B에는 ${EB} = ${VBA}×${BA}가 있다. 갈아타는 동안 힘의 크기는 그대로이고 초록(자기력)이 주황(전기력)으로 바뀐다.` },
@@ -2258,6 +2305,8 @@ const KIT = (() => {
     { obj: 'q', frame: 1, quiz: QZ, reveal: true, cap: `일반적으로 B가 A에 대해 ${VBA}로 움직이면 ${EB} = ${EA} + ${VBA}×${BA}, ${BB} = ${BA} − ${VBA}×${EA}/${M('c')}<sup>2</sup> (갈릴레이 장 변환, 나이트 식 31.10). 두 식은 같은 점의 장을 각 관성계에 정지한 실험자가 잰 값이다. 전기장과 자기장은 따로 있는 것이 아니라, 하나의 전자기장이 관찰자에 따라 다른 얼굴을 보인다.` },
     { obj: 'q', frame: 1, quiz: QR, cap: `나이트 예제 31.2로 확인해 보자.` },
     { obj: 'q', frame: 1, quiz: QR, reveal: true, cap: `로켓에서는 자기장 1.0 T와 함께 1000 V/m의 전기장을 잰다. 실험실에서 1000 m/s는 빠르지만 ${M('c')}에 비하면 아주 느리다.` },
+    { obj: 'q', frame: 1, quiz: QT, cap: `나이트 Stop to Think 31.1: 이번에는 A에 전기장과 자기장이 둘 다 있다.` },
+    { obj: 'q', frame: 1, quiz: QT, reveal: true, cap: `두 식을 차례로 쓴다. ${VBA}가 ${BA}와 나란하면 ${VBA}×${BA} = 0이라 전기장은 그대로이고, 자기장에 −${VBA}×${EA}/${M('c')}<sup>2</sup>(+${M('y')} 방향)가 더해져 ${BB}가 위로 기운다: 정답 (b). 자기장에 실린 이 변화가 움직이는 전하의 자기장(비오–사바르)과 같은 뿌리다.` },
     { obj: 'rod', frame: 0, cap: `도체 막대가 자기장 속을 움직인다(A). 양전하는 자기력 ${M('q')}${MV('v')}×${MV('B')}에 밀려 위로 모이고 아래에는 음전하가 남는다. 쌓인 전하의 전기력이 자기력과 같아지면 멈춘다: ${M('qE')} = ${M('qvB')}, Δ${M('V')} = ${M('vlB')} (운동 기전력, 나이트 30.2).` },
     { obj: 'rod', frame: 1, cap: `막대와 함께 보면(B) 막대는 정지해 있고, 바깥 전기장 ${EB} = ${MV('v')}×${MV('B')} 속에 놓인 도체일 뿐이다. 도체 속 전기장이 0이 될 때까지 전하가 갈라진다 — 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')} = ${M('E')}<sub>B</sub>${M('l')} = ${M('vlB')}.` },
     { obj: 'loop', frame: 0, cap: `나이트 그림 31.10(a) = 그리피스의 실험 1. 실험실 A에서 고리가 자기장 속으로 움직이고, 앞쪽 변의 전하를 미는 것은 자기력 ${M('q')}${MV('v')}×${MV('B')}이다: 운동 기전력.` },
