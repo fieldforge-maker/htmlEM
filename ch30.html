@@ -258,7 +258,7 @@ sub, sup { font-size: .7em; line-height: 0; }
 .quiz-choices.grid .quiz-choice .qk { position: absolute; top: .3em; left: .3em; }
 .quiz-fig { display: block; width: 100%; height: auto; overflow: visible; }
 .quiz-q .quiz-fig { max-width: 10em; margin: .3em auto 0; }
-.quiz-fig text { font-family: var(--font-math); font-size: 12px; fill: var(--ink); }
+.quiz-fig text { font-family: var(--font-math); font-size: 18px; fill: var(--ink); }
 .quiz-fig .ax { stroke: var(--ink); stroke-width: 1.1; fill: none; }
 .quiz-fig .dsh { stroke-width: 1; stroke-dasharray: 3 2.5; fill: none; }
 .quiz-fig .arc { stroke: var(--muted); stroke-width: 1; fill: none; }
@@ -1501,7 +1501,7 @@ const KIT = (() => {
   function fonts(fs) {
     return {
       ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.86)}px ${F.ui}`,
-      mi: `italic ${fs + 2}px ${F.math}`, mb: `700 ${fs + 2}px ${F.math}`, m: `${fs + 2}px ${F.math}`,
+      mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`,
     };
   }
   function drawScene(ctx, k, box, big) {
@@ -1693,9 +1693,9 @@ const KIT = (() => {
     const GX = t => b.x + lw + (t - TMIN) / (tm - TMIN) * (b.w - lw - rw);
     const strips = [
       { y: b.y, hi: P0 * 1.15, pts: [[TMIN, P0], [0, P0], [TT, 0], [tm, 0]], v: flux(state.t), col: C.field,
-        lab: [['Φ', `${fs + 2}px ${F.math}`], ['B', `500 ${Math.round(fs * 0.78)}px ${F.ui}`, fs * 0.3]], txt: `${EM.fmt(flux(state.t) * 1e3, 2)} mWb` },
+        lab: [['Φ', `${Math.round((fs + 2) * 1.5)}px ${F.math}`], ['B', `500 ${Math.round(fs * 0.78 * 1.5)}px ${F.ui}`, fs * 0.45]], txt: `${EM.fmt(flux(state.t) * 1e3, 2)} mWb` },
       { y: b.y + sh + g, hi: E0 * 1.3, pts: [[TMIN, 0], [0, 0], [0, E0], [TT, E0], [TT, 0], [tm, 0]], v: emf(state.t), col: C.current,
-        lab: [['ℰ', `${fs + 2}px ${F.math}`]], txt: `${EM.fmt(emf(state.t) * 1e3, 2)} mV` },
+        lab: [['ℰ', `${Math.round((fs + 2) * 1.5)}px ${F.math}`]], txt: `${EM.fmt(emf(state.t) * 1e3, 2)} mV` },
     ];
     for (const S of strips) {
       const GY = v => S.y + sh - v / S.hi * sh;
@@ -1937,7 +1937,7 @@ const KIT = (() => {
     return y0;
   }
   function fonts(fs) {
-    return { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${fs + 2}px ${F.math}`, mb: `700 ${fs + 2}px ${F.math}`, m: `${fs + 2}px ${F.math}`, sub: `500 ${Math.round(fs * 0.72)}px ${F.ui}`, dy: fs * 0.38 };
+    return { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, sub: `500 ${Math.round(fs * 0.72 * 1.5)}px ${F.ui}`, dy: fs * 0.38 * 1.5 };
   }
 
   function drawStage() {
@@ -2270,7 +2270,7 @@ const KIT = (() => {
     return `<line x1="${FX}" y1="${FY}" x2="${x - ux * h * 0.8}" y2="${y - uy * h * 0.8}" stroke="${col}" stroke-width="2.4"/>` +
       `<path d="M${x} ${y}L${x - ux * h - uy * w} ${y - uy * h + ux * w}L${x - ux * h + uy * w} ${y - uy * h - ux * w}Z" fill="${col}"/>`;
   };
-  const lab = (t, k, x, y, col) => `<text x="${x}" y="${y}" fill="${col}" style="font-weight:700">${t}<tspan font-size="8" dy="3">${k}</tspan></text>`;
+  const lab = (t, k, x, y, col) => `<text x="${x}" y="${y}" fill="${col}" style="font-weight:700">${t}<tspan font-size="12" dy="4">${k}</tspan></text>`;
   const svg = (inner, h = 100) => `<svg class="quiz-fig" viewBox="0 0 124 ${h}" aria-hidden="true">${inner}</svg>`;
   const cE = 'var(--efield)', cB = 'var(--field)';
   const EZ = [FX - 30, FY + 27.6];                     // z축 방향의 E
@@ -2376,7 +2376,7 @@ const KIT = (() => {
     view = { s, cx, cy };
     const X = x => cx + x * s, Y = y => cy - y * s;
     const fs = Math.max(12, Math.round(EM.remPx() * 0.8));
-    const fUi = `600 ${fs}px ${F.ui}`, fUs = `500 ${Math.round(fs * 0.9)}px ${F.ui}`, fMb = `700 ${fs + 2}px ${F.math}`, fMi = `italic ${fs + 2}px ${F.math}`, fM = `${fs + 2}px ${F.math}`;
+    const fUi = `600 ${fs}px ${F.ui}`, fUs = `500 ${Math.round(fs * 0.9)}px ${F.ui}`, fMb = `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, fMi = `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, fM = `${Math.round((fs + 2) * 1.5)}px ${F.math}`;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const dB = dBdt(), Bn = B();
 
@@ -2783,7 +2783,7 @@ const KIT = (() => {
     const s = Math.min(w / (2 * VX), h / (2 * VY)), cx = w / 2, cy = h / 2 + 0.4 * s;
     const X = x => cx + x * s, Y = y => cy - y * s;
     const fs = Math.max(12, Math.round(EM.remPx() * 0.8));
-    const f = { fs, ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${fs + 2}px ${F.math}`, mb: `700 ${fs + 2}px ${F.math}`, m: `${fs + 2}px ${F.math}`, num: `600 ${fs}px ${F.num}` };
+    const f = { fs, ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, sub: `500 ${Math.round(fs * 0.72 * 1.5)}px ${F.ui}`, num: `600 ${fs}px ${F.num}` };
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const wireW = Math.max(2.4, 0.15 * s);
     const P = pts => pts.map(([x, y]) => [X(x), Y(y)]);
@@ -2811,7 +2811,7 @@ const KIT = (() => {
         EM.arrowHead(ctx, X(RC * Math.cos(th)), Y(RC * Math.sin(th)), Math.sin(th), Math.cos(th), Math.max(9, 0.55 * s), C.field);
       }
       ctx.restore();
-      EM.runs(ctx, [['Φ', f.m], ['B', f.uiS, fsSub()]], X(0), Y(RC) - 0.05 * s, C.field, { align: 'center', halo: C.core1 });
+      EM.runs(ctx, [['Φ', f.m], ['B', f.sub, fsSub() * 1.5]], X(0), Y(RC) - 0.05 * s, C.field, { align: 'center', halo: C.core1 });
     }
     // 코일: 고리 띠를 가로지르는 감은 선. 전류가 흐르면 전류색으로
     const coil = (th0, th1, n, on) => {
@@ -2879,7 +2879,7 @@ const KIT = (() => {
     if (closedNow) {
       ctx.fillStyle = EM.alpha(C.field, 0.24);
       ctx.fillRect(X(XL), Y(YF), (xc - XL) * s, H_IN * s);
-      EM.runs(ctx, [['Φ', f.m], ['B', f.uiS, fsSub()], [` = ${EM.fmt(phiAt(xc) * 1e3, 2)} mWb`, f.num]], X((XL + xc) / 2), Y((YB + YF) / 2), C.field, { align: 'center', halo: true });
+      EM.runs(ctx, [['Φ', f.m], ['B', f.sub, fsSub() * 1.5], [` = ${EM.fmt(phiAt(xc) * 1e3, 2)} mWb`, f.num]], X((XL + xc) / 2), Y((YB + YF) / 2), C.field, { align: 'center', halo: true });
     }
     // 지금 이어진 회로 (보라 띠)
     const loop = bar
@@ -3093,7 +3093,7 @@ const KIT = (() => {
     const s = Math.min(w / (2 * VX), h / (2 * VY)), cx = w / 2, cy = h / 2 + 0.3 * s;
     const X = x => cx + x * s, Y = y => cy - y * s;
     const fs = Math.max(12, Math.round(EM.remPx() * 0.8));
-    const f = { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${fs + 2}px ${F.math}`, mb: `700 ${fs + 2}px ${F.math}`, m: `${fs + 2}px ${F.math}`, num: `600 ${fs}px ${F.num}` };
+    const f = { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, num: `600 ${fs}px ${F.num}` };
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const wireW = Math.max(2.4, 0.15 * s);
     const I = cur(), on = I > 1e-9;
