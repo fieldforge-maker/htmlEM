@@ -107,6 +107,11 @@ h1 { margin: 0; font-size: clamp(1.7em, 3vw + 1em, 2.4em); font-weight: 700; let
 .group a:hover .n { border-color: var(--accent); color: var(--accent); }
 .extra { font-size: .78em; color: var(--muted); }
 
+.refs { border-top: 1px solid var(--line); padding-top: 18px; }
+.refs h2 { margin: 0 0 8px; font-size: .78em; font-weight: 600; letter-spacing: .04em; color: var(--muted); }
+.refs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: .85em; color: var(--muted); }
+.refs cite { font-style: italic; color: var(--ink); }
+
 .foot { margin: 0; font-size: .8em; color: var(--muted); }
 </style>
 </head>
@@ -183,6 +188,18 @@ h1 { margin: 0; font-size: clamp(1.7em, 3vw + 1em, 2.4em); font-weight: 700; let
       </div>
     </article>
   </main>
+
+  <!-- 화면별 자세한 출처(그림·예제 번호)는 각 장 탭의 data-ref와 '출처:' 주석에 있다. -->
+  <section class="refs" aria-labelledby="refs-title">
+    <h2 id="refs-title">참고문헌</h2>
+    <ul>
+      <li>R. D. Knight, <cite>Physics for Scientists and Engineers: A Strategic Approach</cite>, 4판</li>
+      <li>R. A. Serway, J. W. Jewett, <cite>Physics for Scientists and Engineers</cite>, 10판</li>
+      <li>D. Halliday, R. Resnick, J. Walker, <cite>Fundamentals of Physics</cite>, 11판</li>
+      <li>H. Benson, <cite>University Physics</cite>, 2판</li>
+      <li>D. J. Griffiths, <cite>Introduction to Electrodynamics</cite>, ?판</li>
+    </ul>
+  </section>
 
   <p class="foot">화면 안에서는 ← → 키나 프레젠터 리모컨으로 단계를 넘기고, F 키로 전체 화면을 켭니다.</p>
 </div>
