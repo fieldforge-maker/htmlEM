@@ -1946,7 +1946,7 @@ const KIT = (() => {
     const s = h / (2 * VIEWY), cx = w / 2, cy = h / 2;
     view = { w, h, s, halfW: w / 2 / s };
     const X = x => cx + (x - state.camX) * s, Y = y => cy - y * s;
-    const fs = Math.max(12, Math.round(EM.remPx() * 0.8)), f = fonts(fs);
+    const fs = Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5)), f = fonts(fs);
     const b = state.beta, obj = state.obj;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
 
@@ -2104,7 +2104,7 @@ const KIT = (() => {
       ctx.restore();
     }
   }
-  const fs = () => Math.max(12, Math.round(EM.remPx() * 0.8));
+  const fs = () => Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5));
 
   function drawLoop(X, Y, s, f) {
     const xL = state.x, xR = xL + LW, b = state.beta;
@@ -2375,7 +2375,7 @@ const KIT = (() => {
     const s = Math.min(w, h) / 2 / VIEW, cx = w / 2, cy = h / 2 + 0.6 * s;
     view = { s, cx, cy };
     const X = x => cx + x * s, Y = y => cy - y * s;
-    const fs = Math.max(12, Math.round(EM.remPx() * 0.8));
+    const fs = Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5));
     const fUi = `600 ${fs}px ${F.ui}`, fUs = `500 ${Math.round(fs * 0.9)}px ${F.ui}`, fMb = `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, fMi = `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, fM = `${Math.round((fs + 2) * 1.5)}px ${F.math}`;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const dB = dBdt(), Bn = B();
@@ -2782,7 +2782,7 @@ const KIT = (() => {
     const ctx = sctx;
     const s = Math.min(w / (2 * VX), h / (2 * VY)), cx = w / 2, cy = h / 2 + 0.4 * s;
     const X = x => cx + x * s, Y = y => cy - y * s;
-    const fs = Math.max(12, Math.round(EM.remPx() * 0.8));
+    const fs = Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5));
     const f = { fs, ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, sub: `500 ${Math.round(fs * 0.72 * 1.5)}px ${F.ui}`, num: `600 ${fs}px ${F.num}` };
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const wireW = Math.max(2.4, 0.15 * s);
@@ -2859,7 +2859,7 @@ const KIT = (() => {
     const msg = state.closed ? (r.i1 < 0.97 ? '스위치를 닫는 중: 선속이 커진다' : '스위치를 닫아 둠: 선속이 일정') : (r.i1 > 0.03 ? '스위치를 여는 중: 선속이 줄어든다' : '스위치가 열려 있음');
     EM.runs(ctx, [[msg, f.ui]], 14, 18 + f.fs * 0.6, C.ink, { halo: true });
   }
-  const fsSub = () => Math.round(EM.remPx() * 0.8) * 0.3;
+  const fsSub = () => Math.round(EM.remPx() * 0.8 * 1.5) * 0.3;
 
   // ②③: 자기장 속 회로
   function drawField(ctx, X, Y, s, f, wireW, P) {
@@ -3092,7 +3092,7 @@ const KIT = (() => {
     const ctx = sctx;
     const s = Math.min(w / (2 * VX), h / (2 * VY)), cx = w / 2, cy = h / 2 + 0.3 * s;
     const X = x => cx + x * s, Y = y => cy - y * s;
-    const fs = Math.max(12, Math.round(EM.remPx() * 0.8));
+    const fs = Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5));
     const f = { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, num: `600 ${fs}px ${F.num}` };
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const wireW = Math.max(2.4, 0.15 * s);
