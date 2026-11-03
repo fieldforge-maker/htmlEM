@@ -3176,9 +3176,9 @@ const KIT = (() => {
     EM.runs(ctx, [['R', f.mi]], X(XR) - 0.9 * s, Y((YR0 + YR1) / 2), C.ink, { align: 'right', halo: true });
 
     // 축: 윗면 위의 점 + 원판을 뚫고 내려가 밑의 접점에 닿는 막대(원판 속은 점선)
-    ctx.save(); ctx.setLineDash([6, 5]);
+    ctx.save(); ctx.setLineDash([7, 6]);
     ctx.beginPath(); ctx.moveTo(X(DX), Y(yT)); ctx.lineTo(X(DX), Y(yB - DR * K));
-    ctx.strokeStyle = EM.alpha(C.ink, 0.55); ctx.lineWidth = wireW * 0.8; ctx.stroke();
+    ctx.strokeStyle = C.ink; ctx.lineWidth = wireW * 0.9; ctx.lineCap = 'butt'; ctx.stroke();
     ctx.restore();
     ctx.beginPath(); ctx.moveTo(X(DX), Y(yB - DR * K)); ctx.lineTo(X(DX), Y(yAx));
     ctx.strokeStyle = C.ink; ctx.lineWidth = wireW * 1.2; ctx.lineCap = 'butt'; ctx.stroke();
