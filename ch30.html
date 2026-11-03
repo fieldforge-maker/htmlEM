@@ -724,13 +724,13 @@ sub, sup { font-size: .7em; line-height: 0; }
 
     <div class="stage-wrap">
       <div class="canvas-box">
-        <canvas id="s5-stage" aria-label="위에서 본 도는 금속 원판. 축과 가장자리에 브러시가 닿아 있고 바깥 회로에 저항이 있다. 자기장은 원판 면에 수직으로 나온다."></canvas>
+        <canvas id="s5-stage" aria-label="비스듬히 본 도는 금속 원판. 자기장은 위쪽을 향하고, 축 밑과 가장자리에 접점이 닿아 있고 바깥 회로에 저항이 있다."></canvas>
         <div class="stage-tools">
           <button class="btn" type="button" id="s5-openBtn">회로 끊기</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
-        <span><b class="key-b">•</b><b class="mv">B</b> (나옴)</span>
+        <span><b class="mv">B</b> (위쪽, ↑)</span>
         <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b> = ω<span class="m">r</span></span>
         <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
         <span><i class="key-current"></i>전류</span>
@@ -3060,16 +3060,17 @@ const KIT = (() => {
 })();
 
 /* ================= 화면 5: 패러데이 원판 (Griffiths 예제 7.4, Serway 문제 30.17 · 예제 30.3) =================
-   위에서 본 금속 원판이 반시계로 돌고(ω), 자기장은 종이면에서 나온다(+z). 축과 가장자리(오른쪽)에 브러시.
+   비스듬히 본 수평 금속 원판이 (위에서 볼 때) 반시계로 돌고(ω), 자기장은 위쪽(+z). 축 밑과 가장자리(오른쪽)에 접점.
    반지름 r의 전하: 𝐯 = ω r φ̂, 𝐯×𝐁 = ωBr r̂ (바깥쪽) → ℰ = ∫₀ᵃ ωBr dr = ½ωBa².
    전류는 원판 안에서 축 → 가장자리 브러시, 바깥 회로에서 브러시 → R → 축 (원판 밑으로). */
 (() => {
   'use strict';
   const { TAU, C, F, m: M, mv: MV, frac } = EM;
   const $ = id => document.getElementById('s5-' + id);
-  const VX = 12.4, VY = 8.6;
-  const DX = -2.6, DY = 0.2, DR = 6.3;          // 원판 중심과 그림 반지름 (cm)
-  const XR = 8.6, YR0 = -1.4, YR1 = -4.8, YBOT = -7.6;   // 바깥 회로: 저항 자리와 아래 도선
+  const VX = 12.4, VY = 7.4;
+  const K = 0.38, TH = 0.55;                     // 비스듬히 본 비율(타원 납작함)과 원판 두께
+  const DX = -2.6, DYT = 0.6, DR = 6.3, YC = 0.9;   // 원판 중심 x, 윗면 높이, 반지름 (cm), 화면 가운데 높이
+  const XR = 8.6, YR0 = -0.6, YR1 = -3.4, YBOT = -5.7;   // 바깥 회로: 저항 자리와 아래 도선
   const state = { w: 100, B: 0.9, a: 0.4, R: 1.0, open: false, force: false, sweep: false, phi: 0, sweepAng: 0, wAnim: null };
   let flow = 0;
 
@@ -3090,108 +3091,131 @@ const KIT = (() => {
     const { w, h } = EM.fitCanvas(stage, sctx);
     if (w < 40 || h < 40) return;
     const ctx = sctx;
+    // 비스듬히 본 3D: 원판은 수평(xy 평면), B는 위(+z). 화면 = (x, K·y + z)
     const s = Math.min(w / (2 * VX), h / (2 * VY)), cx = w / 2, cy = h / 2 + 0.3 * s;
-    const X = x => cx + x * s, Y = y => cy - y * s;
+    const X = x => cx + x * s, Y = y => cy - (y - YC) * s;
     const fs = Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5));
     const f = { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, num: `600 ${fs}px ${F.num}` };
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const wireW = Math.max(2.4, 0.15 * s);
     const I = cur(), on = I > 1e-9;
+    const xb = DX + DR;                                   // 가장자리 브러시 x
+    const top = p => [X(DX + p[0]), Y(DYT + K * p[1])];   // 윗면 위의 점 (원판 중심 기준 x, y 오프셋, cm)
 
-    // 자석의 극 (원판보다 조금 큰 정사각형 영역)
-    const mx0 = DX - 7.6, mx1 = DX + 7.6, my0 = DY - 7.6, my1 = DY + 7.6;
-    ctx.fillStyle = EM.alpha(C.field, 0.07);
-    ctx.beginPath(); ctx.roundRect(X(mx0), Y(my1), (mx1 - mx0) * s, (my1 - my0) * s, 0.6 * s); ctx.fill();
-    ctx.strokeStyle = EM.alpha(C.field, 0.45); ctx.lineWidth = 1.2; ctx.stroke();
+    // 자기장 화살표 (위로). 뒤쪽 줄은 원판 앞에, 앞쪽 줄은 원판 뒤에 그린다
+    const bArrows = (rows) => {
+      ctx.save(); ctx.globalAlpha = 0.9;
+      for (const [ox, oy] of rows) {
+        const x = X(DX + ox), y0 = Y(DYT - 1.6 + K * oy), y1 = Y(DYT + 4.2 + K * oy);
+        EM.vec(ctx, x, y0, 0, y1 - y0, C.field, Math.max(2.6, 0.1 * s));
+      }
+      ctx.restore();
+    };
+    const BROWS_BACK = [[-3.6, 4.4], [0, 4.4], [3.6, 4.4]];
+    const BROWS_FRONT = [[-7.2, 0]];
+    bArrows(BROWS_BACK);
 
-    // 원판 밑을 지나 축으로 가는 도선 (점선)
-    ctx.save(); ctx.setLineDash([6, 5]);
-    KIT.stroke(ctx, [[X(DX), Y(DY)], [X(DX), Y(DY - DR)]], false, C.wire, wireW * 0.8, [6, 5]);
-    ctx.restore();
-
-    // 원판: 금속, 칠한 반지름 무늬가 함께 돈다
-    const g = ctx.createRadialGradient(X(DX) - DR * s * 0.3, Y(DY) - DR * s * 0.35, DR * s * 0.1, X(DX), Y(DY), DR * s);
+    // 원판: 두께(옆면) + 윗면
+    const yT = DYT, yB = DYT - TH;
+    const ell = (yc, a0, a1, ccw) => { ctx.beginPath(); ctx.ellipse(X(DX), Y(yc), DR * s, DR * K * s, 0, a0, a1, ccw); };
+    ctx.beginPath();
+    ctx.ellipse(X(DX), Y(yB), DR * s, DR * K * s, 0, 0, Math.PI, false);       // 아래 타원의 앞 절반
+    ctx.lineTo(X(DX - DR), Y(yT));
+    ctx.ellipse(X(DX), Y(yT), DR * s, DR * K * s, 0, Math.PI, 0, true);        // 위 타원의 앞 절반(반대로)
+    ctx.closePath();
+    ctx.fillStyle = C.metal2; ctx.fill();
+    ctx.strokeStyle = C.wire; ctx.lineWidth = 1.6; ctx.stroke();
+    const g = ctx.createLinearGradient(X(DX - DR), Y(yT + DR * K), X(DX + DR), Y(yT - DR * K));
     g.addColorStop(0, C.metal1); g.addColorStop(1, C.metal2);
-    ctx.beginPath(); ctx.arc(X(DX), Y(DY), DR * s, 0, TAU);
-    ctx.save(); ctx.globalAlpha = 0.92; ctx.fillStyle = g; ctx.fill(); ctx.restore();
-    ctx.lineWidth = 1.6; ctx.strokeStyle = C.wire; ctx.stroke();
+    ell(yT, 0, TAU); ctx.fillStyle = g; ctx.fill(); ctx.stroke();
     for (let k = 0; k < 6; k++) {
       const th = state.phi + TAU * k / 6;
-      ctx.beginPath(); ctx.moveTo(X(DX + 0.9 * Math.cos(th)), Y(DY + 0.9 * Math.sin(th))); ctx.lineTo(X(DX + (DR - 0.25) * Math.cos(th)), Y(DY + (DR - 0.25) * Math.sin(th)));
-      ctx.strokeStyle = EM.alpha(C.ink, 0.13); ctx.lineWidth = 1.2; ctx.stroke();
+      const a = top([0.9 * Math.cos(th), 0.9 * Math.sin(th)]), b = top([(DR - 0.25) * Math.cos(th), (DR - 0.25) * Math.sin(th)]);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+      ctx.strokeStyle = EM.alpha(C.ink, 0.15); ctx.lineWidth = 1.2; ctx.stroke();
     }
     // 함께 도는 반지름이 쓸고 간 넓이 (브러시 쪽 반지름에서 시작)
     if (state.sweep) {
-      const a0 = 0, a1 = state.sweepAng;
-      ctx.beginPath(); ctx.moveTo(X(DX), Y(DY)); ctx.arc(X(DX), Y(DY), DR * s, -a0, -a1, true); ctx.closePath();
-      ctx.fillStyle = EM.alpha(C.accent, 0.2); ctx.fill();
-      const th = a1;
-      ctx.beginPath(); ctx.moveTo(X(DX), Y(DY)); ctx.lineTo(X(DX + DR * Math.cos(th)), Y(DY + DR * Math.sin(th)));
+      const a1 = state.sweepAng, n = Math.max(2, Math.ceil(a1 / 0.05));
+      ctx.beginPath(); const c0 = top([0, 0]); ctx.moveTo(c0[0], c0[1]);
+      for (let i = 0; i <= n; i++) { const th = a1 * i / n, p = top([DR * Math.cos(th), DR * Math.sin(th)]); ctx.lineTo(p[0], p[1]); }
+      ctx.closePath(); ctx.fillStyle = EM.alpha(C.accent, 0.28); ctx.fill();
+      const pe = top([DR * Math.cos(a1), DR * Math.sin(a1)]);
+      ctx.beginPath(); ctx.moveTo(c0[0], c0[1]); ctx.lineTo(pe[0], pe[1]);
       ctx.strokeStyle = C.accent; ctx.lineWidth = Math.max(3, 0.16 * s); ctx.lineCap = 'round'; ctx.stroke();
-      const mid = a1 / 2;
-      EM.runs(ctx, [['½', f.m], ['a', f.mi], ['²', f.m], ['θ', f.mi]], X(DX + 3.4 * Math.cos(mid)), Y(DY + 3.4 * Math.sin(mid)), C.accent, { align: 'center', halo: true });
+      const mid = a1 / 2, pm = top([3.4 * Math.cos(mid), 3.4 * Math.sin(mid)]);
+      EM.runs(ctx, [['½', f.m], ['a', f.mi], ['²', f.m], ['θ', f.mi]], pm[0], pm[1], C.accent, { align: 'center', halo: true });
     }
-    // 자기장 (나옴)
-    ctx.save(); ctx.globalAlpha = 0.85;
-    const gs = 1.5;
-    for (let i = -5; i <= 5; i++) for (let j = -5; j <= 5; j++) {
-      const x = DX + (i + 0.5) * gs, y = DY + (j + 0.5) * gs;
-      if (x < mx0 + 0.3 || x > mx1 - 0.3 || y < my0 + 0.3 || y > my1 - 0.3) continue;
-      KIT.bMark(ctx, X(x), Y(y), 0.2 * s, 'out', C.field);
+    // 회전 방향: 윗면 위의 고리 모양 화살표 (위에서 볼 때 반시계)
+    {
+      const ra = 2.7, t0 = 2.1, t1 = 3.6;
+      ctx.beginPath();
+      for (let i = 0; i <= 24; i++) { const th = t0 + (t1 - t0) * i / 24, p = top([ra * Math.cos(th), ra * Math.sin(th)]); i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]); }
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.stroke();
+      const pe = top([ra * Math.cos(t1), ra * Math.sin(t1)]);
+      let ux = -ra * Math.sin(t1), uy = -K * ra * Math.cos(t1); const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
+      EM.arrowHead(ctx, pe[0], pe[1], ux, uy, 9, C.ink);
+      const pl = top([(ra + 1.0) * Math.cos(2.7), (ra + 1.0) * Math.sin(2.7)]);
+      EM.runs(ctx, [['ω', f.mi]], pl[0], pl[1], C.ink, { align: 'center', halo: true });
     }
-    ctx.restore();
-    EM.runs(ctx, [['B', f.mb], [' (나옴)', f.uiS]], X(mx0) + 0.4 * s, Y(my1) + 0.75 * s, C.field, { halo: true });
-    // 회전 방향
-    ctx.save();
-    const ra = DR + 0.8, t0 = 1.95, t1 = 2.75;
-    ctx.beginPath(); ctx.arc(X(DX), Y(DY), ra * s, -t0, -t1, true);
-    ctx.strokeStyle = C.ink; ctx.lineWidth = 2; ctx.stroke();
-    EM.arrowHead(ctx, X(DX + ra * Math.cos(t1)), Y(DY + ra * Math.sin(t1)), -Math.sin(t1), -Math.cos(t1), 9, C.ink);
-    ctx.restore();
-    EM.runs(ctx, [['ω', f.mi]], X(DX + (ra + 0.7) * Math.cos(2.35)), Y(DY + (ra + 0.7) * Math.sin(2.35)), C.ink, { align: 'center', halo: true });
 
-    // 바깥 회로: 가장자리 브러시 → 오른쪽 → 저항 → 아래 → 원판 밑 → 축
-    const xb = DX + DR;
-    const pts = [[xb + 0.3, DY], [XR, DY], [XR, YR0]];
+    // 바깥 회로: 가장자리 브러시 → 오른쪽 → 저항 → 아래 → 원판 밑 축 접점
+    const yEdge = DYT;                                    // 브러시 높이(윗면 가장자리)
+    const yAx = yB - DR * K - 0.55;                       // 원판 밑 축 접점 (앞쪽 가장자리 바로 아래)
+    const pts = [[xb + 0.3, yEdge], [XR, yEdge], [XR, YR0]];
     KIT.stroke(ctx, pts.map(([x, y]) => [X(x), Y(y)]), false, C.wire, wireW);
     KIT.resistor(ctx, X(XR), Y(YR0), X(XR), Y(YR1), 0.5 * s, C.ink, Math.max(2, 0.12 * s), 7);
+    const lower = [[XR, YBOT], [DX, YBOT], [DX, yAx]];
     if (state.open) {
-      // 끊어진 자리
       KIT.stroke(ctx, [[X(XR), Y(YR1)], [X(XR), Y(YR1 - 0.6)]], false, C.wire, wireW);
-      KIT.stroke(ctx, [[X(XR), Y(YR1 - 1.6)], [X(XR), Y(YBOT)], [X(DX), Y(YBOT)], [X(DX), Y(DY - DR)]], false, C.wire, wireW);
+      KIT.stroke(ctx, [[X(XR), Y(YR1 - 1.6)], ...lower.map(([x, y]) => [X(x), Y(y)])], false, C.wire, wireW);
       EM.runs(ctx, [['끊김', f.uiS]], X(XR) + 0.7 * s, Y(YR1 - 1.1), C.muted, { halo: true });
     } else {
-      KIT.stroke(ctx, [[X(XR), Y(YR1)], [X(XR), Y(YBOT)], [X(DX), Y(YBOT)], [X(DX), Y(DY - DR)]], false, C.wire, wireW);
+      KIT.stroke(ctx, [[X(XR), Y(YR1)], ...lower.map(([x, y]) => [X(x), Y(y)])], false, C.wire, wireW);
     }
     EM.runs(ctx, [['R', f.mi]], X(XR) - 0.9 * s, Y((YR0 + YR1) / 2), C.ink, { align: 'right', halo: true });
-    // 브러시
+
+    // 축: 윗면 위의 점 + 원판을 뚫고 내려가 밑의 접점에 닿는 막대(원판 속은 점선)
+    ctx.save(); ctx.setLineDash([6, 5]);
+    ctx.beginPath(); ctx.moveTo(X(DX), Y(yT)); ctx.lineTo(X(DX), Y(yB - DR * K));
+    ctx.strokeStyle = EM.alpha(C.ink, 0.55); ctx.lineWidth = wireW * 0.8; ctx.stroke();
+    ctx.restore();
+    ctx.beginPath(); ctx.moveTo(X(DX), Y(yB - DR * K)); ctx.lineTo(X(DX), Y(yAx));
+    ctx.strokeStyle = C.ink; ctx.lineWidth = wireW * 1.2; ctx.lineCap = 'butt'; ctx.stroke();
+    ctx.fillStyle = C.ink; ctx.beginPath(); ctx.roundRect(X(DX) - 0.5 * s, Y(yAx) - 0.12 * s, 1.0 * s, 0.34 * s, 0.1 * s); ctx.fill();   // 아래 접점
+    ctx.beginPath(); ctx.ellipse(X(DX), Y(yT), Math.max(5, 0.42 * s), Math.max(3, 0.42 * K * s), 0, 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(X(DX), Y(yT), Math.max(2, 0.16 * s), Math.max(1.2, 0.16 * K * s), 0, 0, TAU); ctx.fillStyle = C.metal1; ctx.fill();
+    // 가장자리 브러시
     ctx.fillStyle = C.ink;
-    ctx.fillRect(X(xb) - 0.05 * s, Y(DY) - 0.45 * s, 0.6 * s, 0.9 * s);
-    ctx.beginPath(); ctx.arc(X(DX), Y(DY), Math.max(5, 0.42 * s), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
-    ctx.beginPath(); ctx.arc(X(DX), Y(DY), Math.max(2, 0.16 * s), 0, TAU); ctx.fillStyle = C.metal1; ctx.fill();
-    EM.runs(ctx, [['축', f.uiS]], X(DX) - 0.7 * s, Y(DY) - 0.8 * s, C.muted, { align: 'right', halo: true });
-    EM.runs(ctx, [['브러시', f.uiS]], X(xb) + 0.9 * s, Y(DY) + 0.9 * s, C.muted, { halo: true });
+    ctx.fillRect(X(xb) - 0.05 * s, Y(yEdge) - 0.45 * s, 0.6 * s, 0.9 * s);
+    EM.runs(ctx, [['축', f.uiS]], X(DX) - 0.7 * s, Y(yT) + 0.9 * s, C.muted, { align: 'right', halo: true });
+    EM.runs(ctx, [['브러시', f.uiS]], X(xb) + 0.9 * s, Y(yEdge) + 0.9 * s, C.muted, { halo: true });
+
+    // 앞쪽 자기장 화살표와 이름표
+    bArrows(BROWS_FRONT);
+    EM.runs(ctx, [['B', f.mb], [' (위로)', f.uiS]], X(DX - 7.2) + 0.35 * s, Y(DYT + 4.2) - 0.3 * s, C.field, { halo: true });
 
     // 전류: 원판 안 반지름(축 → 브러시) + 바깥 회로
     if (on) {
-      const path = [[DX + 0.6, DY], [xb, DY], [XR, DY], [XR, YBOT], [DX, YBOT], [DX, DY - DR]].map(([x, y]) => [X(x), Y(y)]);
+      const path = [[DX + 0.6, yT], [xb, yEdge], [XR, yEdge], [XR, YBOT], [DX, YBOT], [DX, yAx]].map(([x, y]) => [X(x), Y(y)]);
       KIT.flow(ctx, path, false, flow * s, 2.4 * s, Math.max(7, 0.45 * s), C.current, 0.95,
         (px, py) => (Math.abs(px - X(XR)) < 3 && py > Y(YR0) - 4 && py < Y(YR1) + 4));
     }
-    // 반지름 위 전하: 속도 ωr (접선, 위쪽)과 자기력 ωBr (바깥쪽)
+    // 반지름 위 전하: 속도 ωr (접선, 뒤쪽으로) 과 자기력 ωBr (바깥쪽)
     if (state.force) {
       const qr = Math.max(5, 0.33 * s);
       for (const r of [1.6, 3.1, 4.6]) {
-        const x = DX + r;
-        KIT.vArrow(ctx, X(x), Y(DY) - qr, 0, -1, r / DR * 2.6 * s, C.ink, Math.max(0.7, s / 34));
-        EM.vec(ctx, X(x) + qr, Y(DY) + 0.0, r / DR * 2.4 * s, 0, C.field, Math.max(2.4, 0.11 * s));
-        KIT.charge(ctx, X(x), Y(DY), qr, 1);
+        const p = top([r, 0]);
+        KIT.vArrow(ctx, p[0], p[1] - qr, 0, -1, r / DR * 2.6 * s * 0.8, C.ink, Math.max(0.7, s / 34));
+        EM.vec(ctx, p[0] + qr, p[1], r / DR * 2.4 * s, 0, C.field, Math.max(2.4, 0.11 * s));
+        KIT.charge(ctx, p[0], p[1], qr, 1);
       }
-      EM.runs(ctx, [['q', f.mi], ['v', f.mb], ['×', f.m], ['B', f.mb]], X(DX + 4.6) + 0.4 * s, Y(DY) + 1.1 * s, C.field, { halo: true });
-      EM.runs(ctx, [['v', f.mb], [' = ω', f.m], ['r', f.mi]], X(DX + 4.6), Y(DY) - (4.6 / DR * 2.6 + 0.9) * s, C.ink, { align: 'center', halo: true });
+      const pq = top([4.6, 0]);
+      EM.runs(ctx, [['q', f.mi], ['v', f.mb], ['×', f.m], ['B', f.mb]], pq[0] - 0.2 * s, pq[1] + 1.7 * s, C.field, { align: 'center', halo: true });
+      EM.runs(ctx, [['v', f.mb], [' = ω', f.m], ['r', f.mi]], pq[0] + 0.5 * s, pq[1] - (4.6 / DR * 2.6 * 0.8 + 0.9) * s, C.ink, { align: 'left', halo: true });
       // 전지처럼: 가장자리 +, 축 −
-      EM.runs(ctx, [['+', `700 ${fs + 6}px ${F.ui}`]], X(xb) + 0.3 * s, Y(DY) - 1.2 * s, C.current, { align: 'center', halo: true });
-      EM.runs(ctx, [['−', `700 ${fs + 6}px ${F.ui}`]], X(DX) - 0.2 * s, Y(DY) - 1.2 * s, C.neg, { align: 'center', halo: true });
+      EM.runs(ctx, [['+', `700 ${fs + 6}px ${F.ui}`]], X(xb) + 0.3 * s, Y(yEdge) - 1.0 * s, C.current, { align: 'center', halo: true });
+      EM.runs(ctx, [['−', `700 ${fs + 6}px ${F.ui}`]], X(DX) + 0.5 * s, Y(yT) + 0.9 * s, C.neg, { align: 'center', halo: true });
     }
     // 읽은 값
     const ym = (YR0 + YR1) / 2;
