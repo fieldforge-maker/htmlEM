@@ -230,6 +230,8 @@ sub, sup { font-size: .7em; line-height: 0; }
 
 /* 계기판 맨 위: 늘 보이는 공식 카드와 보기 칸 */
 .panel { grid-area: panel; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+/* 화면 5 첫 단계: 공식·그래프·값·조절·범례·버튼을 숨기고 질문만 */
+#s5.intro .panel > :not(.quiz), #s5.intro .legend, #s5.intro .stage-tools { visibility: hidden; }
 .law-card { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .45em 14px .55em; text-align: center; }
 .law-big { margin: 0; white-space: nowrap; font-family: var(--font-math); font-size: min(2em, 6.6vw); line-height: 1.35; }
 .law-sub { margin: .1em 0 0; font-family: var(--font-math); font-size: 1.15em; color: var(--muted); white-space: nowrap; }
@@ -3217,10 +3219,10 @@ const KIT = (() => {
       EM.runs(ctx, [['+', `700 ${fs + 6}px ${F.ui}`]], X(xb) + 0.3 * s, Y(yEdge) - 1.0 * s, C.current, { align: 'center', halo: true });
       EM.runs(ctx, [['−', `700 ${fs + 6}px ${F.ui}`]], X(DX) + 0.5 * s, Y(yT) + 0.9 * s, C.neg, { align: 'center', halo: true });
     }
-    // 읽은 값
+    // 읽은 값 (첫 단계에서는 숨김)
     const ym = (YR0 + YR1) / 2;
-    EM.runs(ctx, [['ℰ', f.m], [` = ${EM.fmt(emf(), 3)} V`, f.num]], X(XR) + 1.0 * s, Y(ym + 0.6), C.current, { halo: true });
-    EM.runs(ctx, [['I', f.mi], [` = ${EM.fmt(I, 3)} A`, f.num]], X(XR) + 1.0 * s, Y(ym - 0.6), C.current, { halo: true });
+    if (!state.intro) EM.runs(ctx, [['ℰ', f.m], [` = ${EM.fmt(emf(), 3)} V`, f.num]], X(XR) + 1.0 * s, Y(ym + 0.6), C.current, { halo: true });
+    if (!state.intro) EM.runs(ctx, [['I', f.mi], [` = ${EM.fmt(I, 3)} A`, f.num]], X(XR) + 1.0 * s, Y(ym - 0.6), C.current, { halo: true });
   }
 
   /* ---------- 그래프: f(r) = ωBr, 넓이 = ℰ ---------- */
@@ -3306,7 +3308,7 @@ const KIT = (() => {
     why: `ℰ = ½ω${M('Ba')}<sup>2</sup> → ω = 2ℰ/(${M('Ba')}<sup>2</sup>) = 2(25.0 V)/[(0.900 T)(0.400 m)<sup>2</sup>] = 347 rad/s ≈ 3.3×10<sup>3</sup> rpm. ½을 빠뜨리면 174 rad/s가 된다. 기전력이 수십 볼트로 낮은 대신 내부 저항이 아주 작아 큰 전류를 낼 수 있다(저전압·대전류).`,
   };
   const STEPS = [
-    { w: 100, open: true, cap: `자기장 속에서 원판이 돌고, 회로가 연결되면 어떻게 될까? 패러데이 원판(1831)은 자석 사이에서 구리 원판을 돌리고 축과 가장자리에 브러시를 댄 장치다.` },
+    { w: 100, open: true, intro: true, cap: `자기장 속에서 원판이 돌고, 회로가 연결되면 어떻게 될까? 패러데이 원판(1831)은 자석 사이에서 구리 원판을 돌리고 축과 가장자리에 브러시를 댄 장치다.` },
     { w: 100, quiz: Q1, cap: `원판 속의 전하에게 무슨 일이 일어나는지 보자.` },
     { w: 100, quiz: Q1, reveal: true, force: true, cap: `반지름 ${M('r')}의 전하는 속력 ω${M('r')}로 움직이며 바깥쪽 자기력 ${M('q')}ω${M('rB')}를 받는다. 축에서 멀수록 세다. 원판은 가장자리가 +, 축이 −인 전지처럼 된다.` },
     { w: 100, force: true, cap: `기전력은 축에서 가장자리까지 단위 전하당 힘을 더한 것: ℰ = ∫<sub>0</sub><sup>${M('a')}</sup> ω${M('Br')} d${M('r')} = ½ω${M('Ba')}<sup>2</sup> (그래프의 삼각형 넓이). 도는 막대 하나와 같은 식이다. 원판은 그런 막대를 수없이 나란히 이은 것이라 기전력은 같고 내부 저항은 작다.` }, // 출처: Serway 예제 30.3
@@ -3335,6 +3337,8 @@ const KIT = (() => {
       if (!!S.sweep !== state.sweep) state.sweepAng = 0;
       state.sweep = !!S.sweep;
       state.open = !!S.open;
+      state.intro = !!S.intro;
+      $('stage').closest('.screen').classList.toggle('intro', state.intro);
       if (S.B) state.B = S.B;
       if (S.a) state.a = S.a;
       if (Math.abs(state.w - S.w) > 0.5) { if (forward && S.reveal) setW(S.w, 1600); else { if (state.wAnim) { state.wAnim.cancel(); state.wAnim = null; } state.w = S.w; } }
