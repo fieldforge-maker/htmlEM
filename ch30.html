@@ -1629,7 +1629,7 @@ const KIT = (() => {
     if (w < 40 || h < 40) return;
     const ctx = sctx;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
-    const fsT = Math.max(12, Math.round(EM.remPx() * 0.78));
+    const fsT = Math.max(12, Math.round(EM.remPx() * 0.78 * 1.5));
     const topPad = (tools ? tools.offsetHeight : 34) + 18;
     const pad = 14, aspect = (WX1 - WX0) / (2 * WY);
     const title = (k, x, y, align = 'left') => EM.runs(ctx, [
