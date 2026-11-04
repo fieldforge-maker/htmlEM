@@ -721,7 +721,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s5" hidden>
     <div class="screen-head">
       <!-- 출처: Griffiths 예제 7.4 · Serway 문제 30.17 -->
-      <h2>패러데이 원판 (단극 발전기)</h2>
+      <h2>패러데이 원판</h2>
     </div>
 
     <div class="stage-wrap">
@@ -2935,8 +2935,33 @@ const KIT = (() => {
     // 전류 (막대가 움직이는 동안: 반시계)
     const I = now().I;
     if (bar && Math.abs(I) > 1e-7) {
-      const pts = P([[xc, YB], [xc, YC], [XP, YC], [XP, YT], [XL, YT], [XL, YB]]);
-      KIT.flow(ctx, I > 0 ? pts : pts.reverse(), true, flowB * s, 2.4 * s, Math.max(7, 0.45 * s), C.current, 1, (px, py) => Math.hypot(px - X(XL), py - Y(YT)) < (meterR + 0.4) * s);
+      // 전류 화살촉: 도선 조각마다 고정된 점(전류계·왼쪽 아래 모서리·위 레일 끝)을 기준으로 놓는다.
+      // 막대가 움직여 고리 길이가 변해도 화살촉이 따라 미끄러지지 않고, 전류 방향으로만 흐른다.
+      const sg = I > 0 ? 1 : -1, SP = 2.4 * s, size = Math.max(7, 0.45 * s);
+      const segs = [   // [시작, 끝, 기준 끝(0=시작, 1=끝)] — 나열 순서가 I > 0 일 때의 진행 방향
+        [[XL, YT], [XL, YB], 0],
+        [[XL, YB], [xc, YB], 0],
+        [[xc, YB], [xc, YC], 0],
+        [[xc, YC], [XP, YC], 1],
+        [[XP, YC], [XP, YT], 0],
+        [[XP, YT], [XL, YT], 0],
+      ];
+      const dirSign = sg, ph = flowB * s;
+      const mod = (v) => ((v % SP) + SP) % SP;
+      for (const [a, b, endAnchor] of segs) {
+        const ax = X(a[0]), ay = Y(a[1]), bx = X(b[0]), by = Y(b[1]);
+        const len = Math.hypot(bx - ax, by - ay);
+        if (len < 1) continue;
+        const ux = (bx - ax) / len, uy = (by - ay) / len;
+        for (let k = 0; k * SP < len + SP; k++) {
+          // t: 조각 시작에서 잰 거리. 기준 끝에서 SP 간격으로 놓고, 전류 방향으로 ph만큼 옮긴다
+          const t = endAnchor ? len - mod(-dirSign * ph) - k * SP : mod(dirSign * ph) + k * SP;
+          if (t < size || t > len - size) continue;
+          const px = ax + ux * t, py = ay + uy * t;
+          if (Math.hypot(px - X(XL), py - Y(YT)) < (meterR + 0.4) * s) continue;
+          EM.arrowHead(ctx, px + dirSign * ux * size * 0.5, py + dirSign * uy * size * 0.5, dirSign * ux, dirSign * uy, size, C.current);
+        }
+      }
     }
     KIT.meter(ctx, X(XL), Y(YT), meterR * s, needle.x, { label: 'A' });
     EM.runs(ctx, [['전류계', f.uiS]], X(XL) - (meterR + 0.4) * s, Y(YT), C.muted, { align: 'right', halo: true });
