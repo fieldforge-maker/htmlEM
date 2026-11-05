@@ -499,6 +499,7 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s2-stage" aria-label="전지, 스위치 S1, 두 갈래 스위치 S2, 저항 R, 코일 L로 된 RL 회로. 오른쪽에 저항과 코일의 전위차 막대."></canvas>
         <div class="stage-tools">
+          <button class="btn primary" type="button" id="s2-playBtn" hidden>▶ 재생</button>
           <button class="btn primary" type="button" id="s2-s1Btn">S₁ 닫기</button>
           <button class="btn" type="button" id="s2-s2Btn">S₂ → b</button>
           <button class="btn" type="button" id="s2-resetBtn">처음으로</button>
@@ -508,7 +509,7 @@ sub, sup { font-size: .7em; line-height: 0; }
         <span><i class="key-current"></i>전류 <span class="m">i</span></span>
         <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
         <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>L</sub></span>
-        <span><i class="key-field"></i>코일의 자기장 (진하기)</span>
+        <span><i class="key-field"></i>코일의 자기력선 (진하기 ∝ 전류)</span>
       </div>
     </div>
     <aside class="panel" id="s2-panel" aria-label="공식, 그래프, 값과 조절">
@@ -569,6 +570,7 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-scene="sol" aria-pressed="false">솔레노이드</button>
             <button type="button" data-scene="coax" aria-pressed="false">동축 도선</button>
           </div>
+          <button class="btn primary" type="button" id="s3-playBtn" hidden>▶ 재생</button>
           <span id="s3-toolsC"><button class="btn" type="button" id="s3-s2Btn">S₂ → b</button> <button class="btn" type="button" id="s3-resetBtn">다시 충전</button></span>
         </div>
       </div>
@@ -652,6 +654,7 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-mode="ac" aria-pressed="false">교류</button>
           </div>
           <button class="btn" type="button" id="s4-swapBtn">코일 2가 보내기</button>
+          <button class="btn primary" type="button" id="s4-playBtn" hidden>▶ 재생</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
@@ -708,6 +711,7 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s5-stage" aria-label="전지, 스위치, 축전기, 코일로 된 LC 회로. 오른쪽에 축전기와 코일의 에너지 막대, 아래에 같은 순간의 용수철과 물체."></canvas>
         <div class="stage-tools">
+          <button class="btn primary" type="button" id="s5-playBtn" hidden>▶ 재생</button>
           <button class="btn" type="button" id="s5-swBtn">S → a (다시 충전)</button>
         </div>
       </div>
@@ -1489,7 +1493,9 @@ const KIT = (() => {
     return { a: [ax, ay], b: [bx, by], px, py };
   }
   // 코일(인덕터) 회로 기호: 고리 n개. amp: 고리 높이(px). side: 고리가 튀어나오는 쪽 (+1 | −1)
-  function coil(ctx, x0, y0, x1, y1, amp, { n = 5, color = C.current, width = 3, side = 1, lead = 0.12 } = {}) {
+  // depth면 나선을 살짝 위(시작 끝 쪽)에서 비스듬히 본 것으로 그려 뒤쪽 반(각 고리의 시작 끝 쪽 호)을 흐리게 한다.
+  // 그러면 감긴 방향이 보인다: 전류가 (x0, y0) → (x1, y1)로 흐를 때 코일 속 자기장은 (x1, y1) → (x0, y0) 쪽 (side = 1).
+  function coil(ctx, x0, y0, x1, y1, amp, { n = 5, color = C.current, width = 3, side = 1, lead = 0.12, depth = false } = {}) {
     const { L, ux, uy } = unitOf(x0, y0, x1, y1), px = -uy * side, py = ux * side;
     const s0 = L * lead, s1 = L * (1 - lead), Lc = s1 - s0;
     const pitch = Lc / (n + 0.6), r = Math.max(pitch * 0.62, Lc / n * 0.5);
@@ -1497,17 +1503,28 @@ const KIT = (() => {
     ctx.strokeStyle = C.wire; ctx.lineWidth = width; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + ux * s0, y0 + uy * s0);
     ctx.moveTo(x0 + ux * s1, y0 + uy * s1); ctx.lineTo(x1, y1); ctx.stroke();
-    // 늘어진 사이클로이드: 축 방향 s = s0 + r + pitch·u − r cos(2πu), 옆 방향 h = amp·sin(2πu)를 0…n까지
-    ctx.beginPath();
-    const M = n * 36;
-    for (let i = 0; i <= M; i++) {
+    // 늘어진 사이클로이드: 축 방향 s = s0 + r(1 − cos 2πu) + D·u, 옆 방향 h = amp·sin(2πu)를 0…n + ½까지.
+    // 반 바퀴를 더 그려 끝점이 축 위의 가장 먼 곳(s = s1)에 오게 한다 → 끝 도선과 끊김 없이 이어진다.
+    const M = Math.round((n + 0.5) * 36), D = (Lc - 2 * r) / (n + 0.5);
+    const pt = i => {
       const u = i / 36, th = TAU * u;
-      const s = s0 + r * (1 - Math.cos(th)) + (Lc - 2 * r) * (u / n);
-      const h = amp * Math.sin(th) * (th < Math.PI / 2 || th > TAU * n - Math.PI / 2 ? 1 : 1);
-      const x = x0 + ux * s + px * h, y = y0 + uy * s + py * h;
-      if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y);
-    }
-    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.stroke();
+      const s = s0 + r * (1 - Math.cos(th)) + D * u, h = amp * Math.sin(th);
+      return [x0 + ux * s + px * h, y0 + uy * s + py * h, Math.cos(th) > 0];   // 셋째: 뒤쪽 반인가
+    };
+    const pass = back => {
+      ctx.beginPath();
+      let on = false, prev = pt(0);
+      for (let i = 1; i <= M; i++) {
+        const p = pt(i), isB = depth && (prev[2] && p[2]);
+        if (depth && isB !== back) { on = false; prev = p; continue; }
+        if (!on) { ctx.moveTo(prev[0], prev[1]); on = true; }
+        ctx.lineTo(p[0], p[1]); prev = p;
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = back ? width * 0.7 : width; ctx.lineJoin = 'round';
+      ctx.globalAlpha = back ? 0.4 : 1; ctx.stroke(); ctx.globalAlpha = 1;
+    };
+    if (depth) pass(true);
+    pass(false);
     ctx.restore();
   }
   // 단자 (작은 빈 원)
@@ -1822,7 +1839,41 @@ const RLDRAW = (() => {
       ctx.restore();
       EM.runs(ctx, [['B', f.mb]], X(W + 1.15), Y((YL0 + YL1) / 2 + 1.0), C.field, { align: 'left', halo: true });
     }
-    KIT.coil(ctx, X(W), Y(YL0), X(W), Y(YL1), 0.62 * s, { n: 5, color: C.current, width: Math.max(2.6, 0.07 * s), side: 1, lead: 0.06 });
+    // 코일 둘레의 자기력선 (st.bLines = 전류 / 기준 전류, 부호 포함). 코일 그림은 나선을 위에서 비스듬히 본 것이라
+    // (뒤쪽 반이 흐리다) 전류가 코일을 위 → 아래로 지나면(+) 오른손 법칙으로 코일 속 자기장은 위쪽이다.
+    // 코일 속을 지나 위로 나온 선이 바깥으로 돌아 아래 끝으로 다시 들어가는 닫힌 고리. 진하기와 개수가 전류에 비례한다.
+    const bl = st.bLines || 0, ba = Math.min(1, Math.abs(bl));
+    const loops = [];
+    if (ba > 0.01) {
+      const yt = YL0 - 0.06 * (YL0 - YL1), yb = YL1 + 0.06 * (YL0 - YL1), up = Math.sign(bl);
+      const LINES = [[0.15, 1.0, 0.8], [0.3, 0.84, 0.55], [0.45, 0.72, 0.34]];   // [속의 x, 바깥의 x, 위아래로 나가는 길이] (축에서)
+      const nL = Math.max(1, Math.ceil(LINES.length * ba - 1e-9));
+      for (const sd of [-1, 1]) for (const [d, xo, ext] of LINES.slice(0, nL)) {
+        const xi = W + sd * d, xe = W + sd * xo, cx = W + sd * (d + xo) / 2, rx = (xo - d) / 2;
+        const pts = [];
+        for (let k = 0; k <= 24; k++) pts.push([xi, yb + (yt - yb) * k / 24]);                       // 속: 위로
+        for (let k = 1; k <= 24; k++) { const a = Math.PI * k / 24; pts.push([cx - sd * rx * Math.cos(a), yt + ext * Math.sin(a)]); }
+        for (let k = 1; k <= 24; k++) pts.push([xe, yt + (yb - yt) * k / 24]);                       // 바깥: 아래로
+        for (let k = 1; k < 24; k++) { const a = Math.PI * k / 24; pts.push([cx + sd * rx * Math.cos(a), yb - ext * Math.sin(a)]); }
+        if (up < 0) pts.reverse();
+        loops.push({ pts, xi, xe, ym: (yt + yb) / 2 });
+      }
+      ctx.save(); ctx.globalAlpha = 0.3 + 0.7 * ba;
+      for (const L of loops) KIT.stroke(ctx, P(L.pts), true, C.field, Math.max(1.6, 0.03 * s));
+      ctx.restore();
+    }
+    KIT.coil(ctx, X(W), Y(YL0), X(W), Y(YL1), 0.62 * s, { n: 5, color: C.current, width: Math.max(2.6, 0.07 * s), side: 1, lead: 0.06, depth: true });
+    if (loops.length) {
+      // 화살촉: 코일 속(위쪽)과 바깥(아래쪽) 한가운데
+      const up = Math.sign(bl), hs = Math.max(8, 0.17 * s);
+      ctx.save(); ctx.globalAlpha = 0.45 + 0.55 * ba;
+      for (const L of loops) {
+        EM.arrowHead(ctx, X(L.xi), Y(L.ym) - up * hs * 0.5, 0, -up, hs, C.field);
+        EM.arrowHead(ctx, X(L.xe), Y(L.ym) + up * hs * 0.5, 0, up, hs, C.field);
+      }
+      ctx.restore();
+      EM.runs(ctx, [['B', f.mb]], X(W + 1.15), Y(YL0 + 0.15), C.field, { align: 'left', halo: true });
+    }
     EM.runs(ctx, [['L', f.mi]], X(W + 1.15), Y((YL0 + YL1) / 2), C.ink, { align: 'left', halo: true });
     // 갈림점
     ctx.beginPath(); ctx.arc(X(XB), Y(0), Math.max(4, 0.08 * s), 0, TAU); ctx.fillStyle = C.wire; ctx.fill();
@@ -1849,7 +1900,7 @@ const RLDRAW = (() => {
     if (st.showV) {
       const vt = (v) => `${EM.fmt(Math.abs(v), 3)} V`;
       EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['R', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VR), f.num]], X((XR0 + XR1) / 2), Y(H - 0.95), C.neg, { align: 'center', halo: true });
-      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['L', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VL), f.num]], X(W - 1.0), Y((YL0 + YL1) / 2), C.accent, { align: 'right', halo: true });
+      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['L', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VL), f.num]], X(W - 1.25), Y((YL0 + YL1) / 2), C.accent, { align: 'right', halo: true });
       const sgn = (x, y, plus, col) => EM.runs(ctx, [[plus ? '+' : '−', `700 ${Math.round(fs * 1.25)}px ${F.ui}`]], X(x), Y(y), col, { align: 'center', halo: true });
       const tiny = 1e-4 * (st.emfRef || 1);
       if (Math.abs(st.VR) > tiny) { const L2R = st.i > 0; sgn(XR0 - 0.25, H - 0.55, L2R, C.neg); sgn(XR1 + 0.25, H - 0.55, !L2R, C.neg); }
@@ -2135,11 +2186,15 @@ const LCDRAW = (() => {
         EM.vec(ctx, xc - sg * len / 2, yc, sg * len, 0, C.field, Math.max(3, Rc * 0.05));
       }
       ctx.restore();
-      EM.runs(ctx, [['B', f.mb]], cx + (Lc * 0.5 - KX * Rc * 0.2) * 0.5 * (sg > 0 ? 1 : -1) + (sg > 0 ? 1 : -1) * 18, cy - 0.48 * Rc - f.fs * 1.0, C.field, { align: 'center', halo: true });
     }
 
     // 나선 앞쪽 반 (전류 색으로)
     seg(true, { color: Math.abs(i) > 0.02 ? C.current : C.wire, width: wireW * 1.25 });
+    // B 이름표: 앞쪽 나선보다 나중에 그려 나선에 가리지 않게. 위 화살표의 머리 바로 위
+    if (state.showB && iA > 0.01) {
+      const len = Lc * (0.25 + 0.55 * iA), sg = Math.sign(i), xt = cx - KX * Rc * 0.05 + sg * len / 2;
+      EM.runs(ctx, [['B', f.mb]], xt - sg * f.fs * 0.6, cy - 0.48 * Rc - f.fs * 0.95, C.field, { align: 'center', halo: true });
+    }
     // 앞쪽 가운데마다 전류 화살촉
     if (Math.abs(i) > 0.05) {
       const sg = Math.sign(i);
@@ -2148,8 +2203,11 @@ const LCDRAW = (() => {
         let ux = q[0] - p[0], uy = q[1] - p[1]; const ul = Math.hypot(ux, uy); ux /= ul; uy /= ul;
         EM.arrowHead(ctx, p[0] + sg * ux * 6, p[1] + sg * uy * 6, sg * ux, sg * uy, Math.max(9, Rc * 0.12), C.current);
       }
-      KIT.flow(ctx, [[xa, cy], [pS[0], pS[1]]], false, (sg > 0 ? flowPh : -flowPh), 46, Math.max(9, Rc * 0.12), C.current, 1);
-      KIT.flow(ctx, [[pE[0], pE[1]], [xb, cy]], false, (sg > 0 ? flowPh : -flowPh), 46, Math.max(9, Rc * 0.12), C.current, 1);
+      // 도선 위 화살촉: 전류가 b → a이면 길을 거꾸로 주어 화살촉도 왼쪽을 향하게
+      const lead1 = [[xa, cy], [pS[0], pS[1]]], lead2 = [[pE[0], pE[1]], [xb, cy]];
+      if (sg < 0) { lead1.reverse(); lead2.reverse(); }
+      KIT.flow(ctx, lead1, false, sg > 0 ? flowPh : -flowPh, 46, Math.max(9, Rc * 0.12), C.current, 1);
+      KIT.flow(ctx, lead2, false, sg > 0 ? flowPh : -flowPh, 46, Math.max(9, Rc * 0.12), C.current, 1);
     }
     // 단자
     KIT.terminal(ctx, xa, cy, Math.max(6, Rc * 0.08));
@@ -2476,14 +2534,14 @@ const LCDRAW = (() => {
     const S = sim.S, i = sim.i(), Iref = S.emf / S.R;
     const st = {
       f, s1: state.sw1, s2: state.sw2, i, iRef: Math.max(Iref, 0.5), flow: flowPh, spark: state.spark,
-      VR: sim.VR(), VL: sim.closed() ? sim.VL() : 0, emfRef: S.emf, showV: state.showV && !state.hideAns, coilGlow: state.glow ? Math.min(1, Math.abs(i) / 2) : 0,
+      VR: sim.VR(), VL: sim.closed() ? sim.VL() : 0, emfRef: S.emf, showV: state.showV && !state.hideAns, bLines: state.glow ? i / Math.max(Iref, 0.5) : 0,
     };
     RLDRAW.draw(ctx, fr, st);
     if (!state.hideAns) RLDRAW.voltBars(ctx, fr, { f, VR: st.VR, VL: st.VL, emf: S.emf, emfOn: sim.batteryIn(), vmax: S.emf, open: !sim.closed() });
     // 전류 읽음
     const { X, Y } = fr;
     EM.runs(ctx, [['i', f.mi], [state.hideAns ? ' = ?' : ` = ${EM.fmt(i, 3)} A`, f.num]], X(RLDRAW.W / 2 + 0.9), Y(-0.75), C.current, { align: 'center', halo: true });
-    if (state.spark > 0.05) EM.runs(ctx, [['불꽃! ', f.ui], ['ℰ', f.m], ['L', f.subI, f.fs * 0.35], [' = ', f.m], ['L', f.mi], ['|d', f.m], ['i', f.mi], ['/d', f.m], ['t', f.mi], ['|가 매우 크다', f.ui]], X(0.9), Y(RLDRAW.H - 1.35), C.efield, { halo: true });
+    if (state.spark > 0.05) EM.runs(ctx, [['불꽃! ', f.ui], ['ℰ', f.m], ['L', f.subI, f.fs * 0.35], [' = ', f.m], ['L', f.mi], ['|d', f.m], ['i', f.mi], ['/d', f.m], ['t', f.mi], ['|가 매우 크다', f.ui]], X(RLDRAW.XB + 0.45), Y(2.3), C.efield, { halo: true });
   }
 
   function drawGraph() {
@@ -2590,13 +2648,6 @@ const LCDRAW = (() => {
     answer: 1,
     why: `코일의 전류는 순간적으로 바뀔 수 없다(바뀌려면 d${M('i')}/d${M('t')}가 무한대). 그래서 전류는 같은 방향, 같은 크기에서 출발해 ${M('i')} = (ℰ/${M('R')})${M('e')}<sup>−${M('t')}/τ</sup>로 줄어든다. 이번에는 코일이 전지 노릇을 한다(아래 끝이 +).`,
   };
-  const QF = {
-    tag: '계산해 보기', // 출처: Serway 예제 31.2 (B)
-    q: `${M('L')} = 30.0 mH, ${M('R')} = 6.00 Ω, ℰ = 12.0 V. S<sub>1</sub>을 닫고 2.00 ms 뒤의 전류는?`,
-    choices: ['0.659 A', '1.34 A', '0.800 A', '2.00 A'],
-    answer: 0,
-    why: `τ = ${M('L')}/${M('R')} = (30.0 mH)/(6.00 Ω) = 5.00 ms. ${M('i')} = (ℰ/${M('R')})(1 − ${M('e')}<sup>−${M('t')}/τ</sup>) = (2.00 A)(1 − ${M('e')}<sup>−0.400</sup>) = 0.659 A. 1.34 A는 2.00 A × ${M('e')}<sup>−0.400</sup>(줄어드는 쪽 식), 0.800 A는 ℰ${M('t')}/${M('L')}(처음 기울기가 그대로 간다고 본 값)이다.`,
-  };
   const QG = {
     q: `전류가 흐르는 동안 S<sub>2</sub>를 쓰지 않고 S<sub>1</sub>을 그냥 연다. 무슨 일이 생길까?`,
     choices: ['전류가 곧바로 0이 되고 아무 일도 없다', '스위치 틈에 아주 큰 전압이 생겨 불꽃이 튈 수 있다', '전류의 방향이 바뀐다', '전지가 다시 충전된다'],
@@ -2624,17 +2675,15 @@ const LCDRAW = (() => {
   };
   const STEPS = [
     { reset: true, quiz: QA, cap: `전지 ℰ, 저항 ${M('R')}, 인덕터 ${M('L')}을 직렬로 이은 RL 회로(교재 그림 31.2). S<sub>2</sub>는 a와 b 사이를 끊기지 않고 옮겨 가는 스위치다. 지금은 S<sub>1</sub>이 열려 있어 전류가 없다.`, hideAns: true },
-    { reset: true, quiz: QA, reveal: true, script: [[0.6, 'close1']], tauMark: true, cap: `전류는 0에서 출발해 나중값 ℰ/${M('R')} = 2.00 A에 다가간다. 시간 상수 τ = ${M('L')}/${M('R')} = 5.00 ms가 지나면 나중값의 1 − ${M('e')}<sup>−1</sup> = 63.2 %. 화면 속 시간은 실제보다 200배 느리다. (단추로 다시 해 볼 수 있다)` },
+    { reset: true, quiz: QA, reveal: true, script: [[0.6, 'close1']], tauMark: true, cap: `'재생' 단추를 누르면 S<sub>1</sub>이 닫힌다. 전류는 0에서 출발해 나중값 ℰ/${M('R')} = 2.00 A에 다가간다. 시간 상수 τ = ${M('L')}/${M('R')} = 5.00 ms가 지나면 나중값의 1 − ${M('e')}<sup>−1</sup> = 63.2 %. 화면 속 시간은 실제보다 200배 느리다. (단추를 다시 누르면 처음부터 다시 해 볼 수 있다)` },
     { reset: true, quiz: QB, hideAns: true, cap: `S<sub>1</sub>을 닫는 순간을 자세히 보자.` },
     { reset: true, quiz: QB, reveal: true, script: [[0.5, 'close1']], cap: `닫는 순간 Δ${M('V')}<sub>L</sub> = ℰ = 12.0 V, Δ${M('V')}<sub>R</sub> = 0. 저항기의 전압은 '켜지고' 인덕터의 전압은 '꺼진다'. 두 전압의 합은 언제나 ℰ (오른쪽 막대).` }, // 출처: Halliday 그림 30-17의 설명
-    { reset: true, quiz: QC, script: [[0.3, 'close1']], cap: `S<sub>1</sub>을 닫으면 전류가 늘기 시작한다. 오래 기다리면 어떻게 될까?` },
-    { ensureOn: true, quiz: QC, reveal: true, script: [[0.1, 'ff']], cap: `나중에는 Δ${M('V')}<sub>R</sub> = ℰ, Δ${M('V')}<sub>L</sub> = 0. 인덕터는 전류가 <b>변하는 동안만</b> 전압을 가진다.` },
+    { reset: true, quiz: QC, cap: `S<sub>1</sub>을 닫으면 전류가 늘기 시작한다. 오래 기다리면 어떻게 될까?` },
+    { reset: true, quiz: QC, reveal: true, script: [[0.4, 'close1'], [0.5, 'ff']], cap: `'재생' 단추를 누르면 S<sub>1</sub>을 닫고 빨리 감는다. 나중에는 Δ${M('V')}<sub>R</sub> = ℰ, Δ${M('V')}<sub>L</sub> = 0. 인덕터는 전류가 <b>변하는 동안만</b> 전압을 가진다.` },
     { reset: true, quiz: QD, R: 6, cap: `시간 상수가 무엇에 달렸는지 보자. 지금은 ${M('R')} = 6.00 Ω, τ = 5.00 ms.` },
     { reset: true, quiz: QD, reveal: true, R: 12, ghost: 6, tauMark: true, script: [[0.5, 'close1']], cap: `${M('R')} = 12.0 Ω: τ = 2.50 ms, 나중값 1.00 A. 점선은 ${M('R')} = 6.00 Ω일 때. 처음 기울기 ℰ/${M('L')}은 같다. 그럼 ℰ를 바꾸면? 처음 기울기와 나중값이 같은 비율로 바뀌어 τ는 그대로다.` }, // 출처: Benson 질문 12
     { reset: true, R: 6, steady: true, quiz: QE, cap: `${M('R')} = 6.00 Ω로 되돌리고, S<sub>1</sub>을 닫은 채 충분히 기다려 전류가 2.00 A로 일정하다.` },
     { steadyIfNot: true, quiz: QE, reveal: true, script: [[0.6, 'toB']], cap: `전류는 같은 방향으로 2.00 A에서 출발해 ${M('i')} = ${M('I')}<sub>i</sub>${M('e')}<sup>−${M('t')}/τ</sup>로 줄어든다(식 31.10). 인덕터의 전압 부호가 바뀌어 아래 끝이 높다: 이제 인덕터가 전류를 밀어 주는 전지다. 저항기는 두 경우 모두 전류가 들어가는 끝이 높다(Young Test Your Understanding 30.4). 축전기는 방전할 때 같은 저항을 지나는 전류의 방향이 충전 때와 반대지만, 인덕터는 흐르던 전류를 그 방향 그대로 이어 간다.` },
-    { reset: true, R: 6, quiz: QF, hideAns: true, cap: `교재의 예제(${M('L')} = 30.0 mH, ${M('R')} = 6.00 Ω, ℰ = 12.0 V)를 계산해 보자.` },
-    { reset: true, R: 6, quiz: QF, reveal: true, mark: 2e-3, tauMark: true, script: [[0.5, 'close1']], cap: `${M('t')} = 2.00 ms에서 0.659 A(그래프의 보라 점). 두 전압이 같아지는 때는 Δ${M('V')}<sub>L</sub> = ℰ/2, 곧 ${M('e')}<sup>−${M('t')}/τ</sup> = 1/2: ${M('t')} = τ ln 2 = 3.47 ms.` },
     { reset: true, R: 6, steady: true, quiz: QG, cap: `다시 전류가 2.00 A로 일정하게 흐른다. S<sub>2</sub>를 b로 옮기는 대신 S<sub>1</sub>을 열면?` },
     { steadyIfNot: true, quiz: QG, reveal: true, script: [[0.6, 'open1']], cap: `회로가 끊기는 순간 전류가 거의 0이 되며 ${M('L')}|d${M('i')}/d${M('t')}|가 아주 커진다. 교재의 예: 10 mH 코일의 1.0 A가 5.0 μs 만에 0이 되면 Δ${M('V')}<sub>L</sub> = 2000 V. 자동차 점화 코일이 이렇게 수천 볼트를 만든다. 헨리는 전자석의 전류를 끊을 때 스위치에서 튀는 밝은 불꽃으로 자체 유도를 확인했다. 큰 코일은 S<sub>2</sub>처럼 전류가 돌아갈 길을 먼저 마련한 뒤 끊는다.` }, // 출처: Knight 예제 30.13·그림 30.41, Benson 32.1절·질문 5
     { reset: true, R: 6, quiz: QH, cap: `배운 것을 다른 회로에 옮겨 써 보자.` },
@@ -2657,25 +2706,32 @@ const LCDRAW = (() => {
       bind('eIn', 'emf'); bind('rIn', 'R'); bind('lIn', 'L', 1e-3);
       $('vChk').addEventListener('change', e => { state.showV = e.target.checked; EM.requestDraw(def); });
       $('gChk').addEventListener('change', e => { state.glow = e.target.checked; EM.requestDraw(def); });
+      // 재생: 단계의 처음 상태로 되돌린 뒤 그 단계의 스위치 조작(script)을 한다. 단계에 들어갈 때는 저절로 하지 않는다.
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (!S.script) return;
+        def.enterStep(def.step, { replay: true });
+        state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+        EM.requestDraw(def);
+      });
       reset();
       updateReadouts();
     },
-    enterStep(i) {
+    enterStep(i, { replay = false } = {}) {
       const S = STEPS[i];
       state.script = [];
       state.hideAns = !!S.hideAns;
       if (S.R) sim.setParam('R', S.R);
       if (S.reset) { sim.setParam('emf', 12); sim.setParam('L', 0.030); reset(); }
       const on = sim.S.s1 && sim.S.s2 === 'a';
-      if (S.ensureOn && !on) { reset(); sim.setS1(true); setSwitchGraphics(true); }
-      if (S.steady || (S.steadyIfNot && !(on && Math.abs(sim.i() - sim.iInf()) < 0.01 * sim.iInf()))) {
+      if (S.steady || (S.steadyIfNot && (replay || !(on && Math.abs(sim.i() - sim.iInf()) < 0.01 * sim.iInf())))) {
         if (!S.steady) reset();
         sim.forceSteady(); setSwitchGraphics(true); record();
       }
       state.ghost = S.ghost ? { R: S.ghost } : null;
       state.mark = S.mark || null;
       state.tauMark = !!S.tauMark;
-      if (S.script) state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      $('playBtn').hidden = !S.script;
       updateReadouts();
     },
     show() { anim.start(); },
@@ -2772,7 +2828,7 @@ const LCDRAW = (() => {
     const zeroBars = (box, items, title, scaleMax, posOnly = false) => {
       const { x, y, w: ww, h: hh } = box;
       EM.runs(ctx, title, x, y + fs * 0.4, C.muted, { halo: true });
-      const y0 = y + hh * (posOnly ? 0.78 : 0.46), half = hh * (posOnly ? 0.6 : 0.34), n = items.length, slot = ww / n, bwid = Math.min(slot * 0.5, fs * 3);
+      const y0 = y + hh * (posOnly ? 0.78 : 0.46), half = hh * (posOnly ? 0.5 : 0.34), n = items.length, slot = ww / n, bwid = Math.min(slot * 0.5, fs * 3);
       ctx.strokeStyle = C.muted; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + ww, y0); ctx.stroke();
       items.forEach((it, k) => {
         const cx = x + slot * (k + 0.5), v = hid ? 0 : Math.max(-1.05, Math.min(1.05, it.v / scaleMax)), hgt = v * half;
@@ -2831,7 +2887,7 @@ const LCDRAW = (() => {
     KIT.line(ctx, x0, yb, x0 + Lc, yb, C.muted, 1.4);
     EM.arrowHead(ctx, x0, yb, -1, 0, 9, C.muted); EM.arrowHead(ctx, x0 + Lc, yb, 1, 0, 9, C.muted);
     EM.runs(ctx, [['ℓ', f.m], [` = ${EM.fmt(state.len * 100, 3)} cm   단면적 `, f.uiS], ['A', f.mi], [` = ${EM.fmt(state.A * 1e4, 3)} cm²`, f.uiS]], cx, yb + fs * 1.2, C.muted, { align: 'center', halo: true });
-    EM.runs(ctx, [['U', f.mi], ['B', f.subI, fs * 0.35], [' = ', f.m], ['u', f.mi], ['B', f.subI, fs * 0.35], ['Aℓ', f.mi], [' = ', f.m], [state.hideAns ? '?' : `${EM.fmt(u * state.A * state.len * 1e3, 3)} mJ`, f.num]], cx, yb + fs * 2.7, C.ink, { align: 'center', halo: true });
+    EM.runs(ctx, [['U', f.mi], ['B', f.subI, fs * 0.35], [' = ', f.m], ['u', f.mi], ['B', f.subI, fs * 0.35], ['Aℓ', f.mi], [' = ', f.m], [state.hideAns ? '?' : `${EM.fmt(u * state.A * state.len * 1e3, 3)} mJ`, f.num]], cx, yb + fs * 3.1, C.ink, { align: 'center', halo: true });
     EM.runs(ctx, [['그림의 감은 수와 단면은 실제와 다르다', f.uiXS]], w - 12, h - fs * 0.8, C.muted, { align: 'right', halo: true });
   }
 
@@ -2866,7 +2922,7 @@ const LCDRAW = (() => {
     ctx.beginPath(); ctx.arc(cx, cy, rb, 0, TAU); ctx.lineWidth = Math.max(4, sc * 0.25); ctx.strokeStyle = C.wire; ctx.stroke();
     EM.marker(ctx, cx, cy, Math.max(10, Math.min(ra * 0.6, 22)), 'cross');
     for (let k = 0; k < 6; k++) { const th = TAU * (k + 0.5) / 6; EM.marker(ctx, cx + rb * Math.cos(th), cy + rb * Math.sin(th), 9, 'dot'); }
-    EM.runs(ctx, [['a', f.mi]], cx + ra * 0.7, cy - ra * 0.7 - fs * 0.6, C.ink, { align: 'left', halo: true });
+    EM.runs(ctx, [['a', f.mi]], cx + ra * 0.72 + 6, cy - ra * 0.72 - fs * 0.8, C.ink, { align: 'left', halo: true });
     EM.runs(ctx, [['b', f.mi]], cx + rb * 0.72 + 8, cy - rb * 0.72 - 8, C.ink, { align: 'left', halo: true });
     EM.runs(ctx, [['안쪽 도체: 들어감 ⊗, 바깥 도체: 나옴 ⊙ (단면)', f.uiXS]], cx, cy + rb + fs * 1.4, C.muted, { align: 'center', halo: true });
     // 오른쪽 계산 (보기에서 켤 때만)
@@ -3069,15 +3125,15 @@ const LCDRAW = (() => {
     why: `${M('L')} = (μ<sub>0</sub>ℓ/2π) ln(${M('b')}/${M('a')}). ${M('a')} = 1 mm일 때 ln 4 = 1.39에서 ln 8 = 2.08로, 1.5배쯤 는다. 새로 늘어난 바깥쪽 껍질은 자기장이 약한 곳이라(1/${M('r')}) 에너지가 조금만 더해진다. 넓이가 커지면 ${M('L')}이 커진다는 교재의 결론은 맞지만 비례하지는 않는다.`,
   };
   const STEPS = [
-    { scene: 'circuit', reset: true, script: [[0.6, 'close1']], cap: `S<sub>1</sub>을 닫는다. 전류가 느는 동안 전지가 내는 일률 ${M('i')}ℰ는 저항의 열 ${M('i')}<sup>2</sup>${M('R')}과 코일로 들어가는 ${M('Li')} d${M('i')}/d${M('t')}로 나뉜다(식 31.11, 고리 법칙에 ${M('i')}를 곱한 것). 화면 속 시간은 200배 느리다.` },
+    { scene: 'circuit', reset: true, script: [[0.6, 'close1']], cap: `'재생' 단추를 누르면 S<sub>1</sub>을 닫는다. 전류가 느는 동안 전지가 내는 일률 ${M('i')}ℰ는 저항의 열 ${M('i')}<sup>2</sup>${M('R')}과 코일로 들어가는 ${M('Li')} d${M('i')}/d${M('t')}로 나뉜다(식 31.11, 고리 법칙에 ${M('i')}를 곱한 것). 화면 속 시간은 200배 느리다.` },
     { scene: 'circuit', steady: true, hideAns: true, quiz: QA, cap: `충분히 기다려 전류가 일정해졌다.` },
     { scene: 'circuit', steady: true, quiz: QA, reveal: true, cap: `코일로 들어가는 일률은 0, 저장된 에너지는 ${M('U')}<sub>B</sub> = ½${M('Li')}<sup>2</sup> = ½(30.0 mH)(2.00 A)<sup>2</sup> = 60.0 mJ로 일정하다. 축전기가 전기장에 ½${M('C')}(Δ${M('V')})<sup>2</sup>를 쌓듯, 코일은 자기장에 에너지를 쌓는다.` },
     { scene: 'circuit', reset: true, hideAns: true, quiz: QF, cap: `코일에 쌓이는 에너지는 전류와 어떤 관계일까? 다시 S<sub>1</sub>을 닫기 전이다.` },
-    { scene: 'circuit', reset: true, quiz: QF, reveal: true, halfMarks: true, script: [[0.5, 'close1']], cap: `그래프의 두 점선: 0.69τ = 3.47 ms에 전류가 1.00 A(절반)일 때 ${M('U')}<sub>B</sub>는 15 mJ(¼)뿐이고, 1.23τ = 6.14 ms에야 30 mJ(절반)가 된다. 에너지를 두 배로 하려면 전류는 √2배로 하면 된다.` },
+    { scene: 'circuit', reset: true, quiz: QF, reveal: true, halfMarks: true, script: [[0.5, 'close1']], cap: `'재생' 단추를 누르면 S<sub>1</sub>을 닫는다. 그래프의 두 점선: 0.69τ = 3.47 ms에 전류가 1.00 A(절반)일 때 ${M('U')}<sub>B</sub>는 15 mJ(¼)뿐이고, 1.23τ = 6.14 ms에야 30 mJ(절반)가 된다. 에너지를 두 배로 하려면 전류는 √2배로 하면 된다.` },
     { scene: 'circuit', steady: true, quiz: QB, cap: `충분히 기다려 전류가 2.00 A로 일정하다. S<sub>2</sub>를 b로 옮기면 전지 없이 ${M('R')}과 ${M('L')}만 남는다.` },
-    { scene: 'circuit', steadyIfNot: true, quiz: QB, reveal: true, script: [[0.6, 'toB']], cap: `코일의 에너지(초록)가 줄어드는 만큼 저항의 열(갈색)이 쌓여 60.0 mJ에 다가간다. 이때 코일로 들어가는 일률은 음수: 코일이 에너지를 내준다.` },
+    { scene: 'circuit', steadyIfNot: true, quiz: QB, reveal: true, script: [[0.6, 'toB']], cap: `'재생' 단추를 누르면 S<sub>2</sub>를 b로 옮긴다. 코일의 에너지(초록)가 줄어드는 만큼 저항의 열(갈색)이 쌓여 60.0 mJ에 다가간다. 이때 코일로 들어가는 일률은 음수: 코일이 에너지를 내준다.` },
     { scene: 'sol', sol: { n: 1000, i: 2, A: 4e-4, len: 0.25 }, quiz: QC, hideAns: true, cap: `에너지는 어디에 쌓일까? 아주 긴 솔레노이드에서는 자기장이 속에만 고르게 있다. 진하기가 자기 에너지 밀도 ${M('u')}<sub>B</sub>(단위 부피당 에너지)를 나타낸다.` },
-    { scene: 'sol', sol: { n: 1000, i: 2, A: 4e-4, len: 0.25 }, quiz: QC, reveal: true, demo: true, cap: `시연: 단면적과 길이를 키우면(밀도 그대로, 에너지 증가) → 감은 수 밀도와 전류를 키우면(밀도 증가). ${M('u')}<sub>B</sub> = ${M('B')}<sup>2</sup>/2μ<sub>0</sub>은 솔레노이드에서 끌어냈지만 자기장이 있는 모든 곳에 쓸 수 있다. 전기장의 ${M('u')}<sub>E</sub> = ½ε<sub>0</sub>${M('E')}<sup>2</sup>와 꼴이 같다.` },
+    { scene: 'sol', sol: { n: 1000, i: 2, A: 4e-4, len: 0.25 }, quiz: QC, reveal: true, demo: true, cap: `시연('재생' 단추): 단면적과 길이를 키우면(밀도 그대로, 에너지 증가) → 감은 수 밀도와 전류를 키우면(밀도 증가). ${M('u')}<sub>B</sub> = ${M('B')}<sup>2</sup>/2μ<sub>0</sub>은 솔레노이드에서 끌어냈지만 자기장이 있는 모든 곳에 쓸 수 있다. 전기장의 ${M('u')}<sub>E</sub> = ½ε<sub>0</sub>${M('E')}<sup>2</sup>와 꼴이 같다.` },
     { scene: 'sol', sol: { n: 1000, i: 2, A: 4e-4, len: 0.25 }, cap: `끌어내기: ${M('L')} = μ<sub>0</sub>${M('n')}<sup>2</sup>${M('V')}, ${M('B')} = μ<sub>0</sub>${M('ni')}를 ${M('U')}<sub>B</sub> = ½${M('Li')}<sup>2</sup>에 넣으면 ${M('U')}<sub>B</sub> = (${M('B')}<sup>2</sup>/2μ<sub>0</sub>)${M('V')}. 크기 감각: MRI의 1.5 T 자기장에서 ${M('u')}<sub>B</sub> = 9.0×10<sup>5</sup> J/m³. 공기가 견디는 가장 센 전기장(약 3×10<sup>6</sup> V/m)도 ${M('u')}<sub>E</sub> ≈ 40 J/m³에 그치니, 같은 부피라면 자기장에 에너지를 훨씬 많이 담을 수 있다.` }, // 출처: Young 30.3(MRI), Benson 예제 32.5와 같은 비교 (공기 쪽 수치는 직접 계산)
     { scene: 'coax', coax: { a: 1e-3, b: 4e-3 }, hideAns: true, quiz: QD, cap: `동축 도선(교재 예제 31.4): 반지름 ${M('a')}인 안쪽 원통과 ${M('b')}인 바깥 원통에 같은 크기의 전류가 반대로 흐른다(얇은 도체막).` },
     { scene: 'coax', coax: { a: 1e-3, b: 4e-3 }, quiz: QD, reveal: true, cap: `${M('u')}<sub>B</sub> ∝ 1/${M('r')}<sup>2</sup>: 안쪽 도체 가까이가 가장 진하다. 이 밀도를 부피에 대해 적분하면 ${M('U')} = (μ<sub>0</sub>${M('i')}<sup>2</sup>ℓ/4π) ln(${M('b')}/${M('a')})이고, ${M('U')} = ½${M('Li')}<sup>2</sup>에서 ${M('L')} = (μ<sub>0</sub>ℓ/2π) ln(${M('b')}/${M('a')}). 교재가 선속(${M('L')} = Φ<sub>B</sub>/${M('i')})으로 구한 값과 같다.` },
@@ -3102,10 +3158,23 @@ const LCDRAW = (() => {
       bindS('nIn', 'n', 100); bindS('iIn', 'i'); bindS('aIn', 'A', 1e-4); bindS('lenIn', 'len', 1e-2);
       bindS('caIn', 'a', 1e-3); bindS('cbIn', 'b', 1e-3); bindS('ciIn', 'ic');
       $('eqChk').addEventListener('change', e => { state.coaxEq = e.target.checked; EM.requestDraw(def); });
+      // 재생: 단계의 처음 상태로 되돌린 뒤 스위치 조작(script)이나 시연(demo)을 한다. 단계에 들어갈 때는 저절로 하지 않는다.
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (!S.script && !S.demo) return;
+        def.enterStep(def.step, { replay: true });
+        if (S.demo) {
+          const t0 = state.clock;
+          const seq = [[0.4, { A: 8e-4 }], [2.0, { len: 0.45 }], [3.6, { n: 2000 }], [5.2, { i: 4 }], [7.4, { n: 1000, i: 2, A: 4e-4, len: 0.25 }]];
+          state.script = seq.map(([d, tg]) => ({ at: t0 + d, fn: () => glide(tg, 1100) }));
+        }
+        if (S.script) state.script = state.script.concat(S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) })));
+        EM.requestDraw(def);
+      });
       reset();
       updateReadouts();
     },
-    enterStep(i) {
+    enterStep(i, { replay = false } = {}) {
       const S = STEPS[i];
       state.script = [];
       state.hideAns = !!S.hideAns; state.halfMarks = !!S.halfMarks;
@@ -3114,23 +3183,18 @@ const LCDRAW = (() => {
       if (S.scene === 'circuit') {
         if (S.reset) { sim.setParam('emf', 12); sim.setParam('R', 6); sim.setParam('L', 0.030); reset(); }
         const on = sim.S.s1 && sim.S.s2 === 'a';
-        if (S.steady || (S.steadyIfNot && !(on && Math.abs(sim.i() - sim.iInf()) < 0.01 * sim.iInf()))) {
+        if (S.steady || (S.steadyIfNot && (replay || !(on && Math.abs(sim.i() - sim.iInf()) < 0.01 * sim.iInf())))) {
           sim.setParam('emf', 12); sim.setParam('R', 6); sim.setParam('L', 0.030);
           reset(); sim.forceSteady(); setSwitchGraphics(true); record();
         }
       }
       if (S.sol) Object.assign(state, S.sol);
       if (S.coax) {
-        const forward = S.reveal && S.coax.b !== state.b;
+        const forward = !replay && S.reveal && S.coax.b !== state.b;
         if (forward) glide({ a: S.coax.a, b: S.coax.b }, 1400); else { state.a = S.coax.a; state.b = S.coax.b; }
         state.ic = 2;
       }
-      if (S.demo) {
-        const t0 = state.clock;
-        const seq = [[0.4, { A: 8e-4 }], [2.0, { len: 0.45 }], [3.6, { n: 2000 }], [5.2, { i: 4 }], [7.4, { n: 1000, i: 2, A: 4e-4, len: 0.25 }]];
-        state.script = seq.map(([d, tg]) => ({ at: t0 + d, fn: () => glide(tg, 1100) }));
-      }
-      if (S.script) state.script = state.script.concat(S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) })));
+      $('playBtn').hidden = !(S.script || S.demo);
       updateReadouts();
     },
     show() { anim.start(); },
@@ -3163,7 +3227,7 @@ const LCDRAW = (() => {
     r: Math.sqrt(4e-4 / Math.PI), tw: null,
   };
   const needle = { x: 0, v: 0 };
-  let flowPh = 0, cacheM = null, fieldCache = null;
+  let flowPh = 0, cacheM = null, fieldCache = null, playId = 0;
 
   /* ---------- 물리 ---------- */
   const Tr = () => I_HI / state.rate;
@@ -3323,9 +3387,10 @@ const LCDRAW = (() => {
     if (ia > 0.01) headOn(drive === 1 ? L1 : L2, drive === 1 ? c1 : c2, Math.sign(iD), C.current);
     if (!state.hideV && Math.abs(E) > 1e-6) headOn(recv === 1 ? L1 : L2, recv === 1 ? c1 : c2, Math.sign(E), C.efield);
     // 이름표
-    const p1 = proj(fr, [0, A1, 0]), p2 = proj(fr, [state.d, B2 + 0.004, 0]);
-    EM.runs(ctx, [['코일 1', f.ui], [`  ${N1}회`, f.uiS]], p1[0], p1[1] - fs * 1.2, C.ink, { align: 'center', halo: true });
-    EM.runs(ctx, [['코일 2', f.ui], [`  ${N2}회`, f.uiS]], p2[0] + fs * 0.4, p2[1] - fs * 1.2, C.ink, { align: 'center', halo: true });
+    // 코일 위에 두면 그 둘레에 몰린 자기력선과 겹친다: 코일 1은 왼쪽 옆, 코일 2는 오른쪽 옆 (가운데 높이)
+    const xMin1 = Math.min(...L1.map(p => proj(fr, p)[0])), xMax2 = Math.max(...L2.map(p => proj(fr, p)[0]));
+    EM.runs(ctx, [['코일 1', f.ui], [`  ${N1}회`, f.uiS]], xMin1 - fs * 0.8, fr.Y(0), C.ink, { align: 'right', halo: true });
+    EM.runs(ctx, [['코일 2', f.ui], [`  ${N2}회`, f.uiS]], xMax2 + fs * 0.8, fr.Y(0), C.ink, { align: 'left', halo: true });
     // 전원(보내는 코일)과 검류계(받는 코일)
     const yB = h - fs * 2.6;
     const b1 = proj(fr, [0, -A1, 0]), b2 = proj(fr, [state.d, -B2, 0]);
@@ -3387,8 +3452,9 @@ const LCDRAW = (() => {
     }
     helix(true);
     ring(rH, true, recvCol, 5);
-    EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0', f.m]], x0 - 14, cy - Rs - fs * 0.3, C.muted, { align: 'right', halo: true });
-    EM.runs(ctx, [['코일 반지름 ', f.uiS], ['r', f.mi], [` = ${EM.fmt(state.r * 100, 3)} cm   (솔레노이드 ${EM.fmt(SOL.R * 100, 3)} cm)`, f.uiS]], w / 2, cy + Math.max(rH, Rs) + fs * 1.5, C.muted, { align: 'center', halo: true });
+    EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0', f.m]], x0 - KX * Rs - 10, cy - Rs - fs * 0.3, C.muted, { align: 'right', halo: true });
+    // 검류계로 가는 두 도선(가운데 세로)과 겹치지 않게 왼쪽으로 붙인다
+    EM.runs(ctx, [['코일 반지름 ', f.uiS], ['r', f.mi], [` = ${EM.fmt(state.r * 100, 3)} cm   (솔레노이드 ${EM.fmt(SOL.R * 100, 3)} cm)`, f.uiS]], w / 2 - 22, cy + Math.max(rH, Rs) + fs * 1.5, C.muted, { align: 'right', halo: true });
     // 검류계
     const yB = h - fs * 2.4, bx = w / 2 + KX * rH * 0, by = cy + rH;
     KIT.stroke(ctx, [[w / 2 - 7, by], [w / 2 - 7, yB - 32]], false, C.wire, 2.2);
@@ -3521,7 +3587,7 @@ const LCDRAW = (() => {
     { scene: 'two', mode: 'up', d: 0.06, th: 0, hideM: true, quiz: QE, cap: `두 코일의 '역할'을 바꿔 보자. 지금은 코일 1이 보내고 코일 2가 받는다.` },
     { scene: 'two', mode: 'up', d: 0.06, th: 0, swap: true, quiz: QE, reveal: true, cap: `이제 코일 2가 보내고 코일 1이 받는다. 같은 d${M('i')}/d${M('t')}에 같은 기전력. 계기판의 ${M('M')}<sub>12</sub>와 ${M('M')}<sub>21</sub>은 서로 다른 적분인데 같은 값이다. 거리와 기울기를 바꿔도 늘 같다.` },
     { scene: 'sol', mode: 'up', r: 1.3 * Math.sqrt(10e-4 / Math.PI), hideM: true, quiz: QF, cap: `무선 칫솔 충전기(교재 예제 31.5): 받침대 속의 긴 솔레노이드를 손잡이의 코일이 감싼다.` },
-    { scene: 'sol', mode: 'up', r: 2.6 * Math.sqrt(10e-4 / Math.PI), demo: true, quiz: QF, reveal: true, cap: `시연: 감싼 코일을 키워도 ${M('M')}은 그대로 → 코일을 솔레노이드 <b>안</b>으로 줄이면 비로소 넓이에 비례해 줄어든다. ${M('M')} = μ<sub>0</sub>${M('nN')}π·min(${M('r')}, ${M('R')})<sup>2</sup>. 솔레노이드를 두 배 긴 도선으로 두 배 길게 감으면? ${M('n')}이 같아 ${M('B')}도 같으니 ${M('M')}은 그대로다.` }, // 출처: Young Test Your Understanding 30.1
+    { scene: 'sol', mode: 'up', r: 2.6 * Math.sqrt(10e-4 / Math.PI), demo: true, quiz: QF, reveal: true, cap: `시연('재생' 단추): 감싼 코일을 키워도 ${M('M')}은 그대로 → 코일을 솔레노이드 <b>안</b>으로 줄이면 비로소 넓이에 비례해 줄어든다. ${M('M')} = μ<sub>0</sub>${M('nN')}π·min(${M('r')}, ${M('R')})<sup>2</sup>. 솔레노이드를 두 배 긴 도선으로 두 배 길게 감으면? ${M('n')}이 같아 ${M('B')}도 같으니 ${M('M')}은 그대로다.` }, // 출처: Young Test Your Understanding 30.1
     { scene: 'sol', mode: 'up', r: Math.sqrt(4e-4 / Math.PI), hideM: true, hideV: true, quiz: QG, cap: `코일이 솔레노이드 <b>안</b>에 있을 때를 계산해 보자.` },
     { scene: 'sol', mode: 'up', r: Math.sqrt(4e-4 / Math.PI), quiz: QG, reveal: true, cap: `${M('M')} = 7.54 μH. 화면의 솔레노이드와 코일이 바로 그 값이다(오른쪽 위). 코일의 전류를 바꾸면 솔레노이드에 생기는 기전력도 같은 ${M('M')}으로 정해진다.` },
   ];
@@ -3544,6 +3610,18 @@ const LCDRAW = (() => {
       $('thIn').addEventListener('input', e => { if (state.tw) { state.tw.cancel(); state.tw = null; } state.th = +e.target.value * Math.PI / 180; updateReadouts(); EM.requestDraw(def); });
       $('rIn').addEventListener('input', e => { if (state.tw) { state.tw.cancel(); state.tw = null; } state.r = +e.target.value / 100; updateReadouts(); EM.requestDraw(def); });
       $('lChk').addEventListener('change', e => { state.lines = e.target.checked; EM.requestDraw(def); });
+      // 재생: 시연(demo)을 처음부터. 단계에 들어갈 때는 저절로 하지 않는다.
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step], i = def.step;
+        if (!S.demo) return;
+        const id = ++playId, r0 = Math.sqrt(10e-4 / Math.PI);
+        if (state.tw) { state.tw.cancel(); state.tw = null; }
+        state.r = 1.3 * r0;
+        updateReadouts(); EM.requestDraw(def);
+        glide({ r: 2.6 * r0 }, 1600);
+        setTimeout(() => { if (def.step === i && playId === id) glide({ r: 0.45 * r0 }, 2600); }, 2600);
+        setTimeout(() => { if (def.step === i && playId === id) glide({ r: 2.6 * r0 }, 1800); }, 6200);
+      });
       updateReadouts();
     },
     enterStep(i, { forward }) {
@@ -3557,13 +3635,8 @@ const LCDRAW = (() => {
       if (S.th != null && Math.abs(S.th - state.th) > 1e-9) tg.th = S.th;
       if (S.r != null && Math.abs(S.r - state.r) > 1e-9) tg.r = S.r;
       if (Object.keys(tg).length) { if (forward && S.reveal) glide(tg); else Object.assign(state, tg); }
-      if (S.demo) {
-        const r0 = Math.sqrt(10e-4 / Math.PI);
-        state.r = 1.3 * r0;
-        glide({ r: 2.6 * r0 }, 1600);
-        setTimeout(() => { if (def.step === i) glide({ r: 0.45 * r0 }, 2600); }, 2600);
-        setTimeout(() => { if (def.step === i) glide({ r: 2.6 * r0 }, 1800); }, 6200);
-      }
+      playId++;                                              // 진행 중인 시연을 멈춘다
+      $('playBtn').hidden = !S.demo;
       updateReadouts();
     },
     show() { anim.start(); },
@@ -3755,9 +3828,9 @@ const LCDRAW = (() => {
     why: `전체 에너지 = ${M('Q')}<sup>2</sup>/2${M('C')} = (200 μC)<sup>2</sup>/(2 × 50.0 μF) = 400 μJ이고 늘 일정하다. 같아지는 순간 반씩: 200 μJ(이때 ${M('q')} = ${M('Q')}/√2, ${M('t')} = ${M('T')}/8, 3${M('T')}/8, …). 교재 문제의 '각각 250 μJ'가 불가능한 까닭은 합이 500 μJ가 되어 에너지 보존을 어기기 때문이다. ${M('L')}은 답에 필요 없다.`,
   };
   const STEPS = [
-    { sw: 'a', script: [[1.2, 'toB']], cap: `S를 a에 두면 전지가 축전기를 ${M('Q')} = ${M('C')}ℰ로 충전한다(저항이 없어 순식간). S를 b로 옮기면 축전기가 코일을 지나 방전하기 시작한다(교재 그림 31.11). 회로의 저항과 복사는 없다고 본다.` },
+    { sw: 'a', script: [[0.6, 'toB']], cap: `S를 a에 두면 전지가 축전기를 ${M('Q')} = ${M('C')}ℰ로 충전한다(저항이 없어 순식간). '재생' 단추를 눌러 S를 b로 옮기면 축전기가 코일을 지나 방전하기 시작한다(교재 그림 31.11). 회로의 저항과 복사는 없다고 본다.` },
     { sw: 'a', hideAns: true, quiz: QA, cap: `방전이 시작되면 무슨 일이 일어날까?` },
-    { sw: 'a', quiz: QA, reveal: true, script: [[0.6, 'toB']], cap: `A(전하 최대) → B(전하 0, 전류 최대) → C(반대로 충전) → D(반대 전류 최대) → A. 에너지는 축전기의 전기장과 코일의 자기장을 오간다(교재 그림 31.12). 용수철–물체에서 물체가 평형점에서 가장 빠른 것과 같다.` },
+    { sw: 'a', quiz: QA, reveal: true, script: [[0.6, 'toB']], cap: `'재생' 단추를 누르면 S가 b로 간다. A(전하 최대) → B(전하 0, 전류 최대) → C(반대로 충전) → D(반대 전류 최대) → A. 에너지는 축전기의 전기장과 코일의 자기장을 오간다(교재 그림 31.12). 용수철–물체에서 물체가 평형점에서 가장 빠른 것과 같다.` },
     { quiz: QJ, cap: `에너지가 축전기에서 코일로 옮겨 가는 동안, 누가 전하를 밀고 있을까?` },
     { quiz: QJ, reveal: true, cap: `축전기의 전기력이 전하를 밀어 전류를 키우고, 코일의 유도 전기장은 그 반대로 밀며(역기전력) 에너지를 받아 자기장에 쌓는다. 같은 순간 두 소자의 전압은 크기가 같다: 축전기 전압 = 코일의 유도 기전력.` }, // 출처: Young 30.5 (각 순간 축전기 전위 = 유도 기전력), TYU 30.5
     { quiz: QC, cap: `진동 주기는 무엇으로 정해질까? 지금 ℰ = 12.0 V.` },
@@ -3783,19 +3856,27 @@ const LCDRAW = (() => {
       const bind = (id, key, k) => $(id).addEventListener('input', e => { state[key] = +e.target.value * k; state.t = 0; updateReadouts(); EM.requestDraw(def); });
       bind('lIn', 'L', 1e-3); bind('cIn', 'Cap', 1e-12); bind('vIn', 'V0', 1);
       $('springChk').addEventListener('change', e => { state.spring = e.target.checked; EM.requestDraw(def); });
+      // 재생: S를 a(충전된 처음 상태)로 되돌린 뒤 b로 옮긴다. 단계에 들어갈 때는 저절로 하지 않는다.
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (!S.script) return;
+        setSwitch('a', true);
+        state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => { if (what === 'toB') setSwitch('b'); updateReadouts(); } }));
+        updateReadouts(); EM.requestDraw(def);
+      });
       setSwitch('b', true);
       updateReadouts();
     },
     enterStep(i) {
       const S = STEPS[i];
       state.script = [];
+      $('playBtn').hidden = !S.script;
       state.hideAns = !!S.hideAns; state.eqMark = !!S.eqMark;
       if (S.V0 != null && S.V0 !== state.V0) { state.V0 = S.V0; state.t = 0; }
       if (i === 0 || S.reveal && S.sw) { state.L = 2.81e-3; state.Cap = 9.00e-12; state.V0 = 12; }
       state.Tref = TAU * Math.sqrt(2.81e-3 * 9.00e-12);
       if (S.sw === 'a') setSwitch('a', true);
       else if (state.swPos !== 'b') setSwitch('b', true);
-      if (S.script) state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => { if (what === 'toB') setSwitch('b'); updateReadouts(); } }));
       updateReadouts();
     },
     show() { anim.start(); },
