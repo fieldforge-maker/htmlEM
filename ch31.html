@@ -2882,7 +2882,7 @@ const LCDRAW = (() => {
     seg(true, C.current, wireW * 1.2, 1);
     EM.runs(ctx, [['B', f.mb], [` = ${EM.fmt(B * 1e3, 3)} mT`, f.num]], cx, cy - Rc - fs * 1.4, C.field, { align: 'center', halo: true });
     EM.runs(ctx, [['u', f.mi], ['B', f.subI, fs * 0.35], [' = ', f.m], [state.hideAns ? '?' : `${EM.fmt(u, 3)} J/m³`, f.num]], cx, cy + Rc + fs * 1.6, C.field, { align: 'center', halo: true });
-    EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0, ', f.m], ['u', f.mi], ['B', f.subI, fs * 0.35], [' ≈ 0', f.m]], x0 - KX * Rc - 10, cy - Rc - fs * 0.4, C.muted, { align: 'right', halo: true });
+    EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0, ', f.m], ['u', f.mi], ['B', f.subI, fs * 0.35], [' ≈ 0', f.m]], 14, h - fs * 0.9, C.muted, { align: 'left', halo: true });   // 솔레노이드가 길어지면 왼쪽 끝에서 잘리던 것을 왼쪽 아래로
     // 아래: 길이와 단면적
     const yb = cy + Rc + fs * 3.6;
     KIT.line(ctx, x0, yb, x0 + Lc, yb, C.muted, 1.4);
@@ -3453,7 +3453,7 @@ const LCDRAW = (() => {
     }
     helix(true);
     ring(rH, true, recvCol, 5);
-    EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0', f.m]], x0 - KX * Rs - 10, cy - Rs - fs * 0.3, C.muted, { align: 'right', halo: true });
+    EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0', f.m]], x0 - KX * Rs, cy - Rs - fs * 1.1, C.muted, { align: 'left', halo: true });
     // 검류계로 가는 두 도선(가운데 세로)과 겹치지 않게 왼쪽으로 붙인다
     EM.runs(ctx, [['코일 반지름 ', f.uiS], ['r', f.mi], [` = ${EM.fmt(state.r * 100, 3)} cm   (솔레노이드 ${EM.fmt(SOL.R * 100, 3)} cm)`, f.uiS]], w / 2 - 22, cy + Math.max(rH, Rs) + fs * 1.5, C.muted, { align: 'right', halo: true });
     // 검류계
