@@ -432,7 +432,7 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-view="2" aria-pressed="false">실험 2</button>
             <button type="button" data-view="3" aria-pressed="false">실험 3</button>
           </div>
-          <button class="btn" type="button" id="s1-playBtn">다시 실행</button>
+          <button class="btn primary" type="button" id="s1-playBtn" hidden>재생</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
@@ -516,6 +516,7 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-frame="0" aria-pressed="true">A · 자석과 함께</button>
             <button type="button" data-frame="1" aria-pressed="false">B · 물체와 함께</button>
           </div>
+          <button class="btn primary" type="button" id="s2-playBtn" hidden>재생</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
@@ -590,6 +591,7 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-mode="down" aria-pressed="false">감소</button>
             <button type="button" data-mode="ac" aria-pressed="false">교류</button>
           </div>
+          <button class="btn primary" type="button" id="s3-playBtn" hidden>재생</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
@@ -671,7 +673,8 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-scene="switch" aria-pressed="false">스위치 a → b</button>
             <button type="button" data-scene="bar" aria-pressed="false">미끄럼 막대</button>
           </div>
-          <button class="btn primary" type="button" id="s4-actBtn">스위치 닫기</button>
+          <button class="btn" type="button" id="s4-actBtn">스위치 닫기</button>
+          <button class="btn primary" type="button" id="s4-playBtn" hidden>재생</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
@@ -731,6 +734,7 @@ sub, sup { font-size: .7em; line-height: 0; }
         <canvas id="s5-stage" aria-label="비스듬히 본 도는 금속 원판. 자기장은 위쪽을 향하고, 축 밑과 가장자리에 접점이 닿아 있고 바깥 회로에 저항이 있다."></canvas>
         <div class="stage-tools">
           <button class="btn" type="button" id="s5-openBtn">회로 끊기</button>
+          <button class="btn primary" type="button" id="s5-playBtn" hidden>재생</button>
         </div>
       </div>
       <div class="legend" aria-hidden="true">
@@ -1767,7 +1771,7 @@ const KIT = (() => {
     $('vOut').textContent = `${state.v.toFixed(1)} cm/s`;
     $('bOut').textContent = `${state.B0.toFixed(1)} T`;
     const done = state.t >= tMax() - 1e-6;
-    playBtn.textContent = state.playing ? '멈춤' : done ? '다시 실행' : state.t <= 0 ? '실행' : '계속';
+    playBtn.textContent = state.playing ? '멈춤' : done ? '다시 재생' : state.t <= TMIN + 1e-6 ? '재생' : '계속';
     segs.forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.view === state.view)));
     $('forceChk').checked = state.force; $('eChk').checked = state.efield; $('lenzChk').checked = state.lenz;
   }
@@ -1848,8 +1852,10 @@ const KIT = (() => {
       const S = STEPS[i];
       state.view = S.view;
       state.force = !!S.force; state.efield = !!S.efield; state.lenz = !!S.lenz; state.mini = !!S.mini;
-      if (S.play) play(TMIN);
-      else { state.playing = false; state.t = S.t ?? 0; }
+      // 저절로 재생하지 않는다: 재생 단계는 처음 모습(t = TMIN)에서 멈춰 두고 '재생' 단추를 보인다
+      state.playing = false;
+      state.t = S.play ? TMIN : S.t ?? 0;
+      playBtn.hidden = !S.play;
       updateReadouts();
     },
     show() { anim.start(); },
@@ -2304,7 +2310,7 @@ const KIT = (() => {
   };
   const STEPS = [
     { obj: 'q', frame: 0, cap: `자석이 정지한 관성계 A(앨릭). 전하 ${M('q')}가 속도 ${MV('v')}로 자기장 속을 지나며 자기력 ${MV('F')} = ${M('q')}${MV('v')}×${BA}(위쪽)를 받는다. 전기장은 없다.` }, // 출처: Knight 31.1 (앨릭·브리트니는 Knight의 등장인물)
-    { obj: 'q', frame: 1, cap: `전하와 함께 달리는 관성계 B(브리트니, ${VBA} = ${MV('v')})로 갈아탄다. B에서 전하는 정지해 있으니 자기력은 0이다. 그런데 갈릴레이 변환에서 두 관성계의 가속도는 같으므로 힘도 같아야 한다. 정지한 전하에 힘을 주는 것은 전기장이므로 B에는 ${EB} = ${VBA}×${BA}가 있다. 갈아타는 동안 힘의 크기는 그대로이고 초록(자기력)이 주황(전기력)으로 바뀐다.` },
+    { obj: 'q', frame: 1, swap: true, cap: `전하와 함께 달리는 관성계 B(브리트니, ${VBA} = ${MV('v')})로 갈아탄다. B에서 전하는 정지해 있으니 자기력은 0이다. 그런데 갈릴레이 변환에서 두 관성계의 가속도는 같으므로 힘도 같아야 한다. 정지한 전하에 힘을 주는 것은 전기장이므로 B에는 ${EB} = ${VBA}×${BA}가 있다. 갈아타는 동안 힘의 크기는 그대로이고 초록(자기력)이 주황(전기력)으로 바뀐다.` },
     { obj: 'q', frame: 1, quiz: QZ, cap: `B에서 전기장이 새로 나타났다. 자기장은 어떻게 될까?` },
     { obj: 'q', frame: 1, quiz: QZ, reveal: true, cap: `일반적으로 B가 A에 대해 ${VBA}로 움직이면 ${EB} = ${EA} + ${VBA}×${BA}, ${BB} = ${BA} − ${VBA}×${EA}/${M('c')}<sup>2</sup> (갈릴레이 장 변환). 두 식은 같은 점의 장을 각 관성계에 정지한 실험자가 잰 값이다. 전기장과 자기장은 따로 있는 것이 아니라, 하나의 전자기장이 관찰자에 따라 다른 얼굴을 보인다.` }, // 출처: Knight 식 31.10
     { obj: 'q', frame: 1, quiz: QR, cap: `계산으로 확인해 보자.` }, // 출처: Knight 예제 31.2
@@ -2312,11 +2318,11 @@ const KIT = (() => {
     { obj: 'q', frame: 1, quiz: QT, cap: `이번에는 A에 전기장과 자기장이 둘 다 있다.` }, // 출처: Knight Stop to Think 31.1
     { obj: 'q', frame: 1, quiz: QT, reveal: true, cap: `두 식을 차례로 쓴다. ${VBA}가 ${BA}와 나란하면 ${VBA}×${BA} = 0이라 전기장은 그대로이고, 자기장에 −${VBA}×${EA}/${M('c')}<sup>2</sup>(+${M('y')} 방향)가 더해져 ${BB}가 위로 기운다: 정답 (b). 자기장에 실린 이 변화가 움직이는 전하의 자기장(비오–사바르)과 같은 뿌리다.` },
     { obj: 'rod', frame: 0, cap: `도체 막대가 자기장 속을 움직인다(A). 양전하는 자기력 ${M('q')}${MV('v')}×${MV('B')}에 밀려 위로 모이고 아래에는 음전하가 남는다. 쌓인 전하의 전기력이 자기력과 같아지면 멈춘다: ${M('qE')} = ${M('qvB')}, Δ${M('V')} = ${M('vlB')} (운동 기전력).` }, // 출처: Knight 30.2
-    { obj: 'rod', frame: 1, cap: `막대와 함께 보면(B) 막대는 정지해 있고, 바깥 전기장 ${EB} = ${MV('v')}×${MV('B')} 속에 놓인 도체일 뿐이다. 도체 속 전기장이 0이 될 때까지 전하가 갈라진다 — 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')} = ${M('E')}<sub>B</sub>${M('l')} = ${M('vlB')}.` },
+    { obj: 'rod', frame: 1, swap: true, cap: `막대와 함께 보면(B) 막대는 정지해 있고, 바깥 전기장 ${EB} = ${MV('v')}×${MV('B')} 속에 놓인 도체일 뿐이다. 도체 속 전기장이 0이 될 때까지 전하가 갈라진다 — 정전기 평형. 같은 전하 분리, 같은 Δ${M('V')} = ${M('E')}<sub>B</sub>${M('l')} = ${M('vlB')}.` },
     { obj: 'loop', frame: 0, cap: `화면 1의 실험 1. 실험실 A에서 고리가 자기장 속으로 움직이고, 앞쪽 변의 전하를 미는 것은 자기력 ${M('q')}${MV('v')}×${MV('B')}이다: 운동 기전력.` }, // 출처: Knight 그림 31.10(a) = Griffiths 실험 1
-    { obj: 'loop', frame: 1, cap: `고리와 함께 보면(B) 자석이 왼쪽으로 움직이는 실험 2가 된다. 정지한 전하를 미는 것은 ${EB} = ${MV('v')}×${MV('B')}이고, 이것이 바로 패러데이 법칙의 유도 전기장이다: 자기장이 '변하는' 것은 고리의 관성계 B에서뿐이므로 유도 전기장도 B에서만 보인다. 그러나 실험 3처럼 자기장의 세기 자체가 변하면 어떤 관성계로 갈아타도 없앨 수 없다 → 다음 화면(유도 전기장).` }, // 출처: Knight 그림 31.10(b)
+    { obj: 'loop', frame: 1, swap: true, cap: `고리와 함께 보면(B) 자석이 왼쪽으로 움직이는 실험 2가 된다. 정지한 전하를 미는 것은 ${EB} = ${MV('v')}×${MV('B')}이고, 이것이 바로 패러데이 법칙의 유도 전기장이다: 자기장이 '변하는' 것은 고리의 관성계 B에서뿐이므로 유도 전기장도 B에서만 보인다. 그러나 실험 3처럼 자기장의 세기 자체가 변하면 어떤 관성계로 갈아타도 없앨 수 없다 → 다음 화면(유도 전기장).` }, // 출처: Knight 그림 31.10(b)
     { obj: 'free', frame: 0, cap: `홀로 움직이는 전하. 전하가 정지한 관성계에는 쿨롱 전기장만 있다. 전하가 ${MV('v')}로 움직이는 관성계에서는 ${MV('B')} = ${MV('v')}×${MV('E')}/${M('c')}<sup>2</sup>인 자기장도 있다(위 • 나옴, 아래 × 들어감): 점전하의 비오–사바르 법칙은 쿨롱 전기장을 움직이는 관성계로 변환한 것이다.` }, // 출처: Knight 그림 31.7
-    { obj: 'free', frame: 1, cap: `거의 상대성: 나란히 달리는 두 전하에 이 변환을 쓰면 전하가 정지한 관성계의 전기장이 (1 − ${M('v')}<sup>2</sup>/${M('c')}<sup>2</sup>)배로 나와 쿨롱 법칙과 어긋난다. 갈릴레이 장 변환은 ${M('v')}<sup>2</sup>/${M('c')}<sup>2</sup>을 0으로 둘 수 있을 때(${M('v')} < 10<sup>7</sup> m/s)만 맞고, 정확한 식은 아인슈타인의 상대성 이론(36장)이 준다.` }, // 출처: Knight 31.1 끝
+    { obj: 'free', frame: 1, swap: true, cap: `거의 상대성: 나란히 달리는 두 전하에 이 변환을 쓰면 전하가 정지한 관성계의 전기장이 (1 − ${M('v')}<sup>2</sup>/${M('c')}<sup>2</sup>)배로 나와 쿨롱 법칙과 어긋난다. 갈릴레이 장 변환은 ${M('v')}<sup>2</sup>/${M('c')}<sup>2</sup>을 0으로 둘 수 있을 때(${M('v')} < 10<sup>7</sup> m/s)만 맞고, 정확한 식은 아인슈타인의 상대성 이론(36장)이 준다.` }, // 출처: Knight 31.1 끝
   ];
   const def = EM.register({
     id: 's2',
@@ -2329,14 +2335,23 @@ const KIT = (() => {
       frameSegs.forEach(b => b.addEventListener('click', () => setFrame(+b.dataset.frame)));
       $('vIn').addEventListener('input', e => { state.V = +e.target.value; updateReadouts(); });
       $('bIn').addEventListener('input', e => { state.B = +e.target.value; updateReadouts(); });
+      // 재생: 갈아타기 전 관성계에서 시작해 갈아타는 움직임을 보인다 (다시 누르면 처음부터)
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (!S.swap) return;
+        trans = null; state.frame = 1 - S.frame; state.beta = 1 - S.frame;
+        if (state.obj !== S.obj) setObj(S.obj); else place();
+        setFrame(S.frame, true);
+      });
       updateReadouts();
     },
-    enterStep(i, { forward, initial }) {
-      const S = STEPS[i], prev = STEPS[i - 1];
+    enterStep(i, { initial }) {
+      const S = STEPS[i];
       const sameObj = state.obj === S.obj;
-      // 같은 물체에서 관성계만 바뀌는 단계(앞으로 갈 때)는 갈아타는 움직임을 보인다
-      if (sameObj && !initial && forward && prev && prev.frame !== S.frame) { setFrame(S.frame, true); return; }
-      trans = null; state.frame = S.frame; state.beta = S.frame;
+      // 저절로 갈아타지 않는다: 갈아타는 단계(swap)는 갈아타기 전 관성계에서 멈춰 두고 '재생' 단추를 보인다
+      const f0 = S.swap ? 1 - S.frame : S.frame;
+      trans = null; state.frame = f0; state.beta = f0;
+      $('playBtn').hidden = !S.swap;
       if (!sameObj || initial) setObj(S.obj);
       else { if (S.obj === 'rod') state.sep = 1; place(); updateReadouts(); }
     },
@@ -2653,19 +2668,28 @@ const KIT = (() => {
         if (!state.path && !state.ring) state.path = true;
         setR((e.clientX - r.left - gview.L) / gview.pw * gview.rMax);
       });
+      // 재생: 이 단계의 경로를 처음 반지름에서 끝 반지름까지 훑는다 (다시 누르면 처음부터)
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (!S.sweep) return;
+        state.insideOnly = false; state.path = true;
+        state.r = state.swept = S.sweep[0];
+        sweepTo(S.sweep[0], S.sweep[1], 2600);
+      });
       updateReadouts();
     },
-    enterStep(i, { forward }) {
+    enterStep(i) {
       const S = STEPS[i];
       if (sweep) { sweep.cancel(); sweep = null; }
       if (state.mode !== S.mode) state.t = 0;
       state.mode = S.mode; state.e = !!S.e; state.path = !!S.path; state.ring = !!S.ring;
       if (!!S.q !== state.q) state.qAng = 0;
       state.q = !!S.q; state.insideOnly = !!S.insideOnly;
-      // 그래프에서 진하게 그릴 범위: 이 단계까지 훑은 데까지. 앞으로 오며 훑는 단계는 처음부터 다시 그려 나간다
-      state.swept = S.sw;
-      if (S.sweep && forward) { state.swept = S.sweep[0]; sweepTo(S.sweep[0], S.sweep[1], 2600); }
-      else state.r = S.sweep ? S.sweep[1] : S.r;
+      // 그래프에서 진하게 그릴 범위: 이 단계까지 훑은 데까지.
+      // 훑는 단계(sweep)는 저절로 훑지 않고 처음 반지름에 멈춰 두고 '재생' 단추를 보인다
+      state.swept = S.sweep ? S.sweep[0] : S.sw;
+      state.r = S.sweep ? S.sweep[0] : S.r;
+      $('playBtn').hidden = !S.sweep;
       updateReadouts();
     },
     show() { anim.start(); },
@@ -2692,6 +2716,13 @@ const KIT = (() => {
   const XL = -6, XA = 0, XB = 6, XP = -2.4;          // 왼쪽 도선, a, b, 스위치 축
   const YB = -5.5, YF = 0.8, YC = 3.6, YT = 5.2;     // 아래 도선, 자기장 윗끝, 접점, 전류계
   const H_IN = YF - YB;                              // 자기장 속 도선 높이 (cm)
+  // ② 스위치 날 (Griffiths 그림 7.14): 축 (SPX, YT)에서 길이 SL을 그대로 둔 채 돈다.
+  //    a는 오른쪽 아래(가운데 도선의 윗끝), b는 같은 반지름의 원 위, 위 도선 높이(오른쪽 도선으로 이어진다)
+  const SPX = -3.0, YSA = 2.4;
+  const SL = Math.hypot(XA - SPX, YSA - YT);
+  const TH_A = Math.atan2(YSA - YT, XA - SPX), TH_B = 0;
+  const SBX = SPX + SL * Math.cos(TH_B), SBY = YT + SL * Math.sin(TH_B);
+  const SWING_T = 0.45;                              // 날이 a에서 b로 도는 시간 (s)
   const phiAt = x => BF * (x - XL) * H_IN * 1e-4;    // Wb
 
   const state = {
@@ -2714,7 +2745,7 @@ const KIT = (() => {
   }
   const swingPos = () => {
     if (!state.swing) return state.pos === 'a' ? 0 : 1;
-    const u = Math.min(1, (state.t - state.swing.t0) / 0.28), e = u * u * (3 - 2 * u);
+    const u = Math.min(1, (state.t - state.swing.t0) / SWING_T), e = u * u * (3 - 2 * u);
     return state.swing.to === 'b' ? e : 1 - e;
   };
   const barV = () => (state.move ? (state.move.to - state.move.from) / state.move.dur : 0);   // cm/s
@@ -2759,7 +2790,7 @@ const KIT = (() => {
     state.t += dt;
     const t = state.t;
     while (state.script.length && state.script[0].at <= t) state.script.shift().fn();
-    if (state.swing && t - state.swing.t0 >= 0.28) { state.pos = state.swing.to; state.swing = null; updateReadouts(); }
+    if (state.swing && t - state.swing.t0 >= SWING_T) { state.pos = state.swing.to; state.swing = null; updateReadouts(); }
     if (state.move) {
       const u = Math.min(1, (t - state.move.t0) / state.move.dur);
       state.xb = state.move.from + (state.move.to - state.move.from) * u;
@@ -2888,27 +2919,26 @@ const KIT = (() => {
     // 지금 이어진 회로 (보라 띠)
     const loop = bar
       ? [[XL, YT], [XL, YB], [xc, YB], [xc, YC], [XP, YC], [XP, YT]]
-      : [[XL, YT], [XL, YB], [xc, YB], [xc, YC], [XP, YT]];
+      : xc === XA ? [[XL, YT], [XL, YB], [XA, YB], [XA, YSA], [SPX, YT]]
+      : [[XL, YT], [XL, YB], [XB, YB], [XB, SBY], [SBX, SBY], [SPX, YT]];
     if (closedNow) KIT.stroke(ctx, P(loop), true, EM.alpha(C.accent, 0.18), Math.max(10, 0.6 * s));
     // 도선
     KIT.stroke(ctx, P([[XL, YT - 1.25], [XL, YB], [bar ? XB + 1.2 : XB, YB]]), false, C.wire, wireW);
-    KIT.stroke(ctx, P([[XL + 1.25, YT], [XP, YT]]), false, C.wire, wireW);
+    KIT.stroke(ctx, P([[XL + 1.25, YT], [bar ? XP : SPX, YT]]), false, C.wire, wireW);
     const meterR = 1.25;
     if (!bar) {
-      KIT.stroke(ctx, P([[XA, YB], [XA, YC]]), false, p >= 1 ? EM.alpha(C.wire, 0.55) : C.wire, wireW);
-      KIT.stroke(ctx, P([[XB, YB], [XB, YC]]), false, p <= 0 ? EM.alpha(C.wire, 0.55) : C.wire, wireW);
-      // 스위치 날: 축 (XP, YT)에서 a나 b로
-      const ta = Math.atan2(YC - YT, XA - XP), tb = Math.atan2(YC - YT, XB - XP);
-      const la = Math.hypot(XA - XP, YC - YT), lb = Math.hypot(XB - XP, YC - YT);
-      const th = ta + (tb - ta) * p, L = la + (lb - la) * p;
-      ctx.beginPath(); ctx.moveTo(X(XP), Y(YT)); ctx.lineTo(X(XP + L * Math.cos(th)), Y(YT + L * Math.sin(th)));
+      KIT.stroke(ctx, P([[XA, YB], [XA, YSA]]), false, p >= 1 ? EM.alpha(C.wire, 0.55) : C.wire, wireW);
+      KIT.stroke(ctx, P([[XB, YB], [XB, SBY], [SBX, SBY]]), false, p <= 0 ? EM.alpha(C.wire, 0.55) : C.wire, wireW);
+      // 스위치 날: 축 (SPX, YT)에서 길이 SL 그대로 a에서 b로 돈다
+      const th = TH_A + (TH_B - TH_A) * p;
+      ctx.beginPath(); ctx.moveTo(X(SPX), Y(YT)); ctx.lineTo(X(SPX + SL * Math.cos(th)), Y(YT + SL * Math.sin(th)));
       ctx.strokeStyle = C.ink; ctx.lineWidth = wireW; ctx.lineCap = 'round'; ctx.stroke();
-      for (const [x, lab] of [[XA, 'a'], [XB, 'b']]) {
-        ctx.beginPath(); ctx.arc(X(x), Y(YC), Math.max(3.5, 0.18 * s), 0, TAU); ctx.fillStyle = C.stage; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
-        EM.runs(ctx, [[lab, f.mi]], X(x) + 0.55 * s, Y(YC) - 0.55 * s, C.ink, { halo: true });
+      for (const [x, y, lab, dx, dy] of [[XA, YSA, 'a', 0.5, -0.1], [SBX, SBY, 'b', 0.1, 0.75]]) {
+        ctx.beginPath(); ctx.arc(X(x), Y(y), Math.max(3.5, 0.18 * s), 0, TAU); ctx.fillStyle = C.stage; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.ink; ctx.stroke();
+        EM.runs(ctx, [[lab, f.mi]], X(x + dx), Y(y + dy), C.ink, { halo: true });
       }
-      ctx.beginPath(); ctx.arc(X(XP), Y(YT), Math.max(3.5, 0.18 * s), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
-      EM.runs(ctx, [['스위치', f.uiS]], X(XP) + 0.4 * s, Y(YT) - 0.75 * s, C.muted, { halo: true });
+      ctx.beginPath(); ctx.arc(X(SPX), Y(YT), Math.max(3.5, 0.18 * s), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
+      EM.runs(ctx, [['스위치', f.uiS]], X(SPX), Y(YT + 0.85), C.muted, { align: 'center', halo: true });
     } else {
       // 위 레일과 막대
       KIT.stroke(ctx, P([[XP, YT], [XP, YC], [XB + 1.2, YC]]), false, C.wire, wireW);
@@ -3033,7 +3063,7 @@ const KIT = (() => {
   };
   const STEPS = [
     { scene: 'ring', quiz: QA, cap: `패러데이의 첫 실험(1831, 슬라이드 4): 쇠고리에 감은 두 코일. 1차 회로에는 전지와 스위치, 2차 회로에는 검류계만 있다.` },
-    { scene: 'ring', quiz: QA, reveal: true, script: [[0.6, 'act'], [3.6, 'act']], cap: `스위치를 닫는 순간 바늘이 한쪽으로 튀었다가 0으로 돌아오고, 닫아 둔 동안은 0, 여는 순간 반대쪽으로 튄다. 철심 속 선속이 변하는 동안만 2차 코일에 기전력 ${M('N')}|dΦ<sub>B</sub>/d${M('t')}|가 생긴다. 방향이 반대인 것은 렌츠의 법칙: 선속이 커질 때와 줄어들 때 그 변화를 막는 방향이 반대다. (단추로 다시 해 볼 수 있다)` },
+    { scene: 'ring', quiz: QA, reveal: true, script: [[0.6, 'act'], [3.6, 'act']], cap: `스위치를 닫는 순간 바늘이 한쪽으로 튀었다가 0으로 돌아오고, 닫아 둔 동안은 0, 여는 순간 반대쪽으로 튄다. 철심 속 선속이 변하는 동안만 2차 코일에 기전력 ${M('N')}|dΦ<sub>B</sub>/d${M('t')}|가 생긴다. 방향이 반대인 것은 렌츠의 법칙: 선속이 커질 때와 줄어들 때 그 변화를 막는 방향이 반대다. (재생 단추로 볼 수 있다)` },
     { scene: 'switch', quiz: QB, cap: `고른 자기장 속에 놓인 회로와 스위치. 스위치를 a에서 b로 옮기면 전류계가 연결된 회로가 왼쪽 칸에서 두 칸 전체로 바뀐다.` }, // 출처: Griffiths 그림 7.14
     { scene: 'switch', quiz: QB, reveal: true, script: [[0.6, 'act']], cap: `선속은 두 배가 되었는데 전류계는 그대로 0이다. 아무 전하도 밀리지 않았기 때문이다: 자기장이 변하지 않아 ${MV('E')} = 0이고, 자기장 속에서 움직인 도선도 없다. 패러데이의 철심 고리에서는 ${M('B')} 자체가 변했고, 여기서는 '회로를 어디로 잡느냐'만 바뀌었다.` },
     { scene: 'bar', quiz: QC, cap: `이번에는 a 자리의 도선을 레일 위의 막대로 바꾸었다. 막대를 b 자리까지 밀어 옮기면 처음과 끝의 선속은 스위치 실험과 똑같다.` },
@@ -3049,13 +3079,21 @@ const KIT = (() => {
       sceneSegs = [...root.querySelectorAll('[data-scene]')];
       sceneSegs.forEach(b => b.addEventListener('click', () => reset(b.dataset.scene)));
       $('actBtn').addEventListener('click', act);
+      // 재생: 이 단계의 장면을 처음 상태로 되돌리고 정해진 순서(script)대로 움직인다 (다시 누르면 처음부터)
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (!S.script) return;
+        reset(S.scene);
+        state.script = S.script.map(([dt, what]) => ({ at: state.t + dt, fn: what === 'act' ? act : () => {} }));
+      });
       $('pushIn').addEventListener('input', e => { state.pushT = +e.target.value; updateReadouts(); });
       reset('ring');
     },
     enterStep(i) {
       const S = STEPS[i];
       reset(S.scene);
-      if (S.script) state.script = S.script.map(([dt, what]) => ({ at: state.t + dt, fn: what === 'act' ? act : () => {} }));
+      // 저절로 재생하지 않는다: script가 있는 단계는 처음 상태에 멈춰 두고 '재생' 단추를 보인다
+      $('playBtn').hidden = !S.script;
     },
     show() { anim.start(); },
     hide() { anim.stop(); },
@@ -3317,7 +3355,7 @@ const KIT = (() => {
     { w: 100, quiz: Q2, cap: `그런데 이 장치는 선속 규칙으로 설명하기 곤란하다.` },
     { w: 100, quiz: Q2, reveal: true, force: true, sweep: true, cap: `회로의 모양도 자기장도 변하지 않는데 기전력이 있다. 원인은 자기력이다(운동 기전력). 원판과 함께 도는 반지름(보라)을 경로의 일부로 잡으면, 그 반지름이 쓸고 간 넓이 ½${M('a')}<sup>2</sup>θ의 선속이 ½ω${M('Ba')}<sup>2</sup>의 빠르기로 늘어나 같은 답을 준다. 경로를 어떻게 잡느냐에 따라 선속 규칙이 맞기도 틀리기도 한다 — 스위치 화면과 같은 교훈.` },
     { w: 100, B: 0.9, a: 0.4, quiz: Q3, cap: `앞 문제의 단극 발전기. 지금 ω = 100 rad/s에서 기전력이 얼마인지 보고 어림해도 된다.` }, // 출처: Serway 문제 30.17
-    { w: 347.2, B: 0.9, a: 0.4, quiz: Q3, reveal: true, cap: `ω = 2ℰ/(${M('Ba')}<sup>2</sup>) = 347 rad/s(분당 약 3300회전)에서 ℰ = 25.0 V. 거꾸로 브러시 사이에 전압을 걸면 원판이 도는 단극 전동기가 된다. 돌리는 손은 반지름 방향 전류가 받는 자기력(돌림힘 ½${M('IBa')}<sup>2</sup>)을 이기며 일을 하고, 그 일이 저항의 열 ℰ${M('I')}가 된다.` },
+    { w: 347.2, w0: 100, B: 0.9, a: 0.4, quiz: Q3, reveal: true, cap: `ω = 2ℰ/(${M('Ba')}<sup>2</sup>) = 347 rad/s(분당 약 3300회전)에서 ℰ = 25.0 V. 거꾸로 브러시 사이에 전압을 걸면 원판이 도는 단극 전동기가 된다. 돌리는 손은 반지름 방향 전류가 받는 자기력(돌림힘 ½${M('IBa')}<sup>2</sup>)을 이기며 일을 하고, 그 일이 저항의 열 ℰ${M('I')}가 된다.` },
   ];
 
   const def = EM.register({
@@ -3331,9 +3369,17 @@ const KIT = (() => {
       $('sweepChk').addEventListener('change', e => { state.sweep = e.target.checked; state.sweepAng = 0; EM.requestDraw(def); });
       const bind = (id, key) => $(id).addEventListener('input', e => { if (key === 'w' && state.wAnim) { state.wAnim.cancel(); state.wAnim = null; } state[key] = +e.target.value; updateReadouts(); EM.requestDraw(def); });
       bind('wIn', 'w'); bind('bIn', 'B'); bind('aIn', 'a'); bind('rIn', 'R');
+      // 재생: ω를 이 단계의 처음 값(w0)에서 목표값(w)까지 올린다 (다시 누르면 처음부터)
+      $('playBtn').addEventListener('click', () => {
+        const S = STEPS[def.step];
+        if (S.w0 == null) return;
+        if (state.wAnim) { state.wAnim.cancel(); state.wAnim = null; }
+        state.w = S.w0; updateReadouts();
+        setW(S.w, 1600);
+      });
       updateReadouts();
     },
-    enterStep(i, { forward }) {
+    enterStep(i) {
       const S = STEPS[i];
       state.force = !!S.force;
       if (!!S.sweep !== state.sweep) state.sweepAng = 0;
@@ -3343,7 +3389,10 @@ const KIT = (() => {
       $('stage').closest('.screen').classList.toggle('intro', state.intro);
       if (S.B) state.B = S.B;
       if (S.a) state.a = S.a;
-      if (Math.abs(state.w - S.w) > 0.5) { if (forward && S.reveal) setW(S.w, 1600); else { if (state.wAnim) { state.wAnim.cancel(); state.wAnim = null; } state.w = S.w; } }
+      // 저절로 ω를 바꾸지 않는다: w0가 있는 단계는 처음 값에 멈춰 두고 '재생' 단추를 보인다
+      if (state.wAnim) { state.wAnim.cancel(); state.wAnim = null; }
+      state.w = S.w0 ?? S.w;
+      $('playBtn').hidden = S.w0 == null;
       updateReadouts();
     },
     show() { anim.start(); },
