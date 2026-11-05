@@ -152,6 +152,7 @@ h1 { margin: 0; flex: none; font-size: 1.12em; font-weight: 700; white-space: no
   border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink);
 }
 .icon-btn:hover { border-color: var(--muted); }
+.home-btn { flex: none; width: auto; height: 2.2em; display: inline-flex; align-items: center; gap: .35em; padding: 0 .65em; font-size: .85em; font-weight: 600; text-decoration: none; }
 
 /* 화면 */
 .screen {
@@ -393,6 +394,7 @@ sub, sup { font-size: .7em; line-height: 0; }
 <body>
 <div class="app">
   <header class="top">
+    <a class="icon-btn home-btn" href="https://fieldforge-maker.github.io/htmlEM/" aria-label="홈 (전체 목록으로)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg><span>홈</span></a>
     <h1><span class="chapter">CH31.</span>유도계수</h1>
     <nav class="tabs" aria-label="화면 목록">
       <span class="tab-group">자체 유도</span>
@@ -2360,12 +2362,14 @@ const LCDRAW = (() => {
     { mode: 'ac', dir: 1, B: true, emf: true, pot: true, shade: true, quiz: QC, reveal: true, cap: `그래프의 분홍 띠가 ${VAB} > 0인 때: ${M('i')}(${M('t')})가 올라가는 구간이다. ${M('i')} > 0(a → b)이면서 커질 때 (c), ${M('i')} < 0(b → a)이면서 크기가 작아질 때 (f). 자체 유도 기전력의 극성은 전류의 크기나 방향이 아니라 전류의 <b>변화율</b>로 정해진다.` }, // 출처: Serway 퀴즈 31.1, Knight Stop to Think 30.6, Benson 그림 32.4
     { mode: 'pw', dir: 1, hideV: true, B: true, quiz: QG, cap: `전류의 그래프만 보고 전위차의 그래프를 그릴 수 있을까? 화면의 코일에 그 전류가 흐른다.` },
     { mode: 'pw', dir: 1, B: true, emf: true, pot: true, quiz: QG, reveal: true, cap: `전위차의 그래프는 전류 그래프의 기울기 그래프다(곱하기 ${M('L')}). 전류가 가장 클 때가 아니라 가장 빨리 변할 때 전위차가 가장 크다. 교류에서는 전류가 최대인 순간 전위차가 0이고, 전위차가 전류보다 1/4 주기 앞선다 — LC 회로(화면 5)에서 다시 만난다.` },
+    /* 수업에서는 1–9단계만 쓴다. 10단계부터(수치 확인 · 감은 수 · 예제 계산)는 화면에서 숨긴다. 다시 쓰려면 이 주석만 풀면 된다.
     { mode: 'up', dir: 1, B: true, hideV: true, quiz: QH, cap: `수치로 확인해 보자. 네 코일 모두 전류는 a → b.` },
     { mode: 'up', dir: 1, B: true, emf: true, quiz: QH, reveal: true, cap: `전류의 크기가 아니라 '${M('L')} × 전류의 변화율'이 전위차를 정한다. 4.0 A가 일정하게 흐르는 (iii)은 0, 줄어드는 (ii)는 음수(b가 높다). 가장 큰 전류가 흐르는 코일이 가장 높은 전위차를 갖는 것이 아니다.` }, // 출처: Young TYU 30.2
     { mode: 'up', dir: 1, B: true, emf: true, N: 300, quiz: QE, cap: `코일의 모양을 바꿔 보자. 지금은 감은 수 300회, ${M('L')} = 0.181 mH.` },
     { mode: 'up', dir: 1, B: true, emf: true, N: 600, quiz: QE, reveal: true, cap: `감은 수 600회에서 ${M('L')} = 0.724 mH (네 배). 같은 d${M('i')}/d${M('t')}에 전압계의 눈금도 네 배로 움직인다. ${M('L')} = μ<sub>0</sub>${M('n')}<sup>2</sup>${M('V')}로 쓰면(${M('n')} = ${M('N')}/ℓ, ${M('V')} = ${M('A')}ℓ) 같은 감기 밀도에서는 부피에 비례한다.` },
     { mode: 'down', dir: 1, B: true, N: 300, rate: 50, hideV: true, quiz: QF, cap: `교재의 예제를 계산해 보자. 감은 수 300회로 되돌리고 전류를 50.0 A/s로 줄인다.` },
     { mode: 'down', dir: 1, B: true, emf: true, pot: true, N: 300, rate: 50, quiz: QF, reveal: true, cap: `${M('L')} = 0.181 mH, |ℰ<sub>L</sub>| = 9.05 mV. 계기판의 '값'에서 ${M('L')}, d${M('i')}/d${M('t')}, ℰ<sub>L</sub>을 확인할 수 있다.` },
+    */
   ];
 
   const def = EM.register({
