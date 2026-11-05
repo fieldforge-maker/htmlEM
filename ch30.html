@@ -505,7 +505,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s2" hidden>
     <div class="screen-head">
       <!-- 출처: Knight 31.1 · 30.2 -->
-      <h2>E일까 B일까? 관성계에 따라 다르다</h2>
+      <h2>E일까 B일까?</h2>
     </div>
 
     <div class="stage-wrap">
@@ -888,12 +888,23 @@ const EM = (() => {
     ctx.fillText(text, x, y);
   }
   // 글꼴이 섞인 한 줄 [[글, 글꼴, 세로 어긋남], ...]. align: 'left' | 'center' | 'right'. halo면 배경색 테두리
-  function runs(ctx, items, x, y, color, { align = 'left', halo = false } = {}) {
+  // plate면 글 밑에 배경색 판(둥근 사각형)을 깐다 — × 표시·장선 사이에 놓이는 이름표용 (색을 주면 그 색)
+  function runs(ctx, items, x, y, color, { align = 'left', halo = false, plate = false } = {}) {
     ctx.textBaseline = 'middle';
-    let total = 0;
-    for (const [t, font] of items) { ctx.font = font; total += ctx.measureText(t).width; }
+    let total = 0, hMax = 0;
+    for (const [t, font] of items) {
+      ctx.font = font; total += ctx.measureText(t).width;
+      hMax = Math.max(hMax, parseFloat((font.match(/([\d.]+)px/) || [])[1]) || 0);
+    }
     if (align === 'center') x -= total / 2; else if (align === 'right') x -= total;
     const x0 = x;
+    if (plate) {
+      const px = Math.max(4, hMax * 0.3), ph = hMax * 0.62 + 3;
+      ctx.save();
+      ctx.globalAlpha *= 0.9; ctx.fillStyle = typeof plate === 'string' ? plate : C.stage;
+      ctx.beginPath(); ctx.roundRect(x - px, y - ph, total + 2 * px, 2 * ph, Math.min(ph, 6)); ctx.fill();
+      ctx.restore();
+    }
     ctx.textAlign = 'left';
     if (halo) {
       ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = typeof halo === 'string' ? halo : C.stage;
@@ -1348,7 +1359,7 @@ const KIT = (() => {
   function timePlot(ctx, w, h, o) {
     ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
     const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
-    const L = fs * 3.4, Rp = 12, Top = fs * 1.9, Bot = fs * 2.6, gap = fs * 2.7;
+    const L = fs * 3.4, Rp = 12, Top = fs * 2.5, Bot = fs * 2.6, gap = fs * 3.3;   // 칸 위에 축 이름 자리(맨 위 눈금 글자와 겹치지 않게)
     const n = o.panels.length;
     const ph = (h - Top - Bot - gap * (n - 1)) / n, pw = w - L - Rp;
     const GX = t => L + (t - o.tmin) / (o.tmax - o.tmin) * pw;
@@ -1383,7 +1394,7 @@ const KIT = (() => {
           ctx.fillText(EM.minus(t.toFixed(dd)), GX(t), T0 + ph + 5);
         }
       }
-      EM.runs(ctx, P.label, 2, T0 - fs * 0.95, C.muted);
+      EM.runs(ctx, P.label, 2, T0 - fs * 1.55, C.muted);
       // 곡선
       ctx.save();
       ctx.beginPath(); ctx.rect(L, T0 - 3, pw + 2, ph + 6); ctx.clip();
@@ -1414,7 +1425,9 @@ const KIT = (() => {
       const x = GX(o.t);
       ctx.save();
       ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.accent;
-      ctx.beginPath(); ctx.moveTo(x, Top); ctx.lineTo(x, h - Bot); ctx.stroke();
+      ctx.beginPath();   // 칸마다 따로 그어 칸 사이 축 이름을 가르지 않게
+      for (const B of boxes) { ctx.moveTo(x, B.T0); ctx.lineTo(x, B.T0 + B.ph); }
+      ctx.stroke();
       ctx.restore();
       o.panels.forEach((P, k) => {
         const B = boxes[k];
@@ -1535,7 +1548,7 @@ const KIT = (() => {
       KIT.bField(ctx, X(rx0), Y(RY), X(rx1), Y(-RY), 2 * s, 0.3 * s * (0.45 + 0.55 * bf), 'in', C.field, X(rx0), Y(RY));
       ctx.restore();
     }
-    EM.runs(ctx, [['B', f.mb], [' (들어감)', f.uiS]], Math.max(X(rx0), box.x) + 0.5 * s, Y(RY) + 0.75 * s, C.field, { halo: true });
+    EM.runs(ctx, [['B', f.mb], [' (들어감)', f.uiS]], Math.max(X(rx0), box.x) + 0.5 * s, Y(RY) + 0.75 * s, C.field, { halo: true, plate: true });
     // 고리 안 선속 영역
     const lx0 = LX0 + c.dxL, lx1 = LX1 + c.dxL;
     const ox0 = Math.max(lx0, rx0), ox1 = Math.min(lx1, rx1);
@@ -1612,19 +1625,30 @@ const KIT = (() => {
     ctx.save();
     ctx.globalAlpha = vAlpha;
     const vy = Y(-6.9), vl = 3 * s, vsc = Math.max(0.75, Math.min(1.5, s / 18));
+    // × 표시 위에 놓이는 화살표와 v 글자 밑에 배경색 판을 깐다 (xa: 화살표 꼬리, dir: 방향)
+    const vPlate = (xa, dir) => {
+      ctx.font = f.mb;
+      const wl = ctx.measureText('v').width, hh = Math.max(9 * vsc, 0.62 * parseFloat(f.mb.match(/([\d.]+)px/)[1])) + 2;
+      const xe = xa + dir * (vl + 0.45 * s + wl), xl = Math.min(xa, xe) - 0.3 * s, xr = Math.max(xa, xe) + 0.3 * s;
+      ctx.save(); ctx.globalAlpha = 0.9 * vAlpha; ctx.fillStyle = C.stage;
+      ctx.beginPath(); ctx.roundRect(xl, vy - hh, xr - xl, 2 * hh, 6); ctx.fill();
+      ctx.restore();
+    };
     if (k === 1) {
       const x = X(lx0 + 3.4);
+      vPlate(x, 1);
       KIT.vArrow(ctx, x, vy, 1, 0, vl, C.ink, vsc);
       EM.runs(ctx, [['v', f.mb]], x + vl + 0.45 * s, vy, C.ink, { halo: true });
     } else if (k === 2) {
       const x = X(rx1 - 1.2);
+      vPlate(x, -1);
       KIT.vArrow(ctx, x, vy, -1, 0, vl, C.ink, vsc);
       EM.runs(ctx, [['v', f.mb]], x - vl - 0.45 * s, vy, C.ink, { align: 'right', halo: true });
     }
     ctx.restore();
     if (k === 3) {
       const txt = `${EM.fmt(c.B, 2)} T`;
-      EM.runs(ctx, [['B', f.mi], [' = ' + txt + (mov ? ' ↓' : ''), f.uiS]], X(rx0) + 0.5 * s, Y(-RY) - 0.8 * s, C.field, { halo: true });
+      EM.runs(ctx, [['B', f.mi], [' = ' + txt + (mov ? ' ↓' : ''), f.uiS]], X(rx0) + 0.5 * s, Y(-RY) - 0.8 * s, C.field, { halo: true, plate: true });
     }
     ctx.restore();
     return { s, X, Y };
@@ -2007,8 +2031,15 @@ const KIT = (() => {
         const L = b * Lv() * s, y = Y(-BAND + 1.3);
         const x0 = obj === 'loop' ? X(-2.2) : w - 2.2 * s;
         if (x0 > L + 10) {
+          // × 표시 위에 놓이므로 화살표와 이름표 밑에 배경색 판을 깐다
+          const vItems = [['자석의 속도 −', f.uiS], ['v', f.mb]];
+          let wl = 0; for (const [t, ft] of vItems) { ctx.font = ft; wl += ctx.measureText(t).width; }
+          const hh = 0.62 * parseFloat(f.mb.match(/([\d.]+)px/)[1]) + 3, xl = x0 - L - 0.4 * s - wl - 6;
+          ctx.save(); ctx.globalAlpha *= 0.9; ctx.fillStyle = C.stage;
+          ctx.beginPath(); ctx.roundRect(xl, y - hh, x0 + 6 - xl, 2 * hh, 6); ctx.fill();
+          ctx.restore();
           KIT.vArrow(ctx, x0, y, -1, 0, L, C.ink, Math.max(0.8, s / 30));
-          EM.runs(ctx, [['자석의 속도 −', f.uiS], ['v', f.mb]], x0 - L - 0.4 * s, y, C.ink, { align: 'right', halo: true });
+          EM.runs(ctx, vItems, x0 - L - 0.4 * s, y, C.ink, { align: 'right', halo: true });
         }
         ctx.restore();
       }
@@ -2049,15 +2080,15 @@ const KIT = (() => {
     const b = state.beta, lf = Lf(), lw = Math.max(2.6, 0.12 * s);
     const vL = (1 - b) * Lv();
     if (vL > 0.15) KIT.vArrow(ctx, X(x) + r * s, Y(y), 1, 0, vL * s, C.ink, Math.max(0.8, s / 30));
-    if (label && vL > 0.6) EM.runs(ctx, [['v', f.mb]], X(x) + (r + vL + 0.35) * s, Y(y), C.ink, { halo: true });
-    if (label && vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x) + (r + 0.4) * s, Y(y), C.ink, { halo: true });
+    if (label && vL > 0.6) EM.runs(ctx, [['v', f.mb]], X(x) + (r + vL + 0.35) * s, Y(y), C.ink, { halo: true, plate: true });
+    if (label && vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x) + (r + 0.4) * s, Y(y), C.ink, { halo: true, plate: true });
     const top = stack(X, Y, s, x, y + r, 1, [[(1 - b) * lf, C.field], [b * lf, C.efield]], lw);
     if (label) {
       const items = [];
       if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
       if (1 - b > 0.12 && b > 0.12) items.push(['  +  ', f.m]);
       if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['B', f.sub, f.dy, C.efield]);
-      EM.runs(ctx, items, X(x) + 0.5 * s, Y(top) + 0.2 * s, C.muted, { halo: true });
+      EM.runs(ctx, items, X(x) + 0.5 * s, Y(top) + 0.2 * s, C.muted, { halo: true, plate: true });
     }
     return top;
   }
@@ -2066,7 +2097,7 @@ const KIT = (() => {
     const r = 0.62;
     forces(X, Y, s, f, state.x, 0, r);
     KIT.charge(ctx, X(state.x), Y(0), r * s, 1);
-    EM.runs(ctx, [['q', f.mi]], X(state.x) - r * s - 0.3 * s, Y(0) + 0.9 * s, C.current, { align: 'right', halo: true });
+    EM.runs(ctx, [['q', f.mi]], X(state.x) - r * s - 0.3 * s, Y(0) + 0.9 * s, C.current, { align: 'right', halo: true, plate: true });
   }
 
   function drawRod(X, Y, s, f) {
@@ -2096,12 +2127,12 @@ const KIT = (() => {
     if (1 - b > 0.12) items.push(['q', f.mi, 0, C.field], ['v', f.mb, 0, C.field], ['×', f.m, 0, C.field], ['B', f.mb, 0, C.field]);
     if (1 - b > 0.12 && b > 0.12) items.push(['  +  ', f.m]);
     if (b > 0.12) items.push(['q', f.mi, 0, C.efield], ['E', f.mb, 0, C.efield], ['B', f.sub, f.dy, C.efield]);
-    EM.runs(ctx, items, X(x) + (ROD_W / 2 + 0.5) * s, Y(r + lf * 0.6), C.muted, { halo: true });
-    if (sep > 0.05) EM.runs(ctx, [['갈라진 전하의 전기력', f.uiS]], X(x) + (ROD_W / 2 + 0.5) * s, Y(-r - lf * 0.6), C.efield, { halo: true });
+    EM.runs(ctx, items, X(x) + (ROD_W / 2 + 0.5) * s, Y(r + lf * 0.6), C.muted, { halo: true, plate: true });
+    if (sep > 0.05) EM.runs(ctx, [['갈라진 전하의 전기력', f.uiS]], X(x) + (ROD_W / 2 + 0.5) * s, Y(-r - lf * 0.6), C.efield, { halo: true, plate: true });
     // 속도
     const vL = (1 - b) * Lv();
     if (vL > 0.15) KIT.vArrow(ctx, X(x) - (ROD_W / 2 + 0.4 + vL) * s, Y(-ROD - 1), 1, 0, vL * s, C.ink, Math.max(0.8, s / 30));
-    if (vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x), Y(-ROD - 1), C.ink, { align: 'center', halo: true });
+    if (vL <= 0.15) EM.runs(ctx, [['v', f.mb], ['CB', f.sub, f.dy], [' = 0', f.m]], X(x), Y(-ROD - 1), C.ink, { align: 'center', halo: true, plate: true });
     // 양 끝 전위차
     if (sep > 0.3) {
       const xb = X(x) - (ROD_W / 2 + 1.1) * s;
@@ -2109,8 +2140,8 @@ const KIT = (() => {
       ctx.globalAlpha *= Math.min(1, (sep - 0.3) / 0.5);
       ctx.strokeStyle = C.muted; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(xb, yT); ctx.lineTo(xb, yB); ctx.moveTo(xb - 4, yT); ctx.lineTo(xb + 4, yT); ctx.moveTo(xb - 4, yB); ctx.lineTo(xb + 4, yB); ctx.stroke();
-      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], [' = ', f.m], ['vlB', f.mi]], xb - 0.4 * s, Y(0.8), C.ink, { align: 'right', halo: true });
-      EM.runs(ctx, [[`${EM.fmt(state.V * 0.1 * state.B, 2)} V`, `600 ${fs()}px ${F.num}`]], xb - 0.4 * s, Y(-0.8), C.ink, { align: 'right', halo: true });
+      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], [' = ', f.m], ['vlB', f.mi]], xb - 0.4 * s, Y(0.8), C.ink, { align: 'right', halo: true, plate: true });
+      EM.runs(ctx, [[`${EM.fmt(state.V * 0.1 * state.B, 2)} V`, `600 ${fs()}px ${F.num}`]], xb - 0.4 * s, Y(-0.8), C.ink, { align: 'right', halo: true, plate: true });
       ctx.restore();
     }
   }
@@ -2421,10 +2452,6 @@ const KIT = (() => {
           EM.vec(ctx, X(px - tx * L / 2), Y(py - ty * L / 2), tx * L * s, -ty * L * s, C.efield, Math.max(2, 0.09 * s));
         }
       }
-      if (!state.insideOnly) {
-        const lr = 5.7, la = -0.62;
-        EM.runs(ctx, [['E', fMb], [cw ? ' (시계 방향)' : ' (반시계 방향)', fUs]], X(lr * Math.cos(la)) + 0.5 * s, Y(lr * Math.sin(la)) - 0.9 * s, C.efield, { halo: true });
-      }
     }
 
     // 솔레노이드: 안의 자기장(• 나옴 / × 들어감)과 벽의 전류
@@ -2445,7 +2472,7 @@ const KIT = (() => {
     const ccw = Bn >= 0;
     const ringPts = n => Array.from({ length: n }, (_, k) => { const th = (ccw ? 1 : -1) * TAU * k / n; return [X(R * Math.cos(th)), Y(R * Math.sin(th))]; });
     KIT.flow(ctx, ringPts(96), true, flowPhase * s, 2.2 * s, Math.max(6, 0.42 * s), C.current, Math.min(1, bAbs));
-    EM.runs(ctx, [['B', fMb], [Bn >= 0 ? ' (나옴)' : ' (들어감)', fUs]], X(0), Y(R) - 0.7 * s, C.field, { align: 'center', halo: true });
+    EM.runs(ctx, [['B', fMb], [Bn >= 0 ? ' (나옴)' : ' (들어감)', fUs]], X(0), Y(R) - 0.7 * s, C.field, { align: 'center', halo: true, plate: true });
 
     // 도선 고리 (적분 경로 자리)
     const rp = state.r;
@@ -2486,6 +2513,12 @@ const KIT = (() => {
       EM.runs(ctx, [['전기장이 한 일 ', fUs], ['W', fMi], ['/', fM], ['q', fMi], [` = ${EM.fmt(Wq, 2)} mV`, fUi], [`   (${(state.qAng / TAU).toFixed(1)}바퀴)`, fUs]], w - 14, h - 1.0 * fs, C.efield, { align: 'right', halo: true });
     }
 
+    // E 방향 이름표: 바깥 고리(9.4 cm) 바로 밖 오른쪽 아래 — 적분 경로(최대 9.5 cm)·시험 전하와 겹치지 않게 맨 나중에, 판을 깔아 그린다
+    if (state.e && Math.abs(dB) > 1e-9 && !state.insideOnly) {
+      const lr = 10.6, la = -0.55;
+      EM.runs(ctx, [['E', fMb], [cw ? ' (시계 방향)' : ' (반시계 방향)', fUs]], X(lr * Math.cos(la)), Y(lr * Math.sin(la)), C.efield, { halo: true, plate: true });
+    }
+
     // 자기장의 상태
     const st = state.mode === 'const' ? [['B', fMb], [' 일정 · d', fUi], ['B', fMi], ['/d', fUi], ['t', fMi], [' = 0', fUi]]
       : state.mode === 'ac' ? [['교류 · ', fUi], ['B', fMi], [` = ${EM.fmt(Bn, 2)} T,  d`, fUi], ['B', fMi], ['/d', fUi], ['t', fMi], [` = ${EM.fmt(dB, 2)} T/s`, fUi]]
@@ -2522,13 +2555,15 @@ const KIT = (() => {
     for (let r = 0; r <= rMax; r += 2) ctx.fillText(String(r), GX(r), T + ph + 5);
     const fM = `italic ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`;
     EM.runs(ctx, [['r', fM], [' (cm)', fU]], L + pw, h - fs * 0.75, C.muted, { align: 'right' });
-    EM.runs(ctx, [['E', fM], ['  (mV/m)', fU]], 2, T - fs * 1.15, C.muted);
+    EM.runs(ctx, [['E', fM], ['  (mV/m)', fU]], 2, T - fs * 1.3, C.muted);
     // 솔레노이드 벽
     ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = C.field; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(GX(R), T); ctx.lineTo(GX(R), T + ph); ctx.stroke(); ctx.restore();
-    EM.runs(ctx, [['R', fM]], GX(R) + 4, T + fs * 0.6, C.field);
-    EM.runs(ctx, [['안', fU]], GX(R / 2), T + fs * 0.6, C.muted, { align: 'center' });
-    EM.runs(ctx, [['밖 (B = 0)', fU]], GX((R + rMax) / 2), T + fs * 0.6, C.muted, { align: 'center' });
+    const tagBoxes = [   // 맨 윗줄 이름표의 가로 범위 (경로 반지름 세로선이 이 글자들을 가르지 않게)
+      EM.runs(ctx, [['R', fM]], GX(R) + 4, T + fs * 0.6, C.field),
+      EM.runs(ctx, [['안', fU]], GX(R / 2), T + fs * 0.6, C.muted, { align: 'center', halo: C.panel }),
+      EM.runs(ctx, [['밖 (B = 0)', fU]], GX((R + rMax) / 2), T + fs * 0.6, C.muted, { align: 'center', halo: C.panel }),
+    ];
     // 곡선: 지금 |dB/dt|에서의 E(r). 훑은 데까지 진하게
     const Eat = r => Math.abs(Ecw(r)) * 1e3;
     const lim = state.insideOnly ? R : rMax;
@@ -2544,8 +2579,9 @@ const KIT = (() => {
     // 경로 반지름
     if (state.path || state.ring || state.q) {
       const x = GX(state.r), y = GY(Eat(state.r));
+      const yTop = tagBoxes.some(b => x > b.x0 - 4 && x < b.x1 + 4) ? T + fs * 1.3 : T;   // 이름표와 만나면 그 아래에서 시작
       ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = C.path; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x, T); ctx.lineTo(x, T + ph); ctx.stroke(); ctx.restore();
+      ctx.beginPath(); ctx.moveTo(x, yTop); ctx.lineTo(x, T + ph); ctx.stroke(); ctx.restore();
       if (!(state.insideOnly && state.r > R)) {
         ctx.beginPath(); ctx.arc(x, y, 5.5, 0, TAU); ctx.fillStyle = C.path; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.panel; ctx.stroke();
       }
@@ -2909,12 +2945,12 @@ const KIT = (() => {
     ctx.strokeStyle = EM.alpha(C.field, 0.5); ctx.lineWidth = 1.2;
     ctx.strokeRect(X(fx0), Y(YF), (fx1 - fx0) * s, (YF - fy0) * s);
     KIT.bField(ctx, X(fx0), Y(YF), X(fx1), Y(fy0), 1.6 * s, 0.24 * s, 'in', C.field, X(fx0), Y(YF));
-    EM.runs(ctx, [['B', f.mb], [' (들어감)', f.uiS]], X(fx0) + 0.4 * s, Y(fy0) - 0.7 * s, C.field, { halo: true });
+    EM.runs(ctx, [['B', f.mb], [' (들어감)', f.uiS]], X(fx0) + 0.4 * s, Y(fy0) - 0.7 * s, C.field, { halo: true, plate: true });
     // 회로가 감싸는 자기장 영역 (선속)
     if (closedNow) {
       ctx.fillStyle = EM.alpha(C.field, 0.24);
       ctx.fillRect(X(XL), Y(YF), (xc - XL) * s, H_IN * s);
-      EM.runs(ctx, [['Φ', f.m], ['B', f.sub, fsSub() * 1.5], [` = ${EM.fmt(phiAt(xc) * 1e3, 2)} mWb`, f.num]], X((XL + xc) / 2), Y((YB + YF) / 2), C.field, { align: 'center', halo: true });
+      EM.runs(ctx, [['Φ', f.m], ['B', f.sub, fsSub() * 1.5], [` = ${EM.fmt(phiAt(xc) * 1e3, 2)} mWb`, f.num]], X((XL + xc) / 2), Y((YB + YF) / 2), C.field, { align: 'center', halo: true, plate: true });
     }
     // 지금 이어진 회로 (보라 띠)
     const loop = bar
@@ -3185,8 +3221,6 @@ const KIT = (() => {
       const pe = top([DR * Math.cos(a1), DR * Math.sin(a1)]);
       ctx.beginPath(); ctx.moveTo(c0[0], c0[1]); ctx.lineTo(pe[0], pe[1]);
       ctx.strokeStyle = C.accent; ctx.lineWidth = Math.max(3, 0.16 * s); ctx.lineCap = 'round'; ctx.stroke();
-      const mid = a1 / 2, pm = top([3.4 * Math.cos(mid), 3.4 * Math.sin(mid)]);
-      EM.runs(ctx, [['½', f.m], ['a', f.mi], ['²', f.m], ['θ', f.mi]], pm[0], pm[1], C.accent, { align: 'center', halo: true });
     }
     // 회전 방향: 윗면 위의 고리 모양 화살표 (위에서 볼 때 반시계)
     {
@@ -3259,6 +3293,13 @@ const KIT = (() => {
       EM.runs(ctx, [['+', `700 ${fs + 6}px ${F.ui}`]], X(xb) + 0.3 * s, Y(yEdge) - 1.0 * s, C.current, { align: 'center', halo: true });
       EM.runs(ctx, [['−', `700 ${fs + 6}px ${F.ui}`]], X(DX) + 0.5 * s, Y(yT) + 0.9 * s, C.neg, { align: 'center', halo: true });
     }
+    // 쓸고 간 넓이의 이름표: 전하의 v 화살표(반지름 위쪽)·ω 표시와 겹치지 않게 부채꼴 안 축 뒤쪽에 두고, 맨 위에 판을 깔아 그린다
+    if (state.sweep) {
+      const a1 = state.sweepAng;
+      const la = state.force ? Math.min(1.65, Math.max(a1 / 2, a1 - 0.45)) : a1 / 2, lr = state.force ? 3.8 : 3.4;
+      const pm = top([lr * Math.cos(la), lr * Math.sin(la)]);
+      EM.runs(ctx, [['½', f.m], ['a', f.mi], ['²', f.m], ['θ', f.mi]], pm[0], pm[1], C.accent, { align: 'center', halo: true, plate: state.force });
+    }
     // 읽은 값 (첫 단계에서는 숨김)
     const ym = (YR0 + YR1) / 2;
     if (!state.intro) EM.runs(ctx, [['ℰ', f.m], [` = ${EM.fmt(emf(), 3)} V`, f.num]], X(XR) + 1.0 * s, Y(ym + 0.6), C.current, { halo: true });
@@ -3290,7 +3331,7 @@ const KIT = (() => {
     for (let r = 0; r <= aMax + 1e-9; r += 0.1) ctx.fillText(r.toFixed(1), GX(r), T + ph + 5);
     const fM = `italic ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`;
     EM.runs(ctx, [['r', fM], [' (m)', fU]], L + pw, h - fs * 0.75, C.muted, { align: 'right' });
-    EM.runs(ctx, [['f', fM], [' = ω', `${fs + 1}px ${F.math}`], ['Br', fM], ['  (V/m)', fU]], 2, T - fs * 1.15, C.muted);
+    EM.runs(ctx, [['f', fM], [' = ω', `${fs + 1}px ${F.math}`], ['Br', fM], ['  (V/m)', fU]], 2, T - fs * 1.3, C.muted);
     // 삼각형 넓이 = ℰ
     const a = state.a;
     ctx.beginPath(); ctx.moveTo(GX(0), GY(0)); ctx.lineTo(GX(a), GY(fTop)); ctx.lineTo(GX(a), GY(0)); ctx.closePath();
