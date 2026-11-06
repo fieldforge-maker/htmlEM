@@ -1907,7 +1907,7 @@ window.COIL = function (ID, STEPS) {
 
     // 씨앗 (sx, sy)에서 sgn 방향으로 따라간다. mid: x = 0을 다시 지나면 멈춤, 아니면 씨앗으로 돌아오면 멈춤
     const k1 = [0, 0], k2 = [0, 0], k3 = [0, 0], k4 = [0, 0];
-    function trace(sx, sy, sgn, mid) {
+    function trace(sx, sy, sgn, mid, rS = rStop) {
       const pts = [sx, sy];
       let x = sx, y = sy, len = 0, side = 0, end = 'max';
       dir(sx, sy, v);
@@ -1915,8 +1915,8 @@ window.COIL = function (ID, STEPS) {
       let prevProj = 0;
       for (let n = 0; n < 9000; n++) {
         const dw = wireDist(x, y);
-        if (dw < rStop) { end = 'wire'; break; }
-        const ds = sgn * Math.min(3 * hMin, Math.max(0.4 * hMin, 0.3 * (dw - rStop)));
+        if (dw < rS) { end = 'wire'; break; }
+        const ds = sgn * Math.min(3 * hMin, Math.max(0.4 * hMin, 0.3 * (dw - rS)));
         if (!dir(x, y, k1)) { end = 'null'; break; }
         dir(x + 0.5 * ds * k1[0], y + 0.5 * ds * k1[1], k2);
         dir(x + 0.5 * ds * k2[0], y + 0.5 * ds * k2[1], k3);
@@ -2015,6 +2015,30 @@ window.COIL = function (ID, STEPS) {
       }
       mark(full);
       upper.push({ pts: thin(full), arrows });
+    }
+
+    // 1b) 촘촘히 감았을 때: 코일 옆(바깥 가운데 면)의 씨앗. 바깥 자기장은 약하므로 안쪽보다 훨씬 성기게 놓는다.
+    //     가운데 면에서 바깥으로 가장 멀리 나가므로 이 선은 화면 안에서 코일 옆을 지나 끝으로 들어가 닫힌다.
+    if (N > 1 && d < 1.8 * gap) {
+      const gapOut = Math.max(4.5 * gap, 0.55 * R);
+      for (let i = 0; ; i++) {
+        const sy = R + (i + 0.6) * gapOut;
+        if (sy > 0.92 * yh) break;
+        const r = trace(0, sy, 1, true, 0.12 * d);   // 끝의 도선 바로 옆을 지나 안으로 들어가므로 멈춤 반지름을 줄인다
+        if (r.end !== 'mid') continue;
+        const half = r.pts;
+        // 아주 약한 바깥 선은 감은 벽을 뚫고 일찍 들어간다(유한한 솔레노이드에서 실제로 그렇다). 그림이 헷갈리므로
+        // 끝 가까이(|x| ≥ 0.75·L/2)에서 들어가는 선만 남긴다
+        let xin = Infinity;
+        for (let k = 0; k < half.length; k += 2) if (half[k + 1] < R) { xin = Math.abs(half[k]); break; }
+        if (xin < 0.75 * L / 2) continue;
+        const full = mirX(half).concat(half.slice(2));
+        const a = along(half, 0.3);
+        const arrows = [[0, sy, r.ux0, r.uy0]];
+        if (a) arrows.push([a[0], a[1], a[2], a[3]], [-a[0], a[1], a[2], -a[3]]);
+        mark(full);
+        upper.push({ pts: thin(full), arrows });
+      }
     }
 
     // 2) 띄엄띄엄 감았을 때: 도선 바로 옆 씨앗 (도선마다 원)과 감은 틈의 씨앗 (새어 나가는 자기력선)
