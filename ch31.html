@@ -1847,17 +1847,18 @@ const RLDRAW = (() => {
     if (ba > 0.01) {
       const yt = YL0 - 0.06 * (YL0 - YL1), yb = YL1 + 0.06 * (YL0 - YL1), up = Math.sign(bl);
       // [속의 x, 바깥의 x, 코일 끝을 지나 곧게 나가는 길이, 휘어 도는 높이] (축에서 잰 값). 축에 가까운 선일수록 멀리 돈다.
-      const LINES = [[0.2, 0.98, 0.3, 0.62], [0.42, 0.76, 0.12, 0.4]];
-      const nL = ba < 0.45 ? 1 : 2;
+      // 속은 촘촘하고(간격 0.1) 바깥은 넓게 퍼진다(간격 약 0.45): 코일 옆의 자기장은 속보다 훨씬 약하다.
+      const LINES = [[0.08, 1.68, 0.35, 0.85], [0.18, 1.24, 0.22, 0.66], [0.28, 0.8, 0.1, 0.46]];
+      const nL = ba < 0.3 ? 1 : ba < 0.65 ? 2 : 3;
       for (const sd of [-1, 1]) for (const [d, xo, e1, e2] of LINES.slice(0, nL)) {
-        const xi = W + sd * d, cx = W + sd * (d + xo) / 2, rx = (xo - d) / 2, bow = 0.07;
+        const xi = W + sd * d, cx = W + sd * (d + xo) / 2, rx = (xo - d) / 2, bow = 0.1;
         const yT = yt + e1, yB = yb - e1, pts = [];
         for (let k = 0; k <= 30; k++) pts.push([xi, yB + (yT - yB) * k / 30]);                          // 속: 위로 곧게
         for (let k = 1; k <= 24; k++) { const a = Math.PI * k / 24; pts.push([cx - sd * rx * Math.cos(a), yT + e2 * Math.sin(a)]); }
         for (let k = 1; k <= 30; k++) { const v = k / 30; pts.push([W + sd * (xo + bow * Math.sin(Math.PI * v)), yT + (yB - yT) * v]); }   // 바깥: 아래로, 살짝 부풀게
         for (let k = 1; k < 24; k++) { const a = Math.PI * k / 24; pts.push([cx + sd * rx * Math.cos(a), yB - e2 * Math.sin(a)]); }
         if (up < 0) pts.reverse();
-        loops.push({ pts, xi, xo: W + sd * (xo + bow * Math.sin(Math.PI * 0.75)), yIn: yt + e1 * 0.55, yOut: yt + (yb - yt) * 0.75, sd });
+        loops.push({ pts, xi, inArrow: d < 0.1, xo: W + sd * (xo + bow * Math.sin(Math.PI * 0.75)), yIn: yt + e1 * 0.55, yOut: yt + (yb - yt) * 0.75, sd });
       }
       ctx.save(); ctx.globalAlpha = 0.3 + 0.7 * ba;
       for (const L of loops) KIT.stroke(ctx, P(L.pts), true, C.field, Math.max(1.8, 0.032 * s));
@@ -1869,13 +1870,13 @@ const RLDRAW = (() => {
       const up = Math.sign(bl), hs = Math.max(8, 0.16 * s);
       ctx.save(); ctx.globalAlpha = 0.45 + 0.55 * ba;
       for (const L of loops) {
-        EM.arrowHead(ctx, X(L.xi), Y(L.yIn) - up * hs * 0.5, 0, -up, hs, C.field);
+        if (L.inArrow) EM.arrowHead(ctx, X(L.xi), Y(L.yIn) - up * hs * 0.5, 0, -up, hs, C.field);   // 속은 촘촘하니 축 가까운 선에만
         EM.arrowHead(ctx, X(L.xo), Y(L.yOut) + up * hs * 0.5, 0, up, hs, C.field);
       }
       ctx.restore();
-      EM.runs(ctx, [['B', f.mb]], X(W + 1.15), Y(YL0 + 0.15), C.field, { align: 'left', halo: true });
+      EM.runs(ctx, [['B', f.mb]], X(W - 1.95), Y(YL0 + 0.75), C.field, { align: 'right', halo: true });
     }
-    EM.runs(ctx, [['L', f.mi]], X(W + 1.15), Y((YL0 + YL1) / 2), C.ink, { align: 'left', halo: true });
+    EM.runs(ctx, [['L', f.mi]], X(W + (loops.length ? 1.95 : 1.15)), Y(loops.length ? YL1 + 0.1 : (YL0 + YL1) / 2), C.ink, { align: 'left', halo: true });
     // 갈림점
     ctx.beginPath(); ctx.arc(X(XB), Y(0), Math.max(4, 0.08 * s), 0, TAU); ctx.fillStyle = C.wire; ctx.fill();
 
@@ -1901,11 +1902,11 @@ const RLDRAW = (() => {
     if (st.showV) {
       const vt = (v) => `${EM.fmt(Math.abs(v), 3)} V`;
       EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['R', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VR), f.num]], X((XR0 + XR1) / 2), Y(H - 0.95), C.neg, { align: 'center', halo: true });
-      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['L', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VL), f.num]], X(W - 1.25), Y((YL0 + YL1) / 2), C.accent, { align: 'right', halo: true });
+      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['L', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VL), f.num]], X(W - 1.95), Y((YL0 + YL1) / 2), C.accent, { align: 'right', halo: true });
       const sgn = (x, y, plus, col) => EM.runs(ctx, [[plus ? '+' : '−', `700 ${Math.round(fs * 1.25)}px ${F.ui}`]], X(x), Y(y), col, { align: 'center', halo: true });
       const tiny = 1e-4 * (st.emfRef || 1);
       if (Math.abs(st.VR) > tiny) { const L2R = st.i > 0; sgn(XR0 - 0.25, H - 0.55, L2R, C.neg); sgn(XR1 + 0.25, H - 0.55, !L2R, C.neg); }
-      if (Math.abs(st.VL) > tiny) { const topHi = st.VL > 0, xs = W - 1.25; sgn(xs, YL0 - 0.1, topHi, C.accent); sgn(xs, YL1 + 0.1, !topHi, C.accent); }
+      if (Math.abs(st.VL) > tiny) { const topHi = st.VL > 0, xs = W - 1.95; sgn(xs, YL0 - 0.1, topHi, C.accent); sgn(xs, YL1 + 0.1, !topHi, C.accent); }
     }
     return { skip };
   }
