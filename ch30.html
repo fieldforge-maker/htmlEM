@@ -726,7 +726,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s5" hidden>
     <div class="screen-head">
       <!-- 출처: Griffiths 예제 7.4 · Serway 문제 30.17 -->
-      <h2>패러데이 원판 (단극 발전기)</h2>
+      <h2>패러데이 원판</h2>
     </div>
 
     <div class="stage-wrap">
@@ -2967,8 +2967,33 @@ const KIT = (() => {
     // 전류 (막대가 움직이는 동안: 반시계)
     const I = now().I;
     if (bar && Math.abs(I) > 1e-7) {
-      const pts = P([[xc, YB], [xc, YC], [XP, YC], [XP, YT], [XL, YT], [XL, YB]]);
-      KIT.flow(ctx, I > 0 ? pts : pts.reverse(), true, flowB * s, 2.4 * s, Math.max(7, 0.45 * s), C.current, 1, (px, py) => Math.hypot(px - X(XL), py - Y(YT)) < (meterR + 0.4) * s);
+      // 전류 화살촉: 도선 조각마다 고정된 점(전류계·왼쪽 아래 모서리·위 레일 끝)을 기준으로 놓는다.
+      // 막대가 움직여 고리 길이가 변해도 화살촉이 따라 미끄러지지 않고, 전류 방향으로만 흐른다.
+      const sg = I > 0 ? 1 : -1, SP = 2.4 * s, size = Math.max(7, 0.45 * s);
+      const segs = [   // [시작, 끝, 기준 끝(0=시작, 1=끝)] — 나열 순서가 I > 0 일 때의 진행 방향
+        [[XL, YT], [XL, YB], 0],
+        [[XL, YB], [xc, YB], 0],
+        [[xc, YB], [xc, YC], 0],
+        [[xc, YC], [XP, YC], 1],
+        [[XP, YC], [XP, YT], 0],
+        [[XP, YT], [XL, YT], 0],
+      ];
+      const dirSign = sg, ph = flowB * s;
+      const mod = (v) => ((v % SP) + SP) % SP;
+      for (const [a, b, endAnchor] of segs) {
+        const ax = X(a[0]), ay = Y(a[1]), bx = X(b[0]), by = Y(b[1]);
+        const len = Math.hypot(bx - ax, by - ay);
+        if (len < 1) continue;
+        const ux = (bx - ax) / len, uy = (by - ay) / len;
+        for (let k = 0; k * SP < len + SP; k++) {
+          // t: 조각 시작에서 잰 거리. 기준 끝에서 SP 간격으로 놓고, 전류 방향으로 ph만큼 옮긴다
+          const t = endAnchor ? len - mod(-dirSign * ph) - k * SP : mod(dirSign * ph) + k * SP;
+          if (t < size || t > len - size) continue;
+          const px = ax + ux * t, py = ay + uy * t;
+          if (Math.hypot(px - X(XL), py - Y(YT)) < (meterR + 0.4) * s) continue;
+          EM.arrowHead(ctx, px + dirSign * ux * size * 0.5, py + dirSign * uy * size * 0.5, dirSign * ux, dirSign * uy, size, C.current);
+        }
+      }
     }
     KIT.meter(ctx, X(XL), Y(YT), meterR * s, needle.x, { label: 'A' });
     EM.runs(ctx, [['전류계', f.uiS]], X(XL) - (meterR + 0.4) * s, Y(YT), C.muted, { align: 'right', halo: true });
@@ -3113,7 +3138,7 @@ const KIT = (() => {
   const K = 0.38, TH = 0.55;                     // 비스듬히 본 비율(타원 납작함)과 원판 두께
   const DX = -2.6, DYT = 0.6, DR = 6.3, YC = 0.9;   // 원판 중심 x, 윗면 높이, 반지름 (cm), 화면 가운데 높이
   const XR = 8.6, YR0 = -0.6, YR1 = -3.4, YBOT = -5.7;   // 바깥 회로: 저항 자리와 아래 도선
-  const state = { w: 100, B: 0.9, a: 0.4, R: 1.0, open: false, force: false, sweep: false, phi: 0, sweepAng: 0, wAnim: null };
+  const state = { w: 100, B: 0.9, a: 0.4, R: 1.0, open: false, force: false, sweep: false, phi: 0, sweepAng: 0, wAnim: null, hideCur: false };
   let flow = 0;
 
   /* ---------- 물리 ---------- */
@@ -3140,7 +3165,7 @@ const KIT = (() => {
     const f = { ui: `600 ${fs}px ${F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${F.ui}`, mi: `italic ${Math.round((fs + 2) * 1.5)}px ${F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${F.math}`, num: `600 ${fs}px ${F.num}` };
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const wireW = Math.max(2.4, 0.15 * s);
-    const I = cur(), on = I > 1e-9;
+    const I = cur(), on = I > 1e-9 && !state.hideCur;
     const xb = DX + DR;                                   // 가장자리 브러시 x
     const top = p => [X(DX + p[0]), Y(DYT + K * p[1])];   // 윗면 위의 점 (원판 중심 기준 x, y 오프셋, cm)
 
@@ -3261,8 +3286,8 @@ const KIT = (() => {
     }
     // 읽은 값 (첫 단계에서는 숨김)
     const ym = (YR0 + YR1) / 2;
-    if (!state.intro) EM.runs(ctx, [['ℰ', f.m], [` = ${EM.fmt(emf(), 3)} V`, f.num]], X(XR) + 1.0 * s, Y(ym + 0.6), C.current, { halo: true });
-    if (!state.intro) EM.runs(ctx, [['I', f.mi], [` = ${EM.fmt(I, 3)} A`, f.num]], X(XR) + 1.0 * s, Y(ym - 0.6), C.current, { halo: true });
+    if (!state.hideCur) EM.runs(ctx, [['ℰ', f.m], [` = ${EM.fmt(emf(), 3)} V`, f.num]], X(XR) + 1.0 * s, Y(ym + 0.6), C.current, { halo: true });
+    if (!state.hideCur) EM.runs(ctx, [['I', f.mi], [` = ${EM.fmt(I, 3)} A`, f.num]], X(XR) + 1.0 * s, Y(ym - 0.6), C.current, { halo: true });
   }
 
   /* ---------- 그래프: f(r) = ωBr, 넓이 = ℰ ---------- */
@@ -3300,7 +3325,7 @@ const KIT = (() => {
     ctx.save(); ctx.setLineDash([4, 4]); ctx.strokeStyle = C.muted; ctx.lineWidth = 1.2;
     ctx.beginPath(); ctx.moveTo(GX(a), GY(0)); ctx.lineTo(GX(a), T); ctx.stroke(); ctx.restore();
     EM.runs(ctx, [['a', fM]], GX(a) + 4, T + fs * 0.6, C.muted);
-    EM.runs(ctx, [['넓이 = ℰ = ', fU], [`${EM.fmt(emf(), 3)} V`, `600 ${fs}px ${F.num}`]], GX(a * 0.62), GY(fTop * 0.2), C.field, { align: 'center', halo: C.panel });
+    if (!state.hideCur) EM.runs(ctx, [['넓이 = ℰ = ', fU], [`${EM.fmt(emf(), 3)} V`, `600 ${fs}px ${F.num}`]], GX(a * 0.62), GY(fTop * 0.2), C.field, { align: 'center', halo: C.panel });
   }
 
   /* ---------- 글 ---------- */
@@ -3309,10 +3334,12 @@ const KIT = (() => {
     $('wVal').textContent = Math.round(state.w);
     $('rpmVal').textContent = Math.round(state.w * 60 / TAU).toLocaleString('ko-KR');
     $('vaVal').textContent = EM.fmt(state.w * state.a, 3);
-    $('eVal').textContent = EM.fmt(e, 3);
-    $('iVal').textContent = EM.fmt(I, 3);
-    $('pVal').textContent = EM.fmt(e * I, 3);
-    $('tVal').textContent = EM.fmt(0.5 * I * state.B * state.a * state.a, 3);
+    // 전류가 흐르는지 묻는 동안은 기전력·전류 값을 감춘다
+    const hid = v => (state.hideCur ? '?' : v);
+    $('eVal').textContent = hid(EM.fmt(e, 3));
+    $('iVal').textContent = hid(EM.fmt(I, 3));
+    $('pVal').textContent = hid(EM.fmt(e * I, 3));
+    $('tVal').textContent = hid(EM.fmt(0.5 * I * state.B * state.a * state.a, 3));
     $('wOut').textContent = `${Math.round(state.w)} rad/s`;
     $('bOut').textContent = `${state.B.toFixed(2)} T`;
     $('aOut').textContent = `${state.a.toFixed(2)} m`;
@@ -3348,8 +3375,8 @@ const KIT = (() => {
     why: `ℰ = ½ω${M('Ba')}<sup>2</sup> → ω = 2ℰ/(${M('Ba')}<sup>2</sup>) = 2(25.0 V)/[(0.900 T)(0.400 m)<sup>2</sup>] = 347 rad/s ≈ 3.3×10<sup>3</sup> rpm. ½을 빠뜨리면 174 rad/s가 된다. 기전력이 수십 볼트로 낮은 대신 내부 저항이 아주 작아 큰 전류를 낼 수 있다(저전압·대전류).`,
   };
   const STEPS = [
-    { w: 100, open: true, intro: true, cap: `자기장 속에서 원판이 돌고, 회로가 연결되면 어떻게 될까? 패러데이 원판(1831)은 자석 사이에서 구리 원판을 돌리고 축과 가장자리에 브러시를 댄 장치다.` },
-    { w: 100, quiz: Q1, cap: `원판 속의 전하에게 무슨 일이 일어나는지 보자.` },
+    { w: 100, intro: true, hideCur: true, cap: `패러데이 원판(1831): 자기장 속에서 구리 원판을 돌리고, 축과 가장자리에 브러시를 대어 저항 ${M('R')}과 이었다. 회로는 이어져 있다. 자기장은 어디서나 일정하고 회로 모양도 그대로인데, 이 회로에 전류가 흐를까?` },
+    { w: 100, quiz: Q1, hideCur: true, cap: `답하기 전에 원판 속의 전하에게 무슨 일이 일어나는지 보자.` },
     { w: 100, quiz: Q1, reveal: true, force: true, cap: `반지름 ${M('r')}의 전하는 속력 ω${M('r')}로 움직이며 바깥쪽 자기력 ${M('q')}ω${M('rB')}를 받는다. 축에서 멀수록 세다. 원판은 가장자리가 +, 축이 −인 전지처럼 된다.` },
     { w: 100, force: true, cap: `기전력은 축에서 가장자리까지 단위 전하당 힘을 더한 것: ℰ = ∫<sub>0</sub><sup>${M('a')}</sup> ω${M('Br')} d${M('r')} = ½ω${M('Ba')}<sup>2</sup> (그래프의 삼각형 넓이). 도는 막대 하나와 같은 식이다. 원판은 그런 막대를 수없이 나란히 이은 것이라 기전력은 같고 내부 저항은 작다.` }, // 출처: Serway 예제 30.3
     { w: 100, quiz: Q2, cap: `그런데 이 장치는 선속 규칙으로 설명하기 곤란하다.` },
@@ -3386,6 +3413,7 @@ const KIT = (() => {
       state.sweep = !!S.sweep;
       state.open = !!S.open;
       state.intro = !!S.intro;
+      state.hideCur = !!S.hideCur;
       $('stage').closest('.screen').classList.toggle('intro', state.intro);
       if (S.B) state.B = S.B;
       if (S.a) state.a = S.a;

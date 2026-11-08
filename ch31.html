@@ -1790,6 +1790,94 @@ const RLDRAW = (() => {
   const YBAT0 = 1.3, YBAT1 = 2.9, YS10 = 4.0, YS11 = 5.5;
   const VIEW = { x0: -1.6, x1: 13.4, y0: -1.15, y1: 8.3 };
 
+  /* 코일의 자기력선: 반지름 SA, 길이 SL인 솔레노이드(고리 SN개)의 선속 Ψ(ρ, z) = Σ 2πρA_φ의 등고선.
+     속의 가운데 면에서 반지름 0.19a, 0.38a, 0.57a, 0.76a를 지나는 선을 고른다(속은 고르게 촘촘하다).
+     바깥으로 돌아오는 선은 저절로 넓게 퍼진다: 같은 선속이 훨씬 넓은 넓이로 돌아오므로 코일 옆 자기장은 약하다.
+     모양은 전류와 상관없으므로 한 번만 계산한다. */
+  const SA = 0.62, SN = 48;
+  // 감은 도선을 얇은 한 겹(면전류)으로 두면 자기력선이 벽을 지날 때 꺾이므로, 두께가 있는 여러 겹으로 나눠 매끄럽게 휘게 한다
+  const SLAYER = [0.86, 0.93, 1.0, 1.07, 1.14].map(q => q * SA);
+  let solCache = null;
+  function solField() {
+    if (solCache) return solCache;
+    const yc = (YL0 + YL1) / 2, SL = (YL0 - YL1) * 0.88;
+    const box = { x0: W - 2.45, x1: W + 1.78, y0: 0.22, y1: H - 0.22 };
+    const zs = Array.from({ length: SN }, (_, k) => -SL / 2 + SL * (k + 0.5) / SN);
+    // 양 끝 20 %에서 전류를 서서히 줄여(코사인) 끝 고리 바로 옆에서 선이 모나게 꺾이지 않게 한다
+    const wt = zs.map(z => { const u = (SL / 2 - Math.abs(z)) / (0.2 * SL); return u >= 1 ? 1 : 0.5 - 0.5 * Math.cos(Math.PI * Math.max(0, u)); });
+    const psi = (rho, z) => { let v = 0; for (const a of SLAYER) zs.forEach((zk, k) => { v += wt[k] * PHYS.loopFlux(a, Math.max(rho, 1e-6), z - zk); }); return v; };
+    const h = 0.035;
+    const nr = Math.ceil(Math.max(W - box.x0, box.x1 - W) / h) + 1, nz = Math.ceil(Math.max(box.y1 - yc, yc - box.y0) / h) + 1;
+    const g = new Float64Array((nr + 1) * (nz + 1));
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nr; i++) g[j * (nr + 1) + i] = psi(i * h, j * h);
+    const G = (i, j) => g[Math.abs(j) * (nr + 1) + Math.abs(i)];   // ρ와 z에 대해 대칭
+    const rhoIn = [0.19, 0.38, 0.57, 0.76].map(q => q * SA);
+    const levels = rhoIn.map(r => psi(r, 0));
+    const NB = 4, fade = 0.45;
+    const segs = levels.map(() => Array.from({ length: NB }, () => []));
+    const raw = levels.map(() => []);
+    const i0 = Math.floor((box.x0 - W) / h), i1 = Math.ceil((box.x1 - W) / h);
+    const j0 = Math.floor((box.y0 - yc) / h), j1 = Math.ceil((box.y1 - yc) / h);
+    for (let j = j0; j < j1; j++) for (let i = i0; i < i1; i++) {
+      const v = [G(i, j), G(i + 1, j), G(i + 1, j + 1), G(i, j + 1)];
+      const pc = [[i, j], [i + 1, j], [i + 1, j + 1], [i, j + 1]];
+      levels.forEach((L, k) => {
+        const e = [];
+        for (let q = 0; q < 4; q++) {
+          const va = v[q], vb = v[(q + 1) % 4];
+          if ((va - L) * (vb - L) < 0) { const t = (L - va) / (vb - va), A = pc[q], B = pc[(q + 1) % 4]; e.push([W + (A[0] + (B[0] - A[0]) * t) * h, yc + (A[1] + (B[1] - A[1]) * t) * h]); }
+        }
+        if (e.length === 2) raw[k].push([e[0], e[1]]);
+        else if (e.length === 4) { raw[k].push([e[0], e[1]]); raw[k].push([e[2], e[3]]); }
+      });
+    }
+    // 조각을 이어 선(점 목록)으로 만든 뒤 [1 2 1]/4 평균을 여러 번 해 매끄럽게 한다:
+    // 감은 도선 층을 지나는 곳(코일 끝 가까이)에서 선이 모나게 꺾여 보이지 않도록
+    const key = p => `${Math.round(p[0] * 1e5)},${Math.round(p[1] * 1e5)}`;
+    raw.forEach((list, k) => {
+      const ends = new Map(), used = new Uint8Array(list.length);
+      list.forEach((sg, n) => { for (const p of sg) { const kk = key(p); (ends.get(kk) || ends.set(kk, []).get(kk)).push(n); } });
+      const nextOf = (p, cur) => { const c = ends.get(key(p)) || []; for (const n of c) if (n !== cur && !used[n]) return n; return -1; };
+      for (let n0 = 0; n0 < list.length; n0++) {
+        if (used[n0]) continue;
+        used[n0] = 1;
+        let line = [list[n0][0], list[n0][1]];
+        for (const dir of [1, -1]) {                 // 뒤쪽 끝으로, 그다음 앞쪽 끝으로 이어 간다
+          let cur = n0;
+          for (;;) {
+            const tip = dir > 0 ? line[line.length - 1] : line[0];
+            const n = nextOf(tip, cur);
+            if (n < 0) break;
+            used[n] = 1; cur = n;
+            const [pa, pb] = list[n], far = key(pa) === key(tip) ? pb : pa;
+            if (dir > 0) line.push(far); else line.unshift(far);
+          }
+        }
+        for (let pass = 0; pass < 40; pass++) {
+          const o = line.map(p => p.slice());
+          for (let m = 1; m < line.length - 1; m++) for (let c = 0; c < 2; c++) o[m][c] = (line[m - 1][c] + 2 * line[m][c] + line[m + 1][c]) / 4;
+          line = o;
+        }
+        for (let m = 1; m < line.length; m++) {
+          const p = line[m - 1], q2 = line[m];
+          const mx = (p[0] + q2[0]) / 2, my = (p[1] + q2[1]) / 2;
+          if (mx < box.x0 || mx > box.x1 || my < box.y0 || my > box.y1) continue;
+          const dEdge = Math.min(mx - box.x0, box.x1 - mx, my - box.y0, box.y1 - my);
+          const bi = Math.min(NB - 1, Math.floor(dEdge / fade * NB));
+          segs[k][bi].push([p[0], p[1], q2[0], q2[1]]);
+        }
+      }
+    });
+    // 가운데 면 바깥에서 각 선이 지나는 반지름 (화살촉 자리)
+    const rhoOut = levels.map(L => {
+      let lo = SA * 1.02, hi = 2.6;
+      if ((psi(lo, 0) - L) * (psi(hi, 0) - L) > 0) return null;
+      for (let it = 0; it < 40; it++) { const mid = (lo + hi) / 2; if ((psi(lo, 0) - L) * (psi(mid, 0) - L) <= 0) hi = mid; else lo = mid; }
+      return (lo + hi) / 2;
+    });
+    return (solCache = { segs, NB, levels, rhoIn, rhoOut, box, yc });
+  }
+
   /* box = { x, y, w, h } 안에 맞춘 좌표 변환 */
   function frame(box, extraRight = 0) {
     const vw = VIEW.x1 - VIEW.x0 + extraRight, vh = VIEW.y1 - VIEW.y0;
@@ -1843,39 +1931,40 @@ const RLDRAW = (() => {
     // (뒤쪽 반이 흐리다) 전류가 코일을 위 → 아래로 지나면(+) 오른손 법칙으로 코일 속 자기장은 위쪽이다.
     // 코일 속을 지나 위로 나온 선이 바깥으로 돌아 아래 끝으로 다시 들어가는 닫힌 고리. 진하기와 개수가 전류에 비례한다.
     const bl = st.bLines || 0, ba = Math.min(1, Math.abs(bl));
-    const loops = [];
-    if (ba > 0.01) {
-      const yt = YL0 - 0.06 * (YL0 - YL1), yb = YL1 + 0.06 * (YL0 - YL1), up = Math.sign(bl);
-      // [속의 x, 바깥의 x, 코일 끝을 지나 곧게 나가는 길이, 휘어 도는 높이] (축에서 잰 값). 축에 가까운 선일수록 멀리 돈다.
-      const LINES = [[0.2, 0.98, 0.3, 0.62], [0.42, 0.76, 0.12, 0.4]];
-      const nL = ba < 0.45 ? 1 : 2;
-      for (const sd of [-1, 1]) for (const [d, xo, e1, e2] of LINES.slice(0, nL)) {
-        const xi = W + sd * d, cx = W + sd * (d + xo) / 2, rx = (xo - d) / 2, bow = 0.07;
-        const yT = yt + e1, yB = yb - e1, pts = [];
-        for (let k = 0; k <= 30; k++) pts.push([xi, yB + (yT - yB) * k / 30]);                          // 속: 위로 곧게
-        for (let k = 1; k <= 24; k++) { const a = Math.PI * k / 24; pts.push([cx - sd * rx * Math.cos(a), yT + e2 * Math.sin(a)]); }
-        for (let k = 1; k <= 30; k++) { const v = k / 30; pts.push([W + sd * (xo + bow * Math.sin(Math.PI * v)), yT + (yB - yT) * v]); }   // 바깥: 아래로, 살짝 부풀게
-        for (let k = 1; k < 24; k++) { const a = Math.PI * k / 24; pts.push([cx + sd * rx * Math.cos(a), yB - e2 * Math.sin(a)]); }
-        if (up < 0) pts.reverse();
-        loops.push({ pts, xi, xo: W + sd * (xo + bow * Math.sin(Math.PI * 0.75)), yIn: yt + e1 * 0.55, yOut: yt + (yb - yt) * 0.75, sd });
+    const showLines = ba > 0.01;
+    let pick = [];
+    if (showLines) {
+      // 실제 유한 솔레노이드의 자기력선 (선속 Ψ의 등고선). 회로 도선과 전위차 막대 사이의 상자 안만 그리고, 상자 끝으로 갈수록 흐리게.
+      const FL = solField();
+      const nK = ba < 0.3 ? 1 : ba < 0.65 ? 2 : FL.levels.length;
+      pick = nK === 1 ? [1] : nK === 2 ? [0, 2] : FL.levels.map((_, k) => k);
+      const lw = Math.max(1.8, 0.032 * s);
+      ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = C.field; ctx.lineWidth = lw;
+      for (const k of pick) {
+        FL.segs[k].forEach((bucket, bi) => {
+          if (!bucket.length) return;
+          ctx.globalAlpha = (0.3 + 0.7 * ba) * (bi + 1) / FL.NB;
+          ctx.beginPath();
+          for (const [x0, y0, x1, y1] of bucket) { ctx.moveTo(X(x0), Y(y0)); ctx.lineTo(X(x1), Y(y1)); }
+          ctx.stroke();
+        });
       }
-      ctx.save(); ctx.globalAlpha = 0.3 + 0.7 * ba;
-      for (const L of loops) KIT.stroke(ctx, P(L.pts), true, C.field, Math.max(1.8, 0.032 * s));
       ctx.restore();
     }
     KIT.coil(ctx, X(W), Y(YL0), X(W), Y(YL1), 0.62 * s, { n: 5, color: C.current, width: Math.max(2.6, 0.07 * s), side: 1, lead: 0.06, depth: true });
-    if (loops.length) {
-      // 화살촉: 속은 코일 위 끝을 막 나온 곳, 바깥은 아래쪽 (가운데 높이의 이름표를 비켜서)
-      const up = Math.sign(bl), hs = Math.max(8, 0.16 * s);
+    if (showLines) {
+      // 화살촉: 속은 코일 위 끝을 막 나온 곳(축 가까운 선), 바깥은 가운데 높이에서 상자 안에 들어오는 선
+      const FL = solField(), up = Math.sign(bl), hs = Math.max(8, 0.16 * s);
       ctx.save(); ctx.globalAlpha = 0.45 + 0.55 * ba;
-      for (const L of loops) {
-        EM.arrowHead(ctx, X(L.xi), Y(L.yIn) - up * hs * 0.5, 0, -up, hs, C.field);
-        EM.arrowHead(ctx, X(L.xo), Y(L.yOut) + up * hs * 0.5, 0, up, hs, C.field);
+      for (const sd of [-1, 1]) {
+        EM.arrowHead(ctx, X(W + sd * FL.rhoIn[pick[0]]), Y(YL0 + 0.3) - up * hs * 0.5, 0, -up, hs, C.field);
+        for (const ro of pick.map(k => FL.rhoOut[k])) if (ro && W + sd * ro > FL.box.x0 + 0.08 && W + sd * ro < FL.box.x1 - 0.08) EM.arrowHead(ctx, X(W + sd * ro), Y(FL.yc) + up * hs * 0.5, 0, up, hs, C.field);
       }
       ctx.restore();
-      EM.runs(ctx, [['B', f.mb]], X(W + 1.15), Y(YL0 + 0.15), C.field, { align: 'left', halo: true });
+      EM.runs(ctx, [['B', f.mb]], X(W - 0.45), Y(YL0 + 1.15), C.field, { align: 'right', halo: true });
     }
-    EM.runs(ctx, [['L', f.mi]], X(W + 1.15), Y((YL0 + YL1) / 2), C.ink, { align: 'left', halo: true });
+    const loops = showLines ? [1] : [];
+    EM.runs(ctx, [['L', f.mi]], X(W + (loops.length ? 1.95 : 1.15)), Y(loops.length ? YL1 + 0.1 : (YL0 + YL1) / 2), C.ink, { align: 'left', halo: true });
     // 갈림점
     ctx.beginPath(); ctx.arc(X(XB), Y(0), Math.max(4, 0.08 * s), 0, TAU); ctx.fillStyle = C.wire; ctx.fill();
 
@@ -1901,11 +1990,11 @@ const RLDRAW = (() => {
     if (st.showV) {
       const vt = (v) => `${EM.fmt(Math.abs(v), 3)} V`;
       EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['R', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VR), f.num]], X((XR0 + XR1) / 2), Y(H - 0.95), C.neg, { align: 'center', halo: true });
-      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['L', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VL), f.num]], X(W - 1.25), Y((YL0 + YL1) / 2), C.accent, { align: 'right', halo: true });
+      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['L', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VL), f.num]], X(W - 2.75), Y((YL0 + YL1) / 2), C.accent, { align: 'right', halo: true });
       const sgn = (x, y, plus, col) => EM.runs(ctx, [[plus ? '+' : '−', `700 ${Math.round(fs * 1.25)}px ${F.ui}`]], X(x), Y(y), col, { align: 'center', halo: true });
       const tiny = 1e-4 * (st.emfRef || 1);
       if (Math.abs(st.VR) > tiny) { const L2R = st.i > 0; sgn(XR0 - 0.25, H - 0.55, L2R, C.neg); sgn(XR1 + 0.25, H - 0.55, !L2R, C.neg); }
-      if (Math.abs(st.VL) > tiny) { const topHi = st.VL > 0, xs = W - 1.25; sgn(xs, YL0 - 0.1, topHi, C.accent); sgn(xs, YL1 + 0.1, !topHi, C.accent); }
+      if (Math.abs(st.VL) > tiny) { const topHi = st.VL > 0, xs = W - 2.75; sgn(xs, YL0 - 0.1, topHi, C.accent); sgn(xs, YL1 + 0.1, !topHi, C.accent); }
     }
     return { skip };
   }
