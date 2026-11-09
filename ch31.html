@@ -174,12 +174,14 @@ h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text
   grid-area: stage; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto;
   background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
 }
-.canvas-box { position: relative; min-height: 0; }
-.canvas-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.canvas-box { position: relative; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
+.canvas-box > canvas { grid-row: 2; grid-column: 1; width: 100%; height: 100%; min-height: 0; display: block; touch-action: none; }
 .can-drag { cursor: grab; }
 .dragging { cursor: grabbing; }
-.stage-tools { position: absolute; top: 10px; right: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.stage-tools { grid-row: 1; grid-column: 1; padding: 10px 10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .stage-tools .btn { background: var(--panel); }
+.stage-tools .pause-btn { min-width: 6.4em; }
+.stage-tools .pause-btn.primary { background: var(--accent); }
 .legend { display: flex; flex-wrap: wrap; gap: .2em 1.2em; padding: .35em 12px .6em; font-size: .76em; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: .4em; }
 .key-path { display: inline-block; width: 1.8em; border-top: 3px dashed var(--path); }
@@ -422,7 +424,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s1" hidden>
     <div class="screen-head">
       <!-- 출처: Serway 31.1 · 퀴즈 31.1 · 예제 31.1 -->
-      <h2>코일 양 끝의 전위차는 무엇이 정할까?</h2>
+      <h2>전류가 흐르는 코일, 양 끝의 전위차는 무엇이 정할까?</h2>
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
@@ -493,7 +495,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s2" hidden>
     <div class="screen-head">
       <!-- 출처: Serway 31.2 · 그림 31.2–31.7 · 퀴즈 31.2 · 예제 31.2 -->
-      <h2>저항과 코일이 있는 RL 회로</h2>
+      <h2>RL 회로: 스위치를 닫거나 바꾸면 전류는 어떻게 변할까?</h2>
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
@@ -559,7 +561,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s3" hidden>
     <div class="screen-head">
       <!-- 출처: Serway 31.3 · 예제 31.3, 31.4 -->
-      <h2>코일에 쌓이는 에너지는 어디에 있을까?</h2>
+      <h2>코일에 전류를 세우는 데 든 에너지는 어디에 있을까?</h2>
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
@@ -637,7 +639,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s4" hidden>
     <div class="screen-head">
       <!-- 출처: Serway 31.4 · 그림 31.9 · 퀴즈 31.4 · 예제 31.5 -->
-      <h2>상호 유도: 마주 놓은 두 코일</h2>
+      <h2>상호 유도: 한 코일의 전류가 이웃 코일에 무엇을 할까?</h2>
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
@@ -705,7 +707,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s5" hidden>
     <div class="screen-head">
       <!-- 출처: Serway 31.5 · 그림 31.11–31.14 · 예제 31.6 -->
-      <h2>축전기와 코일만 있는 LC 회로</h2>
+      <h2>LC 회로: 충전된 축전기를 코일에 이으면?</h2>
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
@@ -757,7 +759,7 @@ sub, sup { font-size: .7em; line-height: 0; }
   <main class="screen" id="s6" hidden>
     <div class="screen-head">
       <!-- 출처: Serway 31.6 · 그림 31.15–31.16 · 표 31.1 -->
-      <h2>LC 회로에 저항을 더하면?</h2>
+      <h2>RLC 회로: 저항을 넣으면 진동은 어떻게 될까?</h2>
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
@@ -884,13 +886,19 @@ const EM = (() => {
     ctx.fillText(text, x, y);
   }
   // 글꼴이 섞인 한 줄 [[글, 글꼴, 세로 어긋남], ...]. align: 'left' | 'center' | 'right'. halo면 배경색 테두리
-  function runs(ctx, items, x, y, color, { align = 'left', halo = false } = {}) {
+  function runs(ctx, items, x, y, color, { align = 'left', halo = false, plate = false } = {}) {
     ctx.textBaseline = 'middle';
     let total = 0;
     for (const [t, font] of items) { ctx.font = font; total += ctx.measureText(t).width; }
     if (align === 'center') x -= total / 2; else if (align === 'right') x -= total;
     const x0 = x;
     ctx.textAlign = 'left';
+    if (plate) {                                          // 선이 많이 지나는 곳의 글: 바탕색 판을 깔아 선을 가린다
+      ctx.font = items[0][1];
+      const hgt = ctx.measureText('Mg').actualBoundingBoxAscent * 2.1 || 20, pad = hgt * 0.3;
+      ctx.save(); ctx.globalAlpha = 0.9; ctx.fillStyle = C.stage;
+      ctx.beginPath(); ctx.roundRect(x - pad, y - hgt * 0.62, total + 2 * pad, hgt * 1.24, pad); ctx.fill(); ctx.restore();
+    }
     if (halo) {
       ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = typeof halo === 'string' ? halo : C.stage;
       let xx = x;
@@ -952,13 +960,27 @@ const EM = (() => {
   const DOT = '<i class="sym dot"></i>', CROSS = '<i class="sym cross"></i>';
   const frac = (top, bottom) => `<span class="frac"><span>${top}</span><span>${bottom}</span></span>`;
 
+  /* 일시정지: 모든 화면의 loop와 tween이 시간을 멈춘다 (그림은 계속 다시 그린다) */
+  let paused = false;
+  function setPaused(p) {
+    paused = !!p;
+    document.querySelectorAll('.pause-btn').forEach(b => {
+      b.setAttribute('aria-pressed', String(paused));
+      b.classList.toggle('primary', paused);
+      b.textContent = paused ? '▶ 계속' : '⏸ 일시정지';
+      b.title = paused ? '움직임 계속 (P)' : '움직임 멈추기 (P)';
+    });
+  }
+
   /* 움직임: 0→1로 가는 e를 onUpdate에 넘긴다. 움직임 줄이기 설정이면 바로 끝낸다. */
   function tween(dur, onUpdate, { ease = 'inOut', onDone } = {}) {
     let raf = 0;
     if (reduceMotion.matches || dur <= 0) { onUpdate(1); if (onDone) onDone(); return { cancel() {} }; }
-    const t0 = performance.now();
+    let last = performance.now(), run = 0;                // 일시정지 동안은 시간이 흐르지 않는다
     const tick = now => {
-      const t = Math.min(1, (now - t0) / dur);
+      if (!paused) run += now - last;
+      last = now;
+      const t = Math.min(1, run / dur);
       const e = ease === 'linear' ? t : (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
       onUpdate(e);
       if (t < 1) raf = requestAnimationFrame(tick);
@@ -971,7 +993,7 @@ const EM = (() => {
   function loop(fn) {
     let raf = 0, last = 0;
     const tick = now => {
-      const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+      const dt = last && !paused ? Math.min(0.1, (now - last) / 1000) : 0;
       last = now;
       fn(dt);
       raf = requestAnimationFrame(tick);
@@ -1080,6 +1102,7 @@ const EM = (() => {
     i = Math.max(0, Math.min(def.steps.length - 1, i));
     const forward = !initial && i === def.step + 1;
     def.step = i;
+    if (!initial && paused) setPaused(false);             // 단계를 옮기면 다시 움직인다
     const { prev, next, dots, caption } = def.rail;
     dots.forEach((d, k) => {
       if (k === i) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current');
@@ -1097,6 +1120,7 @@ const EM = (() => {
     const def = screens.get(id);
     if (!def || def === active) return;
     if (active) { active.el.hidden = true; if (active.hide) active.hide(); }
+    if (paused) setPaused(false);
     active = def;
     def.el.hidden = false;
     document.querySelectorAll('.tab[data-screen]').forEach(t => {
@@ -1145,6 +1169,13 @@ const EM = (() => {
       def.step = 0;
       def.raf = 0;
       buildRail(def);
+      const tools = def.el.querySelector('.stage-tools');
+      if (tools) {
+        const pb = document.createElement('button');
+        pb.type = 'button'; pb.className = 'btn pause-btn';
+        pb.addEventListener('click', () => setPaused(!paused));
+        tools.appendChild(pb);
+      }
       def.init(def.el);
       def.el.querySelectorAll('canvas').forEach(cv => new ResizeObserver(() => requestDraw(def)).observe(cv.parentElement));
       def.el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => requestDraw(def)));
@@ -1168,11 +1199,13 @@ const EM = (() => {
       if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goStep(active, active.step + 1); }
       else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goStep(active, active.step - 1); }
       else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+      else if (e.code === 'KeyP') setPaused(!paused);
       else if (/^[1-9]$/.test(e.key) && +e.key <= active.steps.length) goStep(active, +e.key - 1);
     });
 
     window.addEventListener('hashchange', route);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestDraw(active));
+    setPaused(false);
     route();
     syncTheme();
   }
@@ -2283,7 +2316,7 @@ const LCDRAW = (() => {
     // B 이름표: 나선과 겹치지 않게 코일 위쪽 바깥, 화살표 머리 쪽에
     if (state.showB && iA > 0.01) {
       const len = Lc * (0.25 + 0.55 * iA), sg = Math.sign(i), xt = cx - KX * Rc * 0.05 + sg * len / 2;
-      EM.runs(ctx, [['B', f.mb]], xt - sg * f.fs * 0.6, cy - Rc - f.fs * 0.75, C.field, { align: 'center', halo: true });
+      EM.runs(ctx, [['B', f.mb]], xt - sg * f.fs * 0.6, cy - Rc - f.fs * 1.15, C.field, { align: 'center', halo: true });
     }
     // 앞쪽 가운데마다 전류 화살촉
     if (Math.abs(i) > 0.05) {
@@ -2307,7 +2340,9 @@ const LCDRAW = (() => {
     // 전류 이름표
     if (Math.abs(i) > 0.02) {
       const lx = (xa + pS[0]) / 2;
-      EM.runs(ctx, [['i', f.mi], [` = ${EM.fmt(Math.abs(i), 2)} A `, f.num], [i > 0 ? '(a → b)' : '(b → a)', f.uiS]], lx, cy - f.fs * 1.5, C.current, { align: 'center', halo: true });
+      // 방향은 도선 아래 줄에: 한 줄이면 감은 수가 많을 때 첫 바퀴에 닿는다
+      EM.runs(ctx, [['i', f.mi], [` = ${EM.fmt(Math.abs(i), 2)} A`, f.num]], lx, cy - f.fs * 1.5, C.current, { align: 'center', halo: true });
+      EM.runs(ctx, [[i > 0 ? '(a → b)' : '(b → a)', f.uiS]], lx, cy + f.fs * 1.2, C.current, { align: 'center', halo: true });
     } else {
       EM.runs(ctx, [['i', f.mi], [' = 0', f.num]], (xa + pS[0]) / 2, cy - f.fs * 1.5, C.muted, { align: 'center', halo: true });
     }
@@ -2319,7 +2354,10 @@ const LCDRAW = (() => {
     KIT.stroke(ctx, [[xb, cy - 6], [xb, my], [cx + mr, my]], false, C.muted, probe);
     KIT.meter(ctx, cx, my, mr, needle.x, { label: 'V', color: C.accent });
     const vtxt = state.hideV ? '?' : `${sgnStr(V * 1e3)} mV`;
-    EM.runs(ctx, [['V', f.mi], ['a', f.sub, f.fs * 0.35], [' − ', f.m], ['V', f.mi], ['b', f.sub, f.fs * 0.35], [' = ', f.m], [vtxt, f.num]], cx + mr + 16, my - f.fs * 1.3, state.hideV ? C.muted : C.accent, { halo: true });
+    // 읽은 값: 전압계 오른쪽. 그림이 좁아 오른쪽 끝을 넘으면 왼쪽으로 당긴다 (가장 긴 값 '−40.0 mV' 기준으로 자리를 잡아 흔들리지 않게)
+    const vItems = vt => [['V', f.mi], ['a', f.sub, f.fs * 0.35], [' − ', f.m], ['V', f.mi], ['b', f.sub, f.fs * 0.35], [' = ', f.m], [vt, f.num]];
+    const vW = vItems('−40.0 mV').reduce((a, [t, font]) => { ctx.font = font; return a + ctx.measureText(t).width; }, 0);
+    EM.runs(ctx, vItems(vtxt), Math.min(cx + mr + 16, w - 12 - vW), my - f.fs * 1.3, state.hideV ? C.muted : C.accent, { halo: true });
     EM.runs(ctx, [['전압계', f.uiS]], cx - mr - 14, my - f.fs * 1.0, C.muted, { align: 'right', halo: true });
 
     // 자체 유도 기전력의 방향과 높은 쪽
@@ -2365,7 +2403,7 @@ const LCDRAW = (() => {
         EM.runs(ctx, [['코일 (이 구간의 직선은 단순화)', f.uiS]], (pS[0] + pE[0]) / 2, bot + f.fs * 0.7, C.muted, { align: 'center', halo: true });
         EM.runs(ctx, [['a', f.mi]], xa, bot + f.fs * 0.7, C.muted, { align: 'center', halo: true });
         EM.runs(ctx, [['b', f.mi]], xb, bot + f.fs * 0.7, C.muted, { align: 'center', halo: true });
-        if (Math.abs(vv) > tiny) EM.runs(ctx, [[`${vv > 0 ? '+' : '−'}${EM.fmt(Math.abs(vv) * 1e3, 3)} mV`, f.num]], (xa + pS[0]) / 2, Y(vv) + (vv > 0 ? -1 : 1) * f.fs * 0.9, C.accent, { align: 'center', halo: true });
+        if (Math.abs(vv) > tiny) EM.runs(ctx, [[`${vv > 0 ? '+' : '−'}${EM.fmt(Math.abs(vv) * 1e3, 3)} mV`, f.num]], (xa + pS[0]) / 2, Y(vv) + (Math.abs(Y(vv) - Y(0)) > f.fs * 2.2 ? (vv > 0 ? 1 : -1) : (vv > 0 ? -1 : 1)) * f.fs * 0.9, C.accent, { align: 'center', halo: true });   // 크면 0 쪽(칠한 곳 안)에 써서 위 제목과 겹치지 않게
       }
     }
     EM.runs(ctx, [[`그림은 ${n}바퀴로 줄여 그림 (실제 ${state.N}바퀴)`, f.uiXS]], 14, f.fs * 1.0, C.muted, { align: 'left', halo: true });
@@ -2918,7 +2956,8 @@ const LCDRAW = (() => {
     const zeroBars = (box, items, title, scaleMax, posOnly = false) => {
       const { x, y, w: ww, h: hh } = box;
       EM.runs(ctx, title, x, y + fs * 0.4, C.muted, { halo: true });
-      const y0 = y + hh * (posOnly ? 0.78 : 0.46), half = hh * (posOnly ? 0.5 : 0.34), n = items.length, slot = ww / n, bwid = Math.min(slot * 0.5, fs * 3);
+      const y0 = y + hh * (posOnly ? 0.78 : 0.5), half = hh * (posOnly ? 0.5 : 0.31),   // 가득 찬 막대의 값 글자가 제목에 닿지 않게
+      n = items.length, slot = ww / n, bwid = Math.min(slot * 0.5, fs * 3);
       ctx.strokeStyle = C.muted; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(x, y0); ctx.lineTo(x + ww, y0); ctx.stroke();
       items.forEach((it, k) => {
         const cx = x + slot * (k + 0.5), v = hid ? 0 : Math.max(-1.05, Math.min(1.05, it.v / scaleMax)), hgt = v * half;
@@ -3012,7 +3051,7 @@ const LCDRAW = (() => {
     ctx.beginPath(); ctx.arc(cx, cy, rb, 0, TAU); ctx.lineWidth = Math.max(4, sc * 0.25); ctx.strokeStyle = C.wire; ctx.stroke();
     EM.marker(ctx, cx, cy, Math.max(10, Math.min(ra * 0.6, 22)), 'cross');
     for (let k = 0; k < 6; k++) { const th = TAU * (k + 0.5) / 6; EM.marker(ctx, cx + rb * Math.cos(th), cy + rb * Math.sin(th), 9, 'dot'); }
-    EM.runs(ctx, [['a', f.mi]], cx + ra * 0.72 + 6, cy - ra * 0.72 - fs * 0.8, C.ink, { align: 'left', halo: true });
+    EM.runs(ctx, [['a', f.mi]], cx + ra * 0.72 + 6, cy - ra * 0.72 - fs * 0.8, C.ink, { align: 'left', halo: true, plate: true });
     EM.runs(ctx, [['b', f.mi]], cx + rb * 0.72 + 8, cy - rb * 0.72 - 8, C.ink, { align: 'left', halo: true });
     EM.runs(ctx, [['안쪽 도체: 들어감 ⊗, 바깥 도체: 나옴 ⊙ (단면)', f.uiXS]], cx, cy + rb + fs * 1.4, C.muted, { align: 'center', halo: true });
     // 오른쪽 계산 (보기에서 켤 때만)
@@ -3480,7 +3519,8 @@ const LCDRAW = (() => {
     // 코일 위에 두면 그 둘레에 몰린 자기력선과 겹친다: 코일 1은 왼쪽 옆, 코일 2는 오른쪽 옆 (가운데 높이)
     const xMin1 = Math.min(...L1.map(p => proj(fr, p)[0])), xMax2 = Math.max(...L2.map(p => proj(fr, p)[0]));
     EM.runs(ctx, [['코일 1', f.ui], [`  ${N1}회`, f.uiS]], xMin1 - fs * 0.8, fr.Y(0), C.ink, { align: 'right', halo: true });
-    EM.runs(ctx, [['코일 2', f.ui], [`  ${N2}회`, f.uiS]], xMax2 + fs * 0.8, fr.Y(0), C.ink, { align: 'left', halo: true });
+    // 코일 2는 가까이 오면 화살촉이 옆에 붙으므로 조금 더 띄운다
+    EM.runs(ctx, [['코일 2', f.ui], [`  ${N2}회`, f.uiS]], xMax2 + fs * 1.4, fr.Y(0), C.ink, { align: 'left', halo: true });
     // 전원(보내는 코일)과 검류계(받는 코일)
     const yB = h - fs * 2.6;
     const b1 = proj(fr, [0, -A1, 0]), b2 = proj(fr, [state.d, -B2, 0]);
@@ -3503,8 +3543,8 @@ const LCDRAW = (() => {
     const eStr = state.hideV ? '?' : `${sgnStr(E * 1e3)} mV`;
     // 코일 1(왼쪽)의 글은 왼쪽에, 코일 2(오른쪽)의 글은 오른쪽에
     const eItems = [['ℰ', f.m], [String(recv), f.sub, fs * 0.35], [` = ${eStr}`, f.num]], iItems = [['i', f.mi], [String(drive), f.sub, fs * 0.35], [` = ${EM.fmt(iD, 3)} A`, f.num]];
-    EM.runs(ctx, recv === 1 ? eItems : iItems, b1[0] - 64, yB - 8, recv === 1 ? C.efield : C.current, { align: 'right', halo: true });
-    EM.runs(ctx, recv === 2 ? eItems : iItems, b2[0] + 64, yB - 8, recv === 2 ? C.efield : C.current, { align: 'left', halo: true });
+    EM.runs(ctx, recv === 1 ? eItems : iItems, b1[0] - 64, yB - 8, recv === 1 ? C.efield : C.current, { align: 'right', halo: true, plate: true });
+    EM.runs(ctx, recv === 2 ? eItems : iItems, b2[0] + 64, yB - 8, recv === 2 ? C.efield : C.current, { align: 'left', halo: true, plate: true });
     EM.runs(ctx, [['M', f.mi], [state.hideM ? ' = ?' : ` = ${EM.fmt(Mx * 1e6, 3)} μH`, f.num]], w - 18, 70 + fs, C.accent, { align: 'right', halo: true });
     EM.runs(ctx, [[`거리 ${EM.fmt(state.d * 100, 3)} cm, 기울기 ${Math.round(state.th * 180 / Math.PI)}°`, f.uiS]], w - 18, 70 + fs * 2.9, C.muted, { align: 'right', halo: true });
   }
@@ -3513,7 +3553,7 @@ const LCDRAW = (() => {
   function drawSol(ctx, w, h, f) {
     const fs = f.fs, t = state.t, iD = cur(t), E = emf(t);
     const KX = 0.34, cy = h * 0.42, Lc = Math.min(w * 0.78, 1300), x0 = w / 2 - Lc / 2;
-    const pxm = Math.min(h * 0.2, 120) / SOL.R;            // m → px (단면은 크게 그린다)
+    const pxm = Math.min(Math.min(h * 0.2, 120) / SOL.R, (cy - fs * 0.6) / 0.05);   // m → px (단면은 크게 그린다). 가장 큰 코일(r = 5 cm)도 위 끝을 넘지 않게
     const Rs = SOL.R * pxm, rH = state.r * pxm, nv = 26;
     const wireW = 2.6;
     const P = (x, ph, R) => [x + KX * R * Math.sin(ph), cy - R * Math.cos(ph), Math.sin(ph)];
@@ -3543,8 +3583,8 @@ const LCDRAW = (() => {
     helix(true);
     ring(rH, true, recvCol, 5);
     EM.runs(ctx, [['밖: ', f.uiS], ['B', f.mb], [' ≈ 0', f.m]], x0 - KX * Rs, cy - Rs - fs * 1.1, C.muted, { align: 'left', halo: true });
-    // 검류계로 가는 두 도선(가운데 세로)과 겹치지 않게 왼쪽으로 붙인다
-    EM.runs(ctx, [['코일 반지름 ', f.uiS], ['r', f.mi], [` = ${EM.fmt(state.r * 100, 3)} cm   (솔레노이드 ${EM.fmt(SOL.R * 100, 3)} cm)`, f.uiS]], w / 2 - 22, cy + Math.max(rH, Rs) + fs * 1.5, C.muted, { align: 'right', halo: true });
+    // 코일이 커지면 아래쪽 글(전류, 검류계)과 부딪히므로 그림 왼쪽 위 구석에 둔다
+    EM.runs(ctx, [['코일 반지름 ', f.uiS], ['r', f.mi], [` = ${EM.fmt(state.r * 100, 3)} cm   (솔레노이드 ${EM.fmt(SOL.R * 100, 3)} cm)`, f.uiS]], 14, fs * 1.0, C.muted, { align: 'left', halo: true });
     // 검류계
     const yB = h - fs * 2.4, bx = w / 2 + KX * rH * 0, by = cy + rH;
     KIT.stroke(ctx, [[w / 2 - 7, by], [w / 2 - 7, yB - 32]], false, C.wire, 2.2);
@@ -3783,7 +3823,7 @@ const LCDRAW = (() => {
     LCDRAW.draw(ctx, fr, { f, sw: state.sw, q: st.q / Q, icw, flow: flowPh, R: false });
     const { X, Y } = fr;
     if (!state.hideAns) {
-      EM.runs(ctx, [['q', f.mi], [` = ${EM.fmt(st.q * 1e12, 3)} pC`, f.numS]], X(4.6) + fs * 0.3, Y(1.6), C.ink, { align: 'left', halo: true });
+      EM.runs(ctx, [['q', f.mi], [` = ${EM.fmt(st.q * 1e12, 3)} pC`, f.numS]], X(4.6) + fs * 0.8, Y(1.6), C.ink, { align: 'left', halo: true, plate: true });
       EM.runs(ctx, [['i', f.mi], [` = ${EM.fmt(Math.abs(st.i) * 1e3, 3)} mA`, f.numS]], X(7.6), Y(7.8), C.current, { align: 'center', halo: true });
     }
     // 에너지 막대
