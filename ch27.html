@@ -179,7 +179,10 @@ h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text
 .canvas-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .can-drag { cursor: grab; }
 .dragging { cursor: grabbing; }
-.stage-tools { position: absolute; top: 10px; right: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+/* 단추 막대는 그림 아래, 범례와 같은 줄의 오른쪽 (단계 레일의 '다음' 단추 바로 위) */
+.stage-foot { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; padding-right: 10px; }
+.stage-foot .legend { flex: 1 1 auto; min-width: 0; }
+.stage-tools { margin-left: auto; padding: 6px 0 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .stage-tools .btn { background: var(--panel); }
 .legend { display: flex; flex-wrap: wrap; gap: .2em 1.2em; padding: .35em 12px .6em; font-size: .76em; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: .4em; }
@@ -348,9 +351,6 @@ sub, sup { font-size: .7em; line-height: 0; }
   border: 1px solid var(--line); background: var(--panel); color: var(--ink);
 }
 .nav-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-/* (CH27) 다음 단추 옆의 '넘기고 재생' 단추 */
-.nav-end { display: flex; align-items: center; gap: 8px; }
-.nav-btn.play-next { border-color: var(--accent); color: var(--accent); }
 .nav-btn:disabled { opacity: .35; cursor: default; }
 .step-body { min-width: 0; }
 .step-top { display: flex; align-items: center; gap: 10px; }
@@ -426,6 +426,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s1-stage" aria-label="전지, 세 자리 스위치(열림, a, b), 축전기 C, 저항 R로 된 RC 회로(교재 그림 27.14). 오른쪽에 저항과 축전기의 전위차 막대."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류 <span class="m">i</span> (화살표가 길수록 세다)</span>
+          <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
+          <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>C</sub></span>
+          <span><i class="key-efield"></i>축전기 속 전기장</span>
+        </div>
         <div class="stage-tools">
           <button class="btn primary" type="button" id="s1-playBtn" hidden>▶ 재생</button>
           <div class="seg" role="group" aria-label="스위치">
@@ -435,12 +443,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <button class="btn" type="button" id="s1-resetBtn">처음으로</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 <span class="m">i</span> (화살표가 길수록 세다)</span>
-        <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
-        <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>C</sub></span>
-        <span><i class="key-efield"></i>축전기 속 전기장</span>
       </div>
     </div>
     <aside class="panel" id="s1-panel" aria-label="공식, 그래프, 값과 조절">
@@ -496,6 +498,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s2-stage" aria-label="교재 그림 27.14의 RC 회로. 오른쪽에 전지가 한 일, 축전기의 전기 에너지, 저항의 열 막대."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류 <span class="m">i</span></span>
+          <span>□ 전지가 한 일 <span class="m">W</span></span>
+          <span style="color:var(--efield)">■ 축전기의 에너지 <span class="m">U</span><sub>C</sub></span>
+          <span style="color:var(--heat)">■ 저항의 열 (내부 에너지) <span class="m">E</span><sub>R</sub></span>
+        </div>
         <div class="stage-tools">
           <button class="btn primary" type="button" id="s2-playBtn" hidden>▶ 재생</button>
           <div class="seg" role="group" aria-label="스위치">
@@ -505,12 +515,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <button class="btn" type="button" id="s2-resetBtn">처음으로</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 <span class="m">i</span></span>
-        <span>□ 전지가 한 일 <span class="m">W</span></span>
-        <span style="color:var(--efield)">■ 축전기의 에너지 <span class="m">U</span><sub>C</sub></span>
-        <span style="color:var(--heat)">■ 저항의 열 (내부 에너지) <span class="m">E</span><sub>R</sub></span>
       </div>
     </div>
     <aside class="panel" id="s2-panel" aria-label="공식, 그래프, 값과 조절">
@@ -551,6 +555,12 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s3-stage" aria-label="장면에 따라 교재 그림 27.16(퀴즈 27.5)의 회로 또는 문제 23의 회로. 가지마다 전류의 크기와 방향."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류 (화살표가 길수록 세다)</span>
+          <span><i class="key-efield"></i>축전기 속 전기장</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="회로">
             <button type="button" data-scene="A" aria-pressed="true">퀴즈 27.5</button>
@@ -560,10 +570,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           <button class="btn" type="button" id="s3-swBtn">S 닫기</button>
           <button class="btn" type="button" id="s3-resetBtn">처음으로</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 (화살표가 길수록 세다)</span>
-        <span><i class="key-efield"></i>축전기 속 전기장</span>
       </div>
     </div>
     <aside class="panel" id="s3-panel" aria-label="공식, 그래프, 값">
@@ -773,7 +779,6 @@ const EM = (() => {
   const ICON_PREV = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   const ICON_NEXT = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
 
-  const ICON_PLAY = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
   function buildRail(def) {
     const rail = def.el.querySelector('.steps');
     const nextBtn = `<button class="nav-btn primary" type="button" aria-label="다음 단계">${ICON_NEXT}</button>`;
@@ -782,8 +787,8 @@ const EM = (() => {
       '<div class="step-body"><div class="step-top"><div class="dots" role="group" aria-label="단계"></div>' +
       '<button class="cap-toggle" type="button" aria-expanded="false">설명</button></div>' +
       '<p class="caption" hidden aria-live="polite"></p></div>' +
-      (def.play ? `<div class="nav-end"><button class="nav-btn play-next" type="button" aria-label="다음 단계로 넘기고 재생" title="넘기고 재생">${ICON_PLAY}</button>${nextBtn}</div>` : nextBtn);
-    const prev = rail.querySelector('.nav-btn'), next = rail.querySelector('.nav-btn.primary'), playNext = rail.querySelector('.play-next');
+      nextBtn;
+    const prev = rail.querySelector('.nav-btn'), next = rail.querySelector('.nav-btn.primary');
     const dotsBox = rail.querySelector('.dots');
     const toggle = rail.querySelector('.cap-toggle');
     const caption = rail.querySelector('.caption');
@@ -797,13 +802,8 @@ const EM = (() => {
     });
     prev.addEventListener('click', () => goStep(def, def.step - 1));
     next.addEventListener('click', () => goStep(def, def.step + 1));
-    // ▶: 이 단계의 시연을 아직 안 했으면 여기서 재생, 했거나 시연이 없으면 다음 단계로 넘기고 재생
-    if (playNext) playNext.addEventListener('click', () => {
-      if (!playsHere(def)) goStep(def, def.step + 1);
-      startPlay(def);
-    });
     toggle.addEventListener('click', () => setCaptionOpen(!captionOpen));
-    def.rail = { prev, next, playNext, dots, toggle, caption };
+    def.rail = { prev, next, dots, toggle, caption };
     buildQuiz(def);
   }
   // 설명 문구는 모든 화면이 같이 열고 닫는다
@@ -863,20 +863,12 @@ const EM = (() => {
     Z.btn.parentElement.hidden = shown;
   }
 
-  /* (CH27) 재생 상태: 화면 위 '재생' 단추는 재생 → 멈춤 → 계속. def.play()는 그 단계의 시연(script)을 처음부터 시작하고,
+  /* (CH27) 재생 상태: 그림 아래 '재생' 단추는 재생 → 멈춤 → 계속. def.play()는 그 단계의 시연(script)을 처음부터 시작하고,
      시연이 없으면 false를 돌려준다. 멈춤은 화면의 움직임(def.hide/def.show)을 잠시 세운다. */
   const PLAY_LABEL = { idle: '▶ 재생', running: '❚❚ 멈춤', paused: '▶ 계속' };
-  const playsHere = def => !!def.steps[def.step].script && def.playState === 'idle';
   function setPlay(def, st) {
     def.playState = st;
     if (def.playBtn) { def.playBtn.textContent = PLAY_LABEL[st]; def.playBtn.classList.toggle('primary', st !== 'running'); }
-    const pn = def.rail && def.rail.playNext;
-    if (pn) {
-      const here = playsHere(def);
-      pn.disabled = !here && def.step === def.steps.length - 1;
-      const lab = here ? '이 단계 재생' : '다음 단계로 넘기고 재생';
-      pn.setAttribute('aria-label', lab); pn.title = lab;
-    }
   }
   function startPlay(def) {
     if (!def.play) return;
@@ -1859,7 +1851,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       $('playBtn').hidden = !S.script;
       updateReadouts();
     },
-    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 ('재생' 단추)
     play() {
       const S = STEPS[def.step];
       if (!S.script) return false;
@@ -2049,7 +2041,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       $('playBtn').hidden = !S.script;
       updateReadouts();
     },
-    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 ('재생' 단추)
     play() {
       const S = STEPS[def.step];
       if (!S.script) return false;
@@ -2352,7 +2344,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       $('playBtn').hidden = !St.script;
       updateReadouts();
     },
-    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 ('재생' 단추)
     play() {
       const St = STEPS[def.step];
       if (!St.script) return false;

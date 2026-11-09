@@ -174,11 +174,14 @@ h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text
   grid-area: stage; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto;
   background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
 }
-.canvas-box { position: relative; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); }
-.canvas-box > canvas { grid-row: 2; grid-column: 1; width: 100%; height: 100%; min-height: 0; display: block; touch-action: none; }
+.canvas-box { position: relative; min-height: 0; }
+.canvas-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .can-drag { cursor: grab; }
 .dragging { cursor: grabbing; }
-.stage-tools { grid-row: 1; grid-column: 1; padding: 10px 10px 0; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+/* 단추 막대는 그림 아래, 범례와 같은 줄의 오른쪽 (단계 레일의 '다음' 단추 바로 위) */
+.stage-foot { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; padding-right: 10px; }
+.stage-foot .legend { flex: 1 1 auto; min-width: 0; }
+.stage-tools { margin-left: auto; padding: 6px 0 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .stage-tools .btn { background: var(--panel); }
 .stage-tools .pause-btn { min-width: 6.4em; }
 .stage-tools .pause-btn.primary { background: var(--accent); }
@@ -429,6 +432,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s1-stage" aria-label="비스듬히 본 공심 솔레노이드. 왼쪽 단자 a, 오른쪽 단자 b, 위에 두 단자를 잇는 전압계. 아래에는 도선을 따라 본 전위 그래프."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류 <span class="m">i</span></span>
+          <span><i class="key-field"></i>코일 속 <b class="mv">B</b></span>
+          <span><i class="key-efield"></i>자체 유도 기전력 ℰ<sub>L</sub>이 미는 쪽</span>
+          <span><i class="key-pos">+</i><i class="key-neg">−</i>전위가 높은 끝 / 낮은 끝</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="전류의 변화">
             <button type="button" data-mode="up" aria-pressed="false">증가</button>
@@ -443,12 +454,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <button class="btn" type="button" id="s1-playBtn">다시 실행</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 <span class="m">i</span></span>
-        <span><i class="key-field"></i>코일 속 <b class="mv">B</b></span>
-        <span><i class="key-efield"></i>자체 유도 기전력 ℰ<sub>L</sub>이 미는 쪽</span>
-        <span><i class="key-pos">+</i><i class="key-neg">−</i>전위가 높은 끝 / 낮은 끝</span>
       </div>
     </div>
     <aside class="panel" id="s1-panel" aria-label="공식, 그래프, 값과 조절">
@@ -500,18 +505,20 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s2-stage" aria-label="전지, 스위치 S1, 두 갈래 스위치 S2, 저항 R, 코일 L로 된 RL 회로. 오른쪽에 저항과 코일의 전위차 막대."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류 <span class="m">i</span></span>
+          <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
+          <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>L</sub></span>
+          <span><i class="key-field"></i>코일의 자기력선 (진하기 ∝ 전류)</span>
+        </div>
         <div class="stage-tools">
           <button class="btn primary" type="button" id="s2-playBtn" hidden>▶ 재생</button>
           <button class="btn primary" type="button" id="s2-s1Btn">S₁ 닫기</button>
           <button class="btn" type="button" id="s2-s2Btn">S₂ → b</button>
           <button class="btn" type="button" id="s2-resetBtn">처음으로</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 <span class="m">i</span></span>
-        <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
-        <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>L</sub></span>
-        <span><i class="key-field"></i>코일의 자기력선 (진하기 ∝ 전류)</span>
       </div>
     </div>
     <aside class="panel" id="s2-panel" aria-label="공식, 그래프, 값과 조절">
@@ -566,6 +573,13 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s3-stage" aria-label="장면에 따라 RL 회로와 일률·에너지 막대, 긴 솔레노이드 속 에너지 밀도, 동축 도선 단면의 에너지 밀도."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-field"></i>자기장, 자기 에너지</span>
+          <span style="color:var(--heat)">■ 저항의 열 (내부 에너지)</span>
+          <span><i class="key-current"></i>전류</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="장면">
             <button type="button" data-scene="circuit" aria-pressed="true">회로</button>
@@ -575,11 +589,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           <button class="btn primary" type="button" id="s3-playBtn" hidden>▶ 재생</button>
           <span id="s3-toolsC"><button class="btn" type="button" id="s3-s2Btn">S₂ → b</button> <button class="btn" type="button" id="s3-resetBtn">다시 충전</button></span>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-field"></i>자기장, 자기 에너지</span>
-        <span style="color:var(--heat)">■ 저항의 열 (내부 에너지)</span>
-        <span><i class="key-current"></i>전류</span>
       </div>
     </div>
     <aside class="panel" id="s3-panel" aria-label="공식, 그래프, 값과 조절">
@@ -644,6 +653,13 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s4-stage" aria-label="장면에 따라 같은 축 위의 두 코일과 코일 1의 자기력선, 또는 긴 솔레노이드를 감싼 코일. 받는 코일에 검류계."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>보내는 코일의 전류</span>
+          <span><i class="key-efield"></i>받는 코일의 유도 전류 방향</span>
+          <span><i class="key-field"></i>자기력선, 받는 코일을 지나는 선속</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="장면">
             <button type="button" data-scene="two" aria-pressed="true">두 코일</button>
@@ -658,11 +674,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           <button class="btn" type="button" id="s4-swapBtn">코일 2가 보내기</button>
           <button class="btn primary" type="button" id="s4-playBtn" hidden>▶ 재생</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>보내는 코일의 전류</span>
-        <span><i class="key-efield"></i>받는 코일의 유도 전류 방향</span>
-        <span><i class="key-field"></i>자기력선, 받는 코일을 지나는 선속</span>
       </div>
     </div>
     <aside class="panel" id="s4-panel" aria-label="공식, 그래프, 값과 조절">
@@ -712,15 +723,17 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s5-stage" aria-label="전지, 스위치, 축전기, 코일로 된 LC 회로. 오른쪽에 축전기와 코일의 에너지 막대, 아래에 같은 순간의 용수철과 물체."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-efield"></i>전기장, 전기 에너지 <span class="m">U</span><sub>E</sub></span>
+          <span><i class="key-field"></i>자기장, 자기 에너지 <span class="m">U</span><sub>B</sub></span>
+          <span><i class="key-current"></i>전류</span>
+        </div>
         <div class="stage-tools">
           <button class="btn primary" type="button" id="s5-playBtn" hidden>▶ 재생</button>
           <button class="btn" type="button" id="s5-swBtn">S → a (다시 충전)</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-efield"></i>전기장, 전기 에너지 <span class="m">U</span><sub>E</sub></span>
-        <span><i class="key-field"></i>자기장, 자기 에너지 <span class="m">U</span><sub>B</sub></span>
-        <span><i class="key-current"></i>전류</span>
       </div>
     </div>
     <aside class="panel" id="s5-panel" aria-label="공식, 그래프, 값과 조절">
@@ -764,15 +777,17 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s6-stage" aria-label="축전기, 코일, 저항으로 된 RLC 회로. 오른쪽에 축전기·코일·열의 에너지 막대, 아래에 감쇠기가 달린 용수철과 물체."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-efield"></i>전기 에너지 <span class="m">U</span><sub>E</sub></span>
+          <span><i class="key-field"></i>자기 에너지 <span class="m">U</span><sub>B</sub></span>
+          <span style="color:var(--heat)">■ 저항의 열</span>
+          <span><i class="key-current"></i>전류</span>
+        </div>
         <div class="stage-tools">
           <button class="btn" type="button" id="s6-playBtn">다시 실행</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-efield"></i>전기 에너지 <span class="m">U</span><sub>E</sub></span>
-        <span><i class="key-field"></i>자기 에너지 <span class="m">U</span><sub>B</sub></span>
-        <span style="color:var(--heat)">■ 저항의 열</span>
-        <span><i class="key-current"></i>전류</span>
       </div>
     </div>
     <aside class="panel" id="s6-panel" aria-label="공식, 그래프, 값과 조절">
