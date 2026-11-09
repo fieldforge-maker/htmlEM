@@ -1,0 +1,2361 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CH27. 직류 회로</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=STIX+Two+Text:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* 레이아웃은 CH29·CH30과 같다: 왼쪽은 실험대(캔버스)와 그 아래 단계 레일, 오른쪽은 공식 · 퀴즈 · 접이식 계기판.
+   색도 이어 쓴다: B 초록, 전류 자홍, 강조 보라, 전기장 E 주황, 음전하 파랑.
+   CH31에서 더한 색: 저항의 열(내부 에너지) 갈색. 에너지 막대는 전기 에너지 U_E 주황, 자기 에너지 U_B 초록, 열 갈색.
+   CH27은 CH31의 틀·색·그림 조각을 그대로 가져와 쓴다 (ΔV_R 파랑, ΔV_C 보라, 축전기 에너지 주황, 열 갈색). */
+:root {
+  --paper: #F5F6FA;
+  --panel: #FFFFFF;
+  --stage: #FFFFFF;
+  --ink: #1C1B29;
+  --muted: #5D6075;
+  --line: #DADCE7;
+  --accent: #6B2D9E;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #F1E9F8;
+  --field: #17894D;
+  --current: #C2185B;
+  --path: #0A86AD;
+  --efield: #E25A0C;
+  --neg: #1F6FCF;
+  --heat: #9A5B2E;
+  --core-1: #EAD8BC;
+  --core-2: #CBAE88;
+  --metal-1: #EEF0F4;
+  --metal-2: #B8BECB;
+  --wire: #8C92A4;
+  --wire-hi: #EEF0F5;
+  --font-ui: "IBM Plex Sans KR", "Pretendard", "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  --font-math: "STIX Two Text", "Cambria Math", Cambria, "Times New Roman", serif;
+  --font-num: "IBM Plex Mono", ui-monospace, Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121119;
+    --panel: #1B1A26;
+    --stage: #17161F;
+    --ink: #ECEBF4;
+    --muted: #A3A2B6;
+    --line: #33314A;
+    --accent: #BC92EA;
+    --accent-ink: #1B1027;
+    --accent-soft: #2B2240;
+    --field: #4CD48E;
+    --current: #FF6FA3;
+    --path: #43C9EF;
+    --efield: #FF9350;
+    --neg: #6FB2FF;
+    --heat: #DDA070;
+    --core-1: #6E5C45;
+    --core-2: #4B3E2E;
+    --metal-1: #5A5F6E;
+    --metal-2: #33363F;
+    --wire: #9298AB;
+    --wire-hi: #D2D6E0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121119;
+  --panel: #1B1A26;
+  --stage: #17161F;
+  --ink: #ECEBF4;
+  --muted: #A3A2B6;
+  --line: #33314A;
+  --accent: #BC92EA;
+  --accent-ink: #1B1027;
+  --accent-soft: #2B2240;
+  --field: #4CD48E;
+  --current: #FF6FA3;
+  --path: #43C9EF;
+  --efield: #FF9350;
+  --neg: #6FB2FF;
+  --heat: #DDA070;
+  --core-1: #6E5C45;
+  --core-2: #4B3E2E;
+  --metal-1: #5A5F6E;
+  --metal-2: #33363F;
+  --wire: #9298AB;
+  --wire-hi: #D2D6E0;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: clamp(15px, 0.5vw + 10.5px, 20px);
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--path); outline-offset: 2px; }
+
+.app { height: 100%; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+
+/* 머리띠 */
+.top {
+  display: flex; align-items: center; gap: 16px; min-width: 0;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+h1 { margin: 0; flex: none; font-size: 1.12em; font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: .5em; }
+.chapter {
+  font-family: var(--font-num); font-weight: 600; font-size: .8em; letter-spacing: .03em;
+  color: var(--accent-ink); background: var(--accent); padding: .12em .5em; border-radius: 4px;
+}
+.tabs { flex: 1; min-width: 0; display: flex; align-items: center; gap: 2px; overflow-x: auto; scrollbar-width: thin; padding-block: 2px; }
+.tab-group { flex: none; font-size: .7em; font-weight: 600; letter-spacing: .04em; color: var(--muted); padding-right: .3em; }
+.tab + .tab-group { margin-left: .5em; padding-left: .9em; border-left: 1px solid var(--line); }
+.tab {
+  flex: none; display: flex; align-items: center; gap: .45em;
+  font-size: .78em; padding: .38em .55em .38em .35em; white-space: nowrap;
+  border: 1px solid transparent; border-radius: 6px; background: transparent; color: var(--muted); cursor: pointer;
+}
+.tab:hover:not(:disabled) { border-color: var(--line); color: var(--ink); }
+.tab-no {
+  font-family: var(--font-num); font-size: .88em; width: 1.7em; height: 1.7em;
+  display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--line);
+}
+.tab[aria-current="page"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.tab[aria-current="page"] .tab-no { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tab:disabled { cursor: default; opacity: .5; }
+@media (max-width: 1400px) {
+  .tab-group:first-child { display: none; }
+  .tab + .tab-group { font-size: 0; margin-left: 4px; padding: 0; align-self: stretch; }
+}
+@media (max-width: 1240px) {
+  .tab:not([aria-current]) .tab-label { display: none; }
+  .tab:not([aria-current]) { padding-right: .35em; }
+}
+.tools { flex: none; display: flex; gap: 6px; }
+.icon-btn {
+  width: 2.2em; height: 2.2em; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink);
+}
+.icon-btn:hover { border-color: var(--muted); }
+.home-btn { flex: none; width: auto; height: 2.2em; display: inline-flex; align-items: center; gap: .35em; padding: 0 .65em; font-size: .85em; font-weight: 600; text-decoration: none; }
+
+/* 화면 */
+.screen {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 29vw, 440px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "head panel" "stage panel" "steps panel";
+  gap: 12px 18px;
+  padding-block: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.screen-head { grid-area: head; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: .9em; min-width: 0; }
+.eyebrow { margin: 0; font-size: .78em; font-weight: 600; color: var(--accent); letter-spacing: .02em; }
+h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text-wrap: balance; }
+
+.stage-wrap {
+  grid-area: stage; min-height: 0; display: grid; grid-template-rows: minmax(0, 1fr) auto;
+  background: var(--stage); border: 1px solid var(--line); border-radius: 10px; overflow: hidden;
+}
+.canvas-box { position: relative; min-height: 0; }
+.canvas-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.can-drag { cursor: grab; }
+.dragging { cursor: grabbing; }
+.stage-tools { position: absolute; top: 10px; right: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+.stage-tools .btn { background: var(--panel); }
+.legend { display: flex; flex-wrap: wrap; gap: .2em 1.2em; padding: .35em 12px .6em; font-size: .76em; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: .4em; }
+.key-path { display: inline-block; width: 1.8em; border-top: 3px dashed var(--path); }
+.key-field, .key-current, .key-efield { display: inline-block; width: 1.6em; height: 3px; position: relative; }
+.key-field { background: var(--field); }
+.key-current { background: var(--current); }
+.key-efield { background: var(--efield); }
+.key-field::after, .key-current::after, .key-efield::after {
+  content: ""; position: absolute; right: -2px; top: 50%; transform: translateY(-50%);
+  border-left: 8px solid; border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+}
+.key-field::after { border-left-color: var(--field); }
+.key-current::after { border-left-color: var(--current); }
+.key-efield::after { border-left-color: var(--efield); }
+.key-vel { display: inline-block; width: 1.5em; height: 7px; border: 2px solid var(--ink); border-right: 0; position: relative; }
+.key-vel::after {
+  content: ""; position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+  border-left: 8px solid var(--ink); border-top: 6px solid transparent; border-bottom: 6px solid transparent;
+}
+.key-b { font-family: var(--font-math); font-style: normal; font-weight: 700; color: var(--field); line-height: 1; }
+.key-pos, .key-neg {
+  display: inline-grid; place-items: center; width: 1.15em; height: 1.15em; border-radius: 50%;
+  font-style: normal; font-weight: 700; font-size: .9em; line-height: 1; border: 1.5px solid;
+}
+.key-pos { color: var(--current); border-color: var(--current); }
+.key-neg { color: var(--neg); border-color: var(--neg); }
+
+/* 수식 */
+.m { font-family: var(--font-math); font-style: italic; }
+.mv { font-family: var(--font-math); font-weight: 700; font-style: normal; }
+.eq { font-family: var(--font-math); }
+sub, sup { font-size: .7em; line-height: 0; }
+.frac { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; margin: 0 .15em; font-family: var(--font-math); line-height: 1.2; }
+.frac > span:first-child { border-bottom: 1.5px solid currentColor; padding: 0 .2em .05em; }
+.frac > span:last-child { padding: .05em .2em 0; }
+.sym {
+  display: inline-block; position: relative; width: 1em; height: 1em; vertical-align: -.15em;
+  border: 2px solid var(--current); border-radius: 50%; background: var(--stage);
+}
+.sym.dot::after {
+  content: ""; position: absolute; inset: 0; margin: auto; width: .28em; height: .28em; border-radius: 50%; background: var(--current);
+}
+.sym.cross::before, .sym.cross::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: .62em; height: 2px; background: var(--current);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.sym.cross::after { transform: translate(-50%, -50%) rotate(-45deg); }
+.num { font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.c-b { color: var(--field); }
+.c-e { color: var(--efield); }
+.c-i { color: var(--current); }
+
+/* 계기판 맨 위: 늘 보이는 공식 카드와 보기 칸 */
+.panel { grid-area: panel; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.law-card { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .45em 14px .55em; text-align: center; }
+.law-big { margin: 0; white-space: nowrap; font-family: var(--font-math); font-size: min(2em, 6.6vw); line-height: 1.35; }
+.law-sub { margin: .1em 0 0; font-family: var(--font-math); font-size: 1.15em; color: var(--muted); white-space: nowrap; }
+.law-note { margin: .25em 0 0; font-size: .78em; color: var(--muted); }
+.view-toggles { flex: none; padding: 0 4px; font-size: .95em; gap: 6px 18px; }
+
+/* 퀴즈 카드: 묻는 단계에서 나타나고, 다음 단계(또는 '정답' 단추)에서 정답과 까닭을 보인다 */
+.quiz { flex: none; background: var(--panel); border: 2px solid var(--accent); border-radius: 10px; padding: .6em 14px .7em; }
+.quiz-tag { margin: 0 0 .3em; display: flex; align-items: center; gap: .5em; font-size: .76em; font-weight: 700; letter-spacing: .04em; color: var(--accent); }
+.quiz-tag::before { content: "Q"; display: grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-family: var(--font-num); font-size: .9em; }
+.quiz-q { margin: 0 0 .55em; font-size: 1.02em; line-height: 1.55; text-wrap: pretty; }
+.quiz-choices { display: grid; gap: 5px; }
+.quiz-choice {
+  display: grid; grid-template-columns: 1.75em minmax(0, 1fr); align-items: center; gap: .6em;
+  width: 100%; text-align: left; padding: .34em .55em; line-height: 1.45;
+  border: 1px solid var(--line); border-radius: 8px; background: transparent; cursor: pointer; font-size: .93em;
+  transition: opacity .2s, background .2s, border-color .2s;
+}
+.quiz-choice:hover { border-color: var(--muted); }
+.quiz-choice .qk {
+  width: 1.75em; height: 1.75em; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--line); font-family: var(--font-num); font-size: .8em; color: var(--muted);
+}
+.quiz-choices.grid { grid-template-columns: 1fr 1fr; }
+.quiz-choices.grid .quiz-choice { position: relative; display: block; padding: .25em .3em; }
+.quiz-choices.grid .quiz-choice .qk { position: absolute; top: .3em; left: .3em; }
+.quiz-fig { display: block; width: 100%; height: auto; overflow: visible; }
+.quiz-q .quiz-fig { max-width: 10em; margin: .3em auto 0; }
+.quiz-fig text { font-family: var(--font-math); font-size: 18px; fill: var(--ink); }
+.quiz-fig .ax { stroke: var(--ink); stroke-width: 1.1; fill: none; }
+.quiz-fig .dsh { stroke-width: 1; stroke-dasharray: 3 2.5; fill: none; }
+.quiz-fig .arc { stroke: var(--muted); stroke-width: 1; fill: none; }
+.quiz-choice.picked { border-color: var(--accent); }
+.quiz-choice.picked .qk { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.quiz.revealed .quiz-choice { cursor: default; opacity: .42; }
+.quiz.revealed .quiz-choice:hover { border-color: var(--line); }
+.quiz.revealed .quiz-choice.right { opacity: 1; background: var(--accent-soft); border-color: var(--accent); }
+.quiz.revealed .quiz-choice.right .qk { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.quiz-foot { display: flex; justify-content: flex-end; margin-top: .6em; }
+.quiz-btn { font-weight: 600; color: var(--accent); border-color: var(--accent); }
+.quiz-why { margin: .6em 0 0; padding-top: .55em; border-top: 1px solid var(--line); font-size: .92em; line-height: 1.6; text-wrap: pretty; }
+
+/* 접이식 계기판 */
+.fold { flex: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.fold > summary {
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: .6em 14px; font-size: .84em; font-weight: 600; color: var(--muted); border-radius: 10px;
+}
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary::after {
+  content: ""; flex: none; width: .5em; height: .5em; margin: 0 .2em .25em 0;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: rotate(45deg); transition: transform .2s;
+}
+.fold[open] > summary { color: var(--ink); }
+.fold[open] > summary::after { transform: rotate(-135deg); margin-bottom: -.2em; }
+.fold > summary:hover { color: var(--ink); }
+.fold-body { padding: 0 14px 12px; transition: opacity .25s; }
+.law { margin: 0; font-size: 1.08em; }
+.result { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; margin-top: .45em; font-size: 1.08em; }
+.readout { display: flex; align-items: baseline; gap: .25em; }
+.big { font-family: var(--font-num); font-size: 2.1em; font-weight: 600; line-height: 1.05; color: var(--current); font-variant-numeric: tabular-nums; }
+.unit { color: var(--muted); }
+.subst { margin: .35em 0 0; font-size: .8em; color: var(--muted); font-family: var(--font-math); }
+.kv { display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: .25em .8em; margin: 0; font-size: .95em; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; text-align: right; font-family: var(--font-num); font-variant-numeric: tabular-nums; }
+.kv .sum { padding-top: .35em; color: var(--ink); font-weight: 600; }
+.graph-box { position: relative; height: clamp(170px, 28vh, 280px); }
+.graph-box.tall { height: clamp(220px, 36vh, 340px); }
+.graph-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.ctrl-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+.ctrl { display: grid; grid-template-columns: 1fr auto; align-items: baseline; gap: 0 8px; margin-bottom: .55em; min-width: 0; }
+.ctrl label { font-size: .86em; }
+.ctrl output { font-family: var(--font-num); font-size: .86em; color: var(--muted); }
+.ctrl input[type="range"] { grid-column: 1 / -1; width: 100%; margin: .2em 0 0; accent-color: var(--accent); }
+.toggles { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; font-size: .84em; }
+.toggles label { display: inline-flex; align-items: center; gap: .35em; cursor: pointer; }
+.toggles input { width: 1.05em; height: 1.05em; accent-color: var(--accent); }
+.btn { font-size: .84em; padding: .3em .8em; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--panel); }
+.seg button { border: 0; background: transparent; padding: .3em .75em; font-size: .84em; color: var(--muted); cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.geo { margin: .6em 0 0; font-size: .78em; color: var(--muted); }
+.opt { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px 12px; margin-bottom: .6em; }
+.opt > span { font-size: .86em; }
+
+/* 비교표 */
+.cmp { width: 100%; border-collapse: collapse; font-size: .84em; line-height: 1.4; }
+.cmp th, .cmp td { padding: .38em .35em; border-bottom: 1px solid var(--line); text-align: center; vertical-align: middle; }
+.cmp thead th { font-size: .92em; color: var(--muted); font-weight: 600; }
+.cmp tbody th { text-align: left; color: var(--muted); font-weight: 500; white-space: nowrap; }
+.cmp tr:last-child th, .cmp tr:last-child td { border-bottom: 0; }
+.cmp .num { font-size: .95em; }
+.cmp.frames td, .cmp.frames thead th:not(:first-child) { width: 34%; transition: background .25s; }
+.cmp .now { background: var(--accent-soft); }
+.cmp thead .now { color: var(--accent); }
+
+/* 단계 레일 */
+.steps {
+  grid-area: steps; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px;
+}
+.nav-btn {
+  width: 2.6em; height: 2.6em; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink);
+}
+.nav-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+/* (CH27) 다음 단추 옆의 '넘기고 재생' 단추 */
+.nav-end { display: flex; align-items: center; gap: 8px; }
+.nav-btn.play-next { border-color: var(--accent); color: var(--accent); }
+.nav-btn:disabled { opacity: .35; cursor: default; }
+.step-body { min-width: 0; }
+.step-top { display: flex; align-items: center; gap: 10px; }
+.dots { display: flex; flex-wrap: wrap; gap: 6px; }
+.dot-btn {
+  width: 2em; height: 2em; padding: 0; white-space: nowrap; border-radius: 50%; cursor: pointer; font-family: var(--font-num); font-size: .72em;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+.dot-btn.done { border-color: var(--accent); color: var(--accent); }
+.dot-btn.ask { border-style: dashed; }
+.dot-btn[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.cap-toggle {
+  margin-left: auto; display: inline-flex; align-items: center; gap: .45em; cursor: pointer;
+  font-size: .78em; font-weight: 600; color: var(--muted);
+  padding: .3em .7em; border: 1px solid var(--line); border-radius: 6px; background: transparent;
+}
+.cap-toggle::after {
+  content: ""; width: .45em; height: .45em; margin-bottom: .2em;
+  border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .2s;
+}
+.cap-toggle[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); }
+.cap-toggle[aria-expanded="true"]::after { transform: rotate(-135deg); margin-bottom: -.2em; }
+.caption { margin: .5em 0 .1em; font-size: 1.05em; line-height: 1.6; text-wrap: pretty; }
+
+@media (max-width: 900px) {
+  html, body { height: auto; }
+  .app { height: auto; min-height: 100%; }
+  .top { flex-wrap: wrap; }
+  .tabs { order: 3; flex-basis: 100%; }
+  .tools { margin-left: auto; }
+  .screen {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto;
+    grid-template-areas: "head" "stage" "steps" "panel";
+  }
+  .canvas-box { aspect-ratio: 1 / 1; max-height: 78vh; max-width: 100%; }
+  .panel { overflow: visible; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fold-body, .fold > summary::after, .cap-toggle::after, .quiz-choice { transition: none; }
+}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="icon-btn home-btn" href="https://fieldforge-maker.github.io/htmlEM/" aria-label="홈 (전체 목록으로)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h5v-6h4v6h5V9.5"/></svg><span>홈</span></a>
+    <h1><span class="chapter">CH27.</span>직류 회로</h1>
+    <nav class="tabs" aria-label="화면 목록">
+      <span class="tab-group">RC 회로</span>
+      <button class="tab" type="button" data-screen="s1" data-ref="Serway 27.4 그림 27.14–27.15 · 식 27.15–27.23 · 예제 27.7, 27.8 · 문제 21, 25"><span class="tab-no">1</span><span class="tab-label">충전과 방전</span></button>
+      <button class="tab" type="button" data-screen="s2" data-ref="Serway 27.4 마지막 문단 · 예제 27.9 · 문제 26, 30"><span class="tab-no">2</span><span class="tab-label">에너지</span></button>
+      <button class="tab" type="button" data-screen="s3" data-ref="Serway 퀴즈 27.5 그림 27.16 · 문제 23, 24 그림 P27.23"><span class="tab-no">3</span><span class="tab-label">가지가 있는 회로</span></button>
+    </nav>
+    <div class="tools">
+      <button class="icon-btn" id="themeBtn" type="button" aria-label="어두운 화면으로 바꾸기">
+        <svg id="icoMoon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg id="icoSun" hidden viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button class="icon-btn" id="fsBtn" type="button" aria-label="전체 화면">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M16 21h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== 화면 1: 충전과 방전 ===== -->
+  <main class="screen" id="s1" hidden>
+    <div class="screen-head">
+      <!-- 출처: Serway 27.4 · 그림 27.14–27.15 · 예제 27.7, 27.8 -->
+      <h2>축전기를 채우고 비우는 <span class="m">RC</span> 회로</h2>
+    </div>
+    <div class="stage-wrap">
+      <div class="canvas-box">
+        <canvas id="s1-stage" aria-label="전지, 세 자리 스위치(열림, a, b), 축전기 C, 저항 R로 된 RC 회로(교재 그림 27.14). 오른쪽에 저항과 축전기의 전위차 막대."></canvas>
+        <div class="stage-tools">
+          <button class="btn primary" type="button" id="s1-playBtn" hidden>▶ 재생</button>
+          <div class="seg" role="group" aria-label="스위치">
+            <button type="button" data-sw="open" aria-pressed="true">열림</button>
+            <button type="button" data-sw="a" aria-pressed="false">a (충전)</button>
+            <button type="button" data-sw="b" aria-pressed="false">b (방전)</button>
+          </div>
+          <button class="btn" type="button" id="s1-resetBtn">처음으로</button>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="key-current"></i>전류 <span class="m">i</span> (화살표가 길수록 세다)</span>
+        <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
+        <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>C</sub></span>
+        <span><i class="key-efield"></i>축전기 속 전기장</span>
+      </div>
+    </div>
+    <aside class="panel" id="s1-panel" aria-label="공식, 그래프, 값과 조절">
+      <section class="law-card" aria-label="RC 회로의 고리 법칙">
+        <p class="law-big">ℰ − <span class="frac"><span><span class="m">q</span></span><span><span class="m">C</span></span></span> − <span class="m">iR</span> = 0</p>
+        <p class="law-sub">충전: <span class="m">q</span> = <span class="m">C</span>ℰ(1 − <span class="m">e</span><sup>−<span class="m">t</span>/τ</sup>), &nbsp;<span class="m">i</span> = <span class="frac"><span>ℰ</span><span><span class="m">R</span></span></span><span class="m">e</span><sup>−<span class="m">t</span>/τ</sup>, &nbsp;τ = <span class="m">RC</span></p>
+        <p class="law-note">방전(전지 없음): <span class="m">q</span> = <span class="m">Q</span><sub>i</sub><span class="m">e</span><sup>−<span class="m">t</span>/τ</sup>, &nbsp;<span class="m">i</span> = −(<span class="m">Q</span><sub>i</sub>/<span class="m">RC</span>)<span class="m">e</span><sup>−<span class="m">t</span>/τ</sup> &nbsp;(식 27.22, 27.23)</p>
+      </section>
+      <section class="quiz" hidden></section>
+      <div class="view-toggles toggles" role="group" aria-label="보기">
+        <label><input type="checkbox" id="s1-vChk" checked><span>전위차 표시</span></label>
+      </div>
+      <details class="fold" open>
+        <summary><span><span class="m">q</span>(<span class="m">t</span>), <span class="m">i</span>(<span class="m">t</span>)</span></summary>
+        <div class="fold-body"><div class="graph-box tall"><canvas id="s1-graph" aria-label="축전기 전하량과 회로 전류의 시간 그래프 (지난 24 s). 교재 그림 27.15"></canvas></div></div>
+      </details>
+      <details class="fold">
+        <summary>값</summary>
+        <div class="fold-body"><dl class="kv" id="s1-kv"></dl>
+          <p class="geo">전류는 그림처럼 저항을 위에서 아래로 지날 때 +(시계 방향). 방전 전류는 −로 나온다(식 27.23).</p>
+          <p class="geo">화살표의 길이가 전류의 세기다. 화살표가 움직이는 빠르기는 일부러 느리게 그렸다: 도선 속 전자의 실제 유동 속력은 1초에 1 mm도 안 된다.</p></div>
+      </details>
+      <details class="fold">
+        <summary>조절</summary>
+        <div class="fold-body">
+          <div class="ctrl-pair">
+            <div class="ctrl">
+              <label for="s1-eIn">기전력 ℰ</label><output id="s1-eOut" for="s1-eIn"></output>
+              <input type="range" id="s1-eIn" min="3" max="24" step="0.5" value="12">
+            </div>
+            <div class="ctrl">
+              <label for="s1-cIn">전기용량 <span class="m">C</span></label><output id="s1-cOut" for="s1-cIn"></output>
+              <input type="range" id="s1-cIn" min="1" max="10" step="0.5" value="5">
+            </div>
+          </div>
+          <div class="ctrl">
+            <label for="s1-rIn">저항 <span class="m">R</span></label><output id="s1-rOut" for="s1-rIn"></output>
+            <input type="range" id="s1-rIn" min="100" max="1600" step="50" value="800">
+          </div>
+          <p class="geo">전지의 내부 저항은 0. 기본값은 교재 예제 27.7(ℰ = 12.0 V, <span class="m">C</span> = 5.00 μF, <span class="m">R</span> = 800 kΩ → τ = 4.00 s). 화면 속 시간은 실제와 같다.</p>
+        </div>
+      </details>
+    </aside>
+    <footer class="steps"></footer>
+  </main>
+
+  <!-- ===== 화면 2: 에너지 ===== -->
+  <main class="screen" id="s2" hidden>
+    <div class="screen-head">
+      <!-- 출처: Serway 27.4 마지막 문단 · 예제 27.9 · 문제 26, 30 -->
+      <h2>전지가 한 일은 어디로 갈까?</h2>
+    </div>
+    <div class="stage-wrap">
+      <div class="canvas-box">
+        <canvas id="s2-stage" aria-label="교재 그림 27.14의 RC 회로. 오른쪽에 전지가 한 일, 축전기의 전기 에너지, 저항의 열 막대."></canvas>
+        <div class="stage-tools">
+          <button class="btn primary" type="button" id="s2-playBtn" hidden>▶ 재생</button>
+          <div class="seg" role="group" aria-label="스위치">
+            <button type="button" data-sw="open" aria-pressed="true">열림</button>
+            <button type="button" data-sw="a" aria-pressed="false">a (충전)</button>
+            <button type="button" data-sw="b" aria-pressed="false">b (방전)</button>
+          </div>
+          <button class="btn" type="button" id="s2-resetBtn">처음으로</button>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="key-current"></i>전류 <span class="m">i</span></span>
+        <span>□ 전지가 한 일 <span class="m">W</span></span>
+        <span style="color:var(--efield)">■ 축전기의 에너지 <span class="m">U</span><sub>C</sub></span>
+        <span style="color:var(--heat)">■ 저항의 열 (내부 에너지) <span class="m">E</span><sub>R</sub></span>
+      </div>
+    </div>
+    <aside class="panel" id="s2-panel" aria-label="공식, 그래프, 값과 조절">
+      <section class="law-card" aria-label="RC 회로의 에너지">
+        <p class="law-big"><span class="m">W</span> = <span class="m">U</span><sub>C</sub> + <span class="m">E</span><sub>R</sub></p>
+        <p class="law-sub"><span class="m">W</span> = <span class="m">Q</span><sub>max</sub>ℰ = <span class="m">C</span>ℰ<sup>2</sup>, &nbsp;<span class="m">U</span><sub>C</sub> = <span class="frac"><span><span class="m">q</span><sup>2</sup></span><span>2<span class="m">C</span></span></span>, &nbsp;<span class="m">E</span><sub>R</sub> = ∫<span class="m">i</span><sup>2</sup><span class="m">R</span> d<span class="m">t</span></p>
+      </section>
+      <section class="quiz" hidden></section>
+      <details class="fold" open>
+        <summary>에너지와 일률의 시간 그래프</summary>
+        <div class="fold-body"><div class="graph-box tall"><canvas id="s2-graph" aria-label="전지가 한 일, 축전기의 에너지, 저항의 열(위)과 그 일률(아래)의 시간 그래프"></canvas></div></div>
+      </details>
+      <details class="fold">
+        <summary>값</summary>
+        <div class="fold-body"><dl class="kv" id="s2-kv"></dl>
+          <p class="geo">회로를 처음 닫은 때부터 쌓은 값. 막대는 <span class="m">C</span>ℰ<sup>2</sup>을 100 %로 잰다.</p></div>
+      </details>
+      <details class="fold">
+        <summary>조절</summary>
+        <div class="fold-body">
+          <div class="ctrl">
+            <label for="s2-rIn">저항 <span class="m">R</span></label><output id="s2-rOut" for="s2-rIn"></output>
+            <input type="range" id="s2-rIn" min="100" max="1600" step="50" value="800">
+          </div>
+          <p class="geo">ℰ = 12.0 V, <span class="m">C</span> = 5.00 μF (예제 27.7). 전지의 내부 저항은 0. 화면 속 시간은 실제와 같다.</p>
+        </div>
+      </details>
+    </aside>
+    <footer class="steps"></footer>
+  </main>
+
+  <!-- ===== 화면 3: 가지가 있는 회로 ===== -->
+  <main class="screen" id="s3" hidden>
+    <div class="screen-head">
+      <!-- 출처: Serway 퀴즈 27.5 그림 27.16 · 문제 23, 24 -->
+      <h2>가지가 있는 <span class="m">RC</span> 회로</h2>
+    </div>
+    <div class="stage-wrap">
+      <div class="canvas-box">
+        <canvas id="s3-stage" aria-label="장면에 따라 교재 그림 27.16(퀴즈 27.5)의 회로 또는 문제 23의 회로. 가지마다 전류의 크기와 방향."></canvas>
+        <div class="stage-tools">
+          <div class="seg" role="group" aria-label="회로">
+            <button type="button" data-scene="A" aria-pressed="true">퀴즈 27.5</button>
+            <button type="button" data-scene="B" aria-pressed="false">문제 23</button>
+          </div>
+          <button class="btn primary" type="button" id="s3-playBtn" hidden>▶ 재생</button>
+          <button class="btn" type="button" id="s3-swBtn">S 닫기</button>
+          <button class="btn" type="button" id="s3-resetBtn">처음으로</button>
+        </div>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span><i class="key-current"></i>전류 (화살표가 길수록 세다)</span>
+        <span><i class="key-efield"></i>축전기 속 전기장</span>
+      </div>
+    </div>
+    <aside class="panel" id="s3-panel" aria-label="공식, 그래프, 값">
+      <section class="law-card" aria-label="키르히호프의 법칙">
+        <p class="law-big">Δ<span class="m">V</span><sub>C</sub> = <span class="frac"><span><span class="m">q</span></span><span><span class="m">C</span></span></span></p>
+        <p class="law-sub">고리: ΣΔ<span class="m">V</span> = 0 &nbsp;·&nbsp; 분기점: Σ<span class="m">I</span><sub>들어옴</sub> = Σ<span class="m">I</span><sub>나감</sub></p>
+      </section>
+      <section class="quiz" hidden></section>
+      <details class="fold" open>
+        <summary>전류와 축전기 전압의 시간 그래프</summary>
+        <div class="fold-body"><div class="graph-box tall"><canvas id="s3-graph" aria-label="가지 전류들과 축전기 전압의 시간 그래프"></canvas></div></div>
+      </details>
+      <details class="fold">
+        <summary>값</summary>
+        <div class="fold-body"><dl class="kv" id="s3-kv"></dl>
+          <p class="geo" id="s3-note"></p></div>
+      </details>
+    </aside>
+    <footer class="steps"></footer>
+  </main>
+
+</div>
+
+<script>
+/* ================= 공통 틀 (CH29·CH30과 같음) =================
+   화면 하나 = <main class="screen" id="sN" hidden> + EM.register({ id, steps, init, enterStep, draw, show?, hide? }).
+   틀이 맡는 일: 탭과 주소(#sN), 단계 레일(◀ 번호 설명 ▶), 키보드, 테마, 전체 화면, 크기 변화 시 다시 그리기.
+   CH30에서 더한 일: 단계에 quiz가 있으면 계기판의 퀴즈 카드에 문제를 보이고, reveal인 단계에서 정답과 까닭을 보인다.
+   CH31에서 더한 일: 정답이 여럿인 퀴즈(answer: [번호, …])와 보기 여섯 개(a–f). */
+const EM = (() => {
+  'use strict';
+  const TAU = Math.PI * 2;
+  const MU0 = 4e-7 * Math.PI;
+  const root = document.documentElement;
+  const C = {}, F = {};                 // 현재 테마의 색과 글꼴 (테마가 바뀌면 같은 객체를 갱신)
+  const screens = new Map();
+  let active = null;
+  let captionOpen = false;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function readTheme() {
+    const cs = getComputedStyle(root);
+    const g = n => cs.getPropertyValue(n).trim();
+    Object.assign(C, {
+      stage: g('--stage'), panel: g('--panel'), paper: g('--paper'), ink: g('--ink'), muted: g('--muted'), line: g('--line'),
+      accent: g('--accent'), accentSoft: g('--accent-soft'),
+      field: g('--field'), current: g('--current'), path: g('--path'), efield: g('--efield'), neg: g('--neg'), heat: g('--heat'),
+      core1: g('--core-1'), core2: g('--core-2'), metal1: g('--metal-1'), metal2: g('--metal-2'),
+      wire: g('--wire'), wireHi: g('--wire-hi'),
+    });
+    Object.assign(F, { ui: g('--font-ui'), math: g('--font-math'), num: g('--font-num') });
+  }
+
+  /* 그리기 도구 */
+  function fitCanvas(cv, ctx) {
+    const rect = cv.getBoundingClientRect();
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const w = Math.max(1, Math.round(rect.width * dpr)), h = Math.max(1, Math.round(rect.height * dpr));
+    if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w: rect.width, h: rect.height };
+  }
+  // (x, y)가 화살촉 끝, (ux, uy)는 단위 방향
+  function arrowHead(ctx, x, y, ux, uy, size, color) {
+    const px = -uy, py = ux;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x - ux * size + px * size * 0.55, y - uy * size + py * size * 0.55);
+    ctx.lineTo(x - ux * size - px * size * 0.55, y - uy * size - py * size * 0.55);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+  }
+  // 꼬리가 (x, y)인 길이 len의 화살표 (벡터는 그 위치에서 시작한다)
+  function arrow(ctx, x, y, ux, uy, len, color, width) {
+    if (len < 2) return;
+    const head = Math.min(len * 0.5, 7 + width * 1.6);
+    const x1 = x + ux * len, y1 = y + uy * len;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x1 - ux * head * 0.7, y1 - uy * head * 0.7);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
+    ctx.stroke();
+    arrowHead(ctx, x1, y1, ux, uy, head, color);
+  }
+  // 꼬리가 (x, y)이고 화면 벡터가 (vx, vy) px인 화살표
+  function vec(ctx, x, y, vx, vy, color, width) {
+    const len = Math.hypot(vx, vy);
+    if (len < 2) return;
+    arrow(ctx, x, y, vx / len, vy / len, len, color, width);
+  }
+  // 배경색 테두리를 두른 글자 (선과 겹쳐도 읽히게)
+  function haloText(ctx, text, x, y, color, font, align = 'left', halo = C.stage) {
+    ctx.font = font; ctx.textAlign = align; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = halo;
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
+  // 글꼴이 섞인 한 줄 [[글, 글꼴, 세로 어긋남], ...]. align: 'left' | 'center' | 'right'. halo면 배경색 테두리
+  function runs(ctx, items, x, y, color, { align = 'left', halo = false } = {}) {
+    ctx.textBaseline = 'middle';
+    let total = 0;
+    for (const [t, font] of items) { ctx.font = font; total += ctx.measureText(t).width; }
+    if (align === 'center') x -= total / 2; else if (align === 'right') x -= total;
+    const x0 = x;
+    ctx.textAlign = 'left';
+    if (halo) {
+      ctx.lineJoin = 'round'; ctx.lineWidth = 5; ctx.strokeStyle = typeof halo === 'string' ? halo : C.stage;
+      let xx = x;
+      for (const [t, font, dy = 0] of items) { ctx.font = font; ctx.strokeText(t, xx, y + dy); xx += ctx.measureText(t).width; }
+    }
+    ctx.fillStyle = color;
+    for (const [t, font, dy = 0, col] of items) {
+      ctx.font = font;
+      if (col) ctx.fillStyle = col;
+      ctx.fillText(t, x, y + dy);
+      if (col) ctx.fillStyle = color;
+      x += ctx.measureText(t).width;
+    }
+    return { x0, x1: x, w: total };
+  }
+  // ⊙(kind 'dot', 종이면에서 나옴) / ⊗(kind 'cross', 들어감). 색을 주지 않으면 전류색
+  function marker(ctx, x, y, r, kind, color = C.current, fill = C.stage) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU);
+    ctx.fillStyle = fill; ctx.fill();
+    ctx.lineWidth = Math.max(1.6, r * 0.18); ctx.strokeStyle = color; ctx.stroke();
+    if (kind === 'dot') {
+      ctx.beginPath(); ctx.arc(x, y, r * 0.3, 0, TAU); ctx.fillStyle = color; ctx.fill();
+    } else {
+      const d = r * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(x - d, y - d); ctx.lineTo(x + d, y + d);
+      ctx.moveTo(x + d, y - d); ctx.lineTo(x - d, y + d);
+      ctx.stroke();
+    }
+  }
+  // 토큰 색(#rgb, #rrggbb, rgb())에 투명도를 준다. 읽지 못하면 원래 색
+  function alpha(col, a) {
+    let m = /^#([0-9a-f]{3})$/i.exec(col);
+    if (m) col = '#' + [...m[1]].map(c => c + c).join('');
+    m = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(col);
+    if (m) return `rgba(${parseInt(m[1], 16)}, ${parseInt(m[2], 16)}, ${parseInt(m[3], 16)}, ${a})`;
+    m = /^rgba?\(([^)]+)\)/i.exec(col);
+    if (m) { const [r, g, b] = m[1].split(/[\s,/]+/).map(parseFloat); return `rgba(${r}, ${g}, ${b}, ${a})`; }
+    return col;
+  }
+  const remPx = () => parseFloat(getComputedStyle(document.body).fontSize) || 16;
+  function niceStep(v) {
+    const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e;
+    return (f < 1.5 ? 1 : f < 3.5 ? 2 : f < 7.5 ? 5 : 10) * e;
+  }
+  const minus = s => String(s).replace(/-/g, '−');
+  // 유효숫자 2–3자리로 (작은 수는 0.0x처럼)
+  function fmt(v, d = 2) {
+    if (!isFinite(v)) return '–';
+    const a = Math.abs(v);
+    if (a < 1e-12) return '0';
+    const p = Math.max(0, d - 1 - Math.floor(Math.log10(a)));
+    return minus(v.toFixed(Math.min(p, 6)));
+  }
+
+  /* 글 조각 */
+  const m = s => `<span class="m">${s}</span>`;
+  const mv = s => `<b class="mv">${s}</b>`;
+  const DOT = '<i class="sym dot"></i>', CROSS = '<i class="sym cross"></i>';
+  const frac = (top, bottom) => `<span class="frac"><span>${top}</span><span>${bottom}</span></span>`;
+
+  /* 움직임: 0→1로 가는 e를 onUpdate에 넘긴다. 움직임 줄이기 설정이면 바로 끝낸다. */
+  function tween(dur, onUpdate, { ease = 'inOut', onDone } = {}) {
+    let raf = 0;
+    if (reduceMotion.matches || dur <= 0) { onUpdate(1); if (onDone) onDone(); return { cancel() {} }; }
+    const t0 = performance.now();
+    const tick = now => {
+      const t = Math.min(1, (now - t0) / dur);
+      const e = ease === 'linear' ? t : (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+      onUpdate(e);
+      if (t < 1) raf = requestAnimationFrame(tick);
+      else { raf = 0; if (onDone) onDone(); }
+    };
+    raf = requestAnimationFrame(tick);
+    return { cancel() { if (raf) cancelAnimationFrame(raf); raf = 0; } };
+  }
+  // 계속 도는 움직임: fn(dt초)를 매 프레임 부른다. 화면의 show/hide에서 start/stop 할 것.
+  function loop(fn) {
+    let raf = 0, last = 0;
+    const tick = now => {
+      const dt = last ? Math.min(0.1, (now - last) / 1000) : 0;
+      last = now;
+      fn(dt);
+      raf = requestAnimationFrame(tick);
+    };
+    return {
+      start() { if (!raf) { last = 0; raf = requestAnimationFrame(tick); } },
+      stop() { if (raf) cancelAnimationFrame(raf); raf = 0; },
+      get running() { return raf !== 0; },
+    };
+  }
+
+  /* 화면 등록과 전환 */
+  function register(def) { screens.set(def.id, def); return def; }
+  function requestDraw(def) {
+    if (!def || def.raf) return;
+    def.raf = requestAnimationFrame(() => { def.raf = 0; if (def.el && !def.el.hidden) def.draw(); });
+  }
+
+  const ICON_PREV = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ICON_NEXT = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
+
+  const ICON_PLAY = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
+  function buildRail(def) {
+    const rail = def.el.querySelector('.steps');
+    const nextBtn = `<button class="nav-btn primary" type="button" aria-label="다음 단계">${ICON_NEXT}</button>`;
+    rail.innerHTML =
+      `<button class="nav-btn" type="button" aria-label="이전 단계">${ICON_PREV}</button>` +
+      '<div class="step-body"><div class="step-top"><div class="dots" role="group" aria-label="단계"></div>' +
+      '<button class="cap-toggle" type="button" aria-expanded="false">설명</button></div>' +
+      '<p class="caption" hidden aria-live="polite"></p></div>' +
+      (def.play ? `<div class="nav-end"><button class="nav-btn play-next" type="button" aria-label="다음 단계로 넘기고 재생" title="넘기고 재생">${ICON_PLAY}</button>${nextBtn}</div>` : nextBtn);
+    const prev = rail.querySelector('.nav-btn'), next = rail.querySelector('.nav-btn.primary'), playNext = rail.querySelector('.play-next');
+    const dotsBox = rail.querySelector('.dots');
+    const toggle = rail.querySelector('.cap-toggle');
+    const caption = rail.querySelector('.caption');
+    const dots = def.steps.map((S, k) => {
+      const d = document.createElement('button');
+      d.type = 'button'; d.className = 'dot-btn' + (S.quiz && !S.reveal ? ' ask' : ''); d.textContent = k + 1;
+      d.setAttribute('aria-label', `${k + 1}단계${S.quiz && !S.reveal ? ' (퀴즈)' : ''}`);
+      d.addEventListener('click', () => goStep(def, k));
+      dotsBox.appendChild(d);
+      return d;
+    });
+    prev.addEventListener('click', () => goStep(def, def.step - 1));
+    next.addEventListener('click', () => goStep(def, def.step + 1));
+    if (playNext) playNext.addEventListener('click', () => { goStep(def, def.step + 1); startPlay(def); });
+    toggle.addEventListener('click', () => setCaptionOpen(!captionOpen));
+    def.rail = { prev, next, playNext, dots, toggle, caption };
+    buildQuiz(def);
+  }
+  // 설명 문구는 모든 화면이 같이 열고 닫는다
+  function setCaptionOpen(open) {
+    captionOpen = open;
+    for (const def of screens.values()) {
+      if (!def.rail) continue;
+      def.rail.toggle.setAttribute('aria-expanded', String(open));
+      def.rail.caption.hidden = !open;
+    }
+  }
+
+  /* 퀴즈 카드: 단계의 quiz = { q, choices: [...], answer: 번호 또는 [번호, …], why }. reveal인 단계에서 정답을 보인다.
+     보기를 누르면 표시만 해 둔다(손든 답). '정답' 단추는 다음 단계(같은 퀴즈의 reveal)로 넘긴다. */
+  const KEYS = ['a', 'b', 'c', 'd', 'e', 'f'];
+  function buildQuiz(def) {
+    const box = def.el.querySelector('.quiz');
+    if (!box) return;
+    box.setAttribute('aria-live', 'polite');
+    box.innerHTML = '<p class="quiz-tag"></p><p class="quiz-q"></p><div class="quiz-choices" role="group" aria-label="보기"></div>' +
+      '<p class="quiz-why" hidden></p><div class="quiz-foot"><button class="btn quiz-btn" type="button">정답 보기</button></div>';
+    const btn = box.querySelector('.quiz-btn');
+    btn.addEventListener('click', () => {
+      const S = def.steps[def.step], N = def.steps[def.step + 1];
+      if (N && N.quiz === S.quiz && N.reveal) goStep(def, def.step + 1);
+    });
+    def.quiz = { box, tag: box.querySelector('.quiz-tag'), q: box.querySelector('.quiz-q'), list: box.querySelector('.quiz-choices'),
+      why: box.querySelector('.quiz-why'), btn, cur: null, items: [] };
+  }
+  function renderQuiz(def, i) {
+    const Z = def.quiz;
+    if (!Z) return;
+    const S = def.steps[i], Q = S.quiz;
+    Z.box.hidden = !Q;
+    if (!Q) return;
+    if (Z.cur !== Q) {
+      Z.cur = Q;
+      Z.tag.textContent = Q.tag || '생각해 보기';
+      Z.q.innerHTML = Q.q;
+      Z.list.innerHTML = '';
+      Z.list.classList.toggle('grid', !!Q.grid);
+      Z.items = Q.choices.map((c, k) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'quiz-choice';
+        b.innerHTML = `<span class="qk">${KEYS[k]}</span><span>${c}</span>`;
+        b.addEventListener('click', () => { if (!Z.box.classList.contains('revealed')) b.classList.toggle('picked'); });
+        Z.list.appendChild(b);
+        return b;
+      });
+      Z.why.innerHTML = Q.why;
+    }
+    const shown = !!S.reveal;
+    Z.box.classList.toggle('revealed', shown);
+    const ans = [].concat(Q.answer);
+    Z.items.forEach((b, k) => b.classList.toggle('right', ans.includes(k)));
+    Z.why.hidden = !shown;
+    Z.btn.parentElement.hidden = shown;
+  }
+
+  /* (CH27) 재생 상태: 화면 위 '재생' 단추는 재생 → 멈춤 → 계속. def.play()는 그 단계의 시연(script)을 처음부터 시작하고,
+     시연이 없으면 false를 돌려준다. 멈춤은 화면의 움직임(def.hide/def.show)을 잠시 세운다. */
+  const PLAY_LABEL = { idle: '▶ 재생', running: '❚❚ 멈춤', paused: '▶ 계속' };
+  function setPlay(def, st) {
+    def.playState = st;
+    if (def.playBtn) { def.playBtn.textContent = PLAY_LABEL[st]; def.playBtn.classList.toggle('primary', st !== 'running'); }
+  }
+  function startPlay(def) {
+    if (!def.play) return;
+    if (def.playState === 'paused' && def.show) def.show();
+    setPlay(def, def.play() === false ? 'idle' : 'running');
+  }
+  function togglePlay(def) {
+    if (def.playState === 'running') { if (def.hide) def.hide(); setPlay(def, 'paused'); }
+    else if (def.playState === 'paused') { if (def.show) def.show(); setPlay(def, 'running'); }
+    else startPlay(def);
+  }
+  // 멈춘 채로 다른 조작을 하면 움직임을 다시 켠다
+  function wake(def) { if (def && def.playState === 'paused') { if (def.show) def.show(); setPlay(def, 'running'); } }
+
+  function goStep(def, i, initial = false) {
+    i = Math.max(0, Math.min(def.steps.length - 1, i));
+    const forward = !initial && i === def.step + 1;
+    def.step = i;
+    const { prev, next, dots, caption } = def.rail;
+    dots.forEach((d, k) => {
+      if (k === i) d.setAttribute('aria-current', 'step'); else d.removeAttribute('aria-current');
+      d.classList.toggle('done', k < i);
+    });
+    prev.disabled = i === 0;
+    next.disabled = i === def.steps.length - 1;
+    if (def.rail.playNext) def.rail.playNext.disabled = next.disabled;
+    if (def.play) { if (def.playState === 'paused' && def.show) def.show(); setPlay(def, 'idle'); }
+    caption.innerHTML = def.steps[i].cap;
+    renderQuiz(def, i);
+    def.enterStep(i, { forward, initial });
+    requestDraw(def);
+  }
+
+  function show(id) {
+    const def = screens.get(id);
+    if (!def || def === active) return;
+    if (active) { active.el.hidden = true; if (active.hide) active.hide(); }
+    active = def;
+    def.el.hidden = false;
+    document.querySelectorAll('.tab[data-screen]').forEach(t => {
+      if (t.dataset.screen === id) { t.setAttribute('aria-current', 'page'); t.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }
+      else t.removeAttribute('aria-current');
+    });
+    if (def.show) def.show();
+    if (def.playState === 'paused') setPlay(def, 'running');
+    requestDraw(def);
+  }
+  function route() {
+    const id = location.hash.slice(1);
+    // 주소에 화면이 없으면 보이는 첫 탭의 화면
+    const first = document.querySelector('.tab[data-screen]:not([hidden]):not(:disabled)');
+    show(screens.has(id) ? id : first ? first.dataset.screen : screens.keys().next().value);
+  }
+
+  function toggleFullscreen() {
+    try {
+      if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+      else if (root.requestFullscreen) root.requestFullscreen().catch(() => {});
+    } catch (_) { /* 전체 화면을 지원하지 않는 환경 */ }
+  }
+
+  function boot() {
+    const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const isDark = () => root.dataset.theme ? root.dataset.theme === 'dark' : darkQuery.matches;
+    const syncTheme = () => {
+      readTheme();
+      const dark = isDark();
+      document.getElementById('icoMoon').hidden = dark;
+      document.getElementById('icoSun').hidden = !dark;
+      document.getElementById('themeBtn').setAttribute('aria-label', dark ? '밝은 화면으로 바꾸기' : '어두운 화면으로 바꾸기');
+      requestDraw(active);
+    };
+    try { const saved = localStorage.getItem('ch27-theme'); if (saved === 'light' || saved === 'dark') root.dataset.theme = saved; } catch (_) { /* 저장소 없음 */ }
+    readTheme();
+
+    document.querySelectorAll('.tab[data-screen]').forEach(tab => {
+      const id = tab.dataset.screen;
+      if (!screens.has(id)) { tab.disabled = true; tab.title = '제작 예정'; return; }
+      tab.addEventListener('click', () => { if (location.hash !== '#' + id) location.hash = id; else show(id); });
+    });
+
+    for (const def of screens.values()) {
+      def.el = document.getElementById(def.id);
+      def.step = 0;
+      def.raf = 0;
+      buildRail(def);
+      def.init(def.el);
+      if (def.play) {
+        def.playBtn = document.getElementById(def.id + '-playBtn');
+        def.playBtn.addEventListener('click', () => togglePlay(def));
+      }
+      def.el.querySelectorAll('canvas').forEach(cv => new ResizeObserver(() => requestDraw(def)).observe(cv.parentElement));
+      def.el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => requestDraw(def)));
+      goStep(def, 0, true);
+    }
+
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      root.dataset.theme = next;
+      try { localStorage.setItem('ch27-theme', next); } catch (_) { /* 저장소 없음 */ }
+    });
+    new MutationObserver(syncTheme).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+    darkQuery.addEventListener('change', syncTheme);
+    document.getElementById('fsBtn').addEventListener('click', toggleFullscreen);
+
+    document.addEventListener('keydown', e => {
+      if (e.altKey || e.ctrlKey || e.metaKey || !active) return;
+      const t = e.target;
+      if (t instanceof HTMLInputElement || t instanceof HTMLSelectElement || t instanceof HTMLTextAreaElement) return;
+      if ((t instanceof HTMLButtonElement || (t instanceof HTMLElement && t.tagName === 'SUMMARY')) && (e.key === ' ' || e.key === 'Enter')) return;
+      if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); goStep(active, active.step + 1); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); goStep(active, active.step - 1); }
+      else if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+      else if (/^[1-9]$/.test(e.key) && +e.key <= active.steps.length) goStep(active, +e.key - 1);
+    });
+
+    window.addEventListener('hashchange', route);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => requestDraw(active));
+    route();
+    syncTheme();
+  }
+
+  return {
+    TAU, MU0, C, F, reduceMotion,
+    fitCanvas, arrowHead, arrow, vec, haloText, runs, marker, alpha, remPx, niceStep, minus, fmt,
+    m, mv, DOT, CROSS, frac,
+    tween, loop, register, requestDraw, boot, wake,
+  };
+})();
+
+/* ================= 공용 그림 조각 (CH30에서 가져오고 CH31에서 더함) =================
+   CH30: 자기장 표시(× 들어감, • 나옴), 속도 화살표, 전하, 도선 위 전류 화살촉, 검류계, 저항, 시간 그래프.
+   CH31: 전지, 축전기, 코일 기호, 단자, 스위치 날, 불꽃, 에너지 막대, 용수철–물체. */
+const KIT = (() => {
+  'use strict';
+  const { TAU, C, F } = EM;
+
+  // 자기장 표시 하나. kind: 'in'(×) | 'out'(•). size: 반 너비(px)
+  function bMark(ctx, x, y, size, kind, color = C.field) {
+    if (kind === 'out') {
+      ctx.beginPath(); ctx.arc(x, y, Math.max(1.6, size * 0.42), 0, TAU); ctx.fillStyle = color; ctx.fill();
+      return;
+    }
+    ctx.beginPath();
+    ctx.moveTo(x - size, y - size); ctx.lineTo(x + size, y + size);
+    ctx.moveTo(x + size, y - size); ctx.lineTo(x - size, y + size);
+    ctx.strokeStyle = color; ctx.lineWidth = Math.max(1.3, size * 0.32); ctx.lineCap = 'round';
+    ctx.stroke();
+  }
+  // 직사각형 [x0, x1] × [y0, y1] (px) 안에 간격 step(px)으로 자기장 표시. (ox, oy): 무늬를 옮기는 양(px)
+  function bField(ctx, x0, y0, x1, y1, step, size, kind, color = C.field, ox = 0, oy = 0) {
+    const i0 = Math.ceil((x0 - ox) / step - 0.5), i1 = Math.floor((x1 - ox) / step - 0.5);
+    const j0 = Math.ceil((y0 - oy) / step - 0.5), j1 = Math.floor((y1 - oy) / step - 0.5);
+    for (let i = i0; i <= i1; i++) {
+      for (let j = j0; j <= j1; j++) {
+        const x = ox + (i + 0.5) * step, y = oy + (j + 0.5) * step;
+        if (x - size < x0 - 0.5 || x + size > x1 + 0.5 || y - size < y0 - 0.5 || y + size > y1 + 0.5) continue;
+        bMark(ctx, x, y, size, kind, color);
+      }
+    }
+  }
+  // 속도 화살표 ⇒ (두 줄 몸통, 속이 빈 화살촉). 꼬리가 (x, y)
+  function vArrow(ctx, x, y, ux, uy, len, color = C.ink, scale = 1) {
+    if (len < 6) return;
+    const g = 2.6 * scale, head = Math.min(len * 0.55, 12 * scale), hw = 8 * scale;
+    const px = -uy, py = ux;
+    const bx = x + ux * (len - head), by = y + uy * (len - head);
+    ctx.save();
+    ctx.strokeStyle = color; ctx.lineWidth = 1.7 * scale; ctx.lineJoin = 'miter'; ctx.lineCap = 'butt';
+    ctx.beginPath();
+    ctx.moveTo(x + px * g, y + py * g); ctx.lineTo(bx + px * g, by + py * g);
+    ctx.moveTo(x - px * g, y - py * g); ctx.lineTo(bx - px * g, by - py * g);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(bx + px * hw, by + py * hw); ctx.lineTo(x + ux * len, y + uy * len); ctx.lineTo(bx - px * hw, by - py * hw); ctx.closePath();
+    ctx.fillStyle = C.stage; ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  // 전하 ⊕ / ⊖. sign: +1 | −1
+  function charge(ctx, x, y, r, sign, { fill = true } = {}) {
+    const col = sign > 0 ? C.current : C.neg;
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU);
+    ctx.fillStyle = fill ? EM.alpha(col, 0.16) : C.stage; ctx.fill();
+    ctx.lineWidth = Math.max(1.4, r * 0.16); ctx.strokeStyle = col; ctx.stroke();
+    const d = r * 0.52;
+    ctx.beginPath();
+    ctx.moveTo(x - d, y); ctx.lineTo(x + d, y);
+    if (sign > 0) { ctx.moveTo(x, y - d); ctx.lineTo(x, y + d); }
+    ctx.lineWidth = Math.max(1.5, r * 0.2); ctx.lineCap = 'round'; ctx.stroke();
+  }
+
+  /* 꺾은선 경로: [[x, y], ...] (px). closed면 끝점에서 처음으로 이어진다 */
+  function pathInfo(pts, closed) {
+    const n = pts.length, segs = [];
+    let L = 0;
+    const last = closed ? n : n - 1;
+    for (let i = 0; i < last; i++) {
+      const a = pts[i], b = pts[(i + 1) % n], len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      segs.push({ a, b, len, s0: L });
+      L += len;
+    }
+    return { segs, L };
+  }
+  function pointAt(info, s) {
+    const { segs, L } = info;
+    if (!L) return null;
+    s = ((s % L) + L) % L;
+    let lo = 0, hi = segs.length - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (segs[mid].s0 <= s) lo = mid; else hi = mid - 1; }
+    const g = segs[lo], t = g.len ? (s - g.s0) / g.len : 0;
+    const ux = (g.b[0] - g.a[0]) / (g.len || 1), uy = (g.b[1] - g.a[1]) / (g.len || 1);
+    return { x: g.a[0] + (g.b[0] - g.a[0]) * t, y: g.a[1] + (g.b[1] - g.a[1]) * t, ux, uy, k: lo };
+  }
+  // 경로를 따라 흐르는 전류 화살촉. phase(px)는 흐른 거리, spacing 간격. skip(x, y)가 참인 자리는 건너뛴다
+  function flow(ctx, pts, closed, phase, spacing, size, color, a = 1, skip = null) {
+    const info = pathInfo(pts, closed);
+    if (!info.L || a <= 0.01) return;
+    const n = Math.max(1, Math.round(info.L / spacing)), sp = info.L / n;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, a);
+    for (let i = 0; i < n; i++) {
+      const s = ((i * sp + phase) % info.L + info.L) % info.L;
+      if (!closed && (s < size || s > info.L - size)) continue;
+      const p = pointAt(info, s);
+      if (skip && skip(p.x, p.y)) continue;
+      EM.arrowHead(ctx, p.x + p.ux * size * 0.5, p.y + p.uy * size * 0.5, p.ux, p.uy, size, color);
+    }
+    ctx.restore();
+  }
+  // (CH27) 전류 화살표: 길이 len(px)이 전류의 세기를 나타낸다. phase(px)로 천천히 움직인다.
+  // 꺾인 곳에 걸친 화살표는 그리지 않는다(도선 밖으로 삐져나가지 않게)
+  function flowVec(ctx, pts, closed, phase, spacing, len, color, width, skip = null) {
+    const info = pathInfo(pts, closed);
+    if (!info.L || len < 3) return;
+    const n = Math.max(1, Math.round(info.L / spacing)), sp = info.L / n;
+    for (let i = 0; i < n; i++) {
+      const s = ((i * sp + phase) % info.L + info.L) % info.L;
+      if (!closed && (s < len * 0.5 + 4 || s > info.L - len * 0.5 - 4)) continue;
+      const a = pointAt(info, s - len / 2), b = pointAt(info, s + len / 2), c = pointAt(info, s);
+      if (!a || !b || a.k !== b.k) continue;
+      if (skip && (skip(c.x, c.y) || skip(a.x, a.y) || skip(b.x, b.y))) continue;
+      EM.arrow(ctx, a.x, a.y, c.ux, c.uy, len, color, width);
+    }
+  }
+  function stroke(ctx, pts, closed, color, width, dash = null) {
+    ctx.save();
+    ctx.beginPath();
+    pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)));
+    if (closed) ctx.closePath();
+    if (dash) ctx.setLineDash(dash);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  // 검류계: 가운데가 0인 바늘. value는 −1…1 (넘치면 끝에서 멈춘다). label: 'G' 또는 'A'
+  function meter(ctx, cx, cy, r, value, { label = 'G', color = C.current } = {}) {
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU);
+    ctx.fillStyle = C.stage; ctx.fill();
+    ctx.lineWidth = Math.max(1.6, r * 0.09); ctx.strokeStyle = C.ink; ctx.stroke();
+    // 눈금: 가운데 조금 아래를 축으로 위쪽 ±50°
+    const px = cx, py = cy + r * 0.26, R = r * 1.08, span = 0.87;
+    ctx.lineWidth = Math.max(1, r * 0.05); ctx.strokeStyle = C.muted;
+    for (let k = -4; k <= 4; k++) {
+      const th = -Math.PI / 2 + span * k / 4, l = k === 0 ? 0.17 : 0.1;
+      const c = Math.cos(th), s = Math.sin(th);
+      const r0 = R * (0.78 - l), r1 = R * 0.78;
+      ctx.beginPath(); ctx.moveTo(px + c * r0, py + s * r0); ctx.lineTo(px + c * r1, py + s * r1); ctx.stroke();
+    }
+    const v = Math.max(-1.08, Math.min(1.08, value));
+    const th = -Math.PI / 2 + span * v;
+    ctx.beginPath(); ctx.moveTo(px, py); ctx.lineTo(px + Math.cos(th) * R * 0.74, py + Math.sin(th) * R * 0.74);
+    ctx.strokeStyle = Math.abs(value) > 0.02 ? color : C.ink; ctx.lineWidth = Math.max(1.6, r * 0.08); ctx.lineCap = 'round'; ctx.stroke();
+    ctx.beginPath(); ctx.arc(px, py, Math.max(2, r * 0.09), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
+    if (label && r >= 12) {
+      ctx.font = `600 ${Math.max(9, r * 0.3)}px ${F.ui}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillStyle = C.muted; ctx.fillText(label, cx, cy + r * 0.64);
+    }
+    ctx.restore();
+  }
+  // 저항 (지그재그). (x0, y0)→(x1, y1) 사이, 진폭 amp px
+  function resistor(ctx, x0, y0, x1, y1, amp, color = C.ink, width = 2, n = 6) {
+    const L = Math.hypot(x1 - x0, y1 - y0), ux = (x1 - x0) / L, uy = (y1 - y0) / L, px = -uy, py = ux;
+    ctx.save();
+    ctx.beginPath(); ctx.moveTo(x0, y0);
+    for (let i = 0; i < n; i++) {
+      const t = (i + 0.5) / n, s = (i % 2 ? -1 : 1) * amp;
+      ctx.lineTo(x0 + ux * L * t + px * s, y0 + uy * L * t + py * s);
+    }
+    ctx.lineTo(x1, y1);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineJoin = 'miter'; ctx.lineCap = 'round'; ctx.stroke();
+    ctx.restore();
+  }
+  // 바늘이 실제 계기처럼 조금 늦게 따라오게 (임계 감쇠). state = { x, v }
+  function needle(state, target, dt, w = 22) {
+    if (!dt) return state.x;
+    const a = w * w * (target - state.x) - 2 * w * state.v;
+    state.v += a * dt; state.x += state.v * dt;
+    return state.x;
+  }
+
+  /* 시간 그래프: 위아래로 쌓은 칸들. opts = { tmin, tmax, panels: [{ label: [[글, 글꼴]], unit, lo, hi, series: [{ f(t) | pts, color, dash, width }], bands?, note? }], t (현재 시각, 세로선), xLabel } */
+  function timePlot(ctx, w, h, o) {
+    ctx.fillStyle = C.panel; ctx.fillRect(0, 0, w, h);
+    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
+    const L = fs * 3.4, Rp = 12, Top = fs * 2.2, Bot = fs * 2.6, gap = fs * 2.9;
+    const n = o.panels.length;
+    const ph = (h - Top - Bot - gap * (n - 1)) / n, pw = w - L - Rp;
+    const GX = t => L + (t - o.tmin) / (o.tmax - o.tmin) * pw;
+    const boxes = [];
+    o.panels.forEach((P, k) => {
+      const T0 = Top + k * (ph + gap);
+      let lo = P.lo, hi = P.hi;
+      const unit = P.step || EM.niceStep((hi - lo) / 3.2);
+      const GY = v => T0 + (hi - v) / (hi - lo) * ph;
+      boxes.push({ T0, ph, GY, lo, hi });
+      ctx.lineWidth = 1; ctx.strokeStyle = C.line;
+      for (let v = Math.ceil(lo / unit - 1e-9) * unit; v <= hi + 1e-9; v += unit) {
+        if (Math.abs(v) < 1e-9) continue;
+        const y = Math.round(GY(v)) + 0.5;
+        ctx.beginPath(); ctx.moveTo(L, y); ctx.lineTo(L + pw, y); ctx.stroke();
+      }
+      const tu = o.tstep || EM.niceStep((o.tmax - o.tmin) / 5);
+      for (let t = Math.ceil(o.tmin / tu - 1e-9) * tu; t <= o.tmax + 1e-9; t += tu) {
+        const x = Math.round(GX(t)) + 0.5;
+        ctx.beginPath(); ctx.moveTo(x, T0); ctx.lineTo(x, T0 + ph); ctx.stroke();
+      }
+      ctx.strokeStyle = C.muted;
+      const y0 = Math.round(GY(Math.max(lo, Math.min(hi, 0)))) + 0.5;
+      ctx.beginPath(); ctx.moveTo(L + 0.5, T0); ctx.lineTo(L + 0.5, T0 + ph); ctx.moveTo(L, y0); ctx.lineTo(L + pw, y0); ctx.stroke();
+      ctx.fillStyle = C.muted; ctx.font = `500 ${fs}px ${F.num}`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      const dec = unit < 1 ? (unit < 0.1 ? 2 : 1) : 0;
+      for (let v = Math.ceil(lo / unit - 1e-9) * unit; v <= hi + 1e-9; v += unit) ctx.fillText(EM.minus((Math.abs(v) < 1e-9 ? 0 : v).toFixed(dec)), L - 6, GY(v));
+      if (k === n - 1) {
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        for (let t = Math.ceil(o.tmin / tu - 1e-9) * tu; t <= o.tmax + 1e-9; t += tu) {
+          const dd = tu < 1 ? 1 : 0;
+          ctx.fillText(EM.minus(t.toFixed(dd)), GX(t), T0 + ph + 5);
+        }
+      }
+      EM.runs(ctx, P.label, 2, T0 - fs * 1.35, C.muted);      // (CH31) 이름표를 눈금 글자와 겹치지 않게 조금 위로
+      // (CH31) 칸 배경 띠: [{ t0, t1, color }]
+      if (P.bands) for (const B of P.bands) {
+        const xa = GX(Math.max(o.tmin, B.t0)), xb = GX(Math.min(o.tmax, B.t1));
+        if (xb > xa) { ctx.fillStyle = B.color; ctx.fillRect(xa, T0, xb - xa, ph); }
+      }
+      // 곡선
+      ctx.save();
+      ctx.beginPath(); ctx.rect(L, T0 - 3, pw + 2, ph + 6); ctx.clip();
+      for (const S of P.series) {
+        ctx.beginPath();
+        if (S.pts) S.pts.forEach(([t, v], i) => (i ? ctx.lineTo(GX(t), GY(v)) : ctx.moveTo(GX(t), GY(v))));
+        else {
+          const N = Math.max(60, Math.round(pw / 2));
+          const tEnd = S.until != null ? Math.min(o.tmax, S.until) : o.tmax;
+          for (let i = 0; i <= N; i++) {
+            const t = o.tmin + (tEnd - o.tmin) * i / N, v = S.f(t);
+            if (i) ctx.lineTo(GX(t), GY(v)); else ctx.moveTo(GX(t), GY(v));
+          }
+        }
+        ctx.setLineDash(S.dash || []);
+        ctx.strokeStyle = S.color; ctx.lineWidth = S.width || 2.5; ctx.lineJoin = 'round'; ctx.lineCap = S.dash ? 'butt' : 'round';
+        ctx.globalAlpha = S.alpha ?? 1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+      ctx.restore();
+      // (CH31) 칸 가운데 글: 숨긴 곡선 자리 등
+      if (P.note) EM.runs(ctx, P.note, L + pw / 2, T0 + ph / 2, C.muted, { align: 'center', halo: C.panel });
+    });
+    // 시간 축 이름
+    const fM = `italic ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`;
+    EM.runs(ctx, o.xLabel || [['t', fM], [' (s)', fU]], L + pw, h - fs * 0.7, C.muted, { align: 'right' });
+    // 지금 시각
+    if (o.t != null && o.t >= o.tmin && o.t <= o.tmax) {
+      const x = GX(o.t);
+      ctx.save();
+      ctx.setLineDash([3, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = C.accent;
+      ctx.beginPath(); ctx.moveTo(x, Top); ctx.lineTo(x, h - Bot); ctx.stroke();
+      ctx.restore();
+      o.panels.forEach((P, k) => {
+        const B = boxes[k];
+        for (const S of P.series) {
+          if (S.noDot || !S.f) continue;
+          const v = S.f(o.t);
+          if (v < B.lo - 1e-9 || v > B.hi + 1e-9) continue;
+          ctx.beginPath(); ctx.arc(x, B.GY(v), 5, 0, TAU);
+          ctx.fillStyle = S.color; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = C.panel; ctx.stroke();
+          break;
+        }
+      });
+    }
+    return { L, pw, GX, boxes, tOf: px => o.tmin + (px - L) / pw * (o.tmax - o.tmin) };
+  }
+
+
+  /* ---------- CH31에서 더한 회로 부품 ----------
+     두 단자 부품은 모두 (x0, y0) → (x1, y1) 선분 위에 그린다. 선분 양끝은 도선에 이어지는 단자다. */
+  const unitOf = (x0, y0, x1, y1) => { const L = Math.hypot(x1 - x0, y1 - y0) || 1; return { L, ux: (x1 - x0) / L, uy: (y1 - y0) / L }; };
+  function line(ctx, x0, y0, x1, y1, color, width, cap = 'round') {
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = cap; ctx.stroke();
+  }
+  // 전지: + 판(길고 가늘다)이 (x1, y1) 쪽. size: 긴 판의 반 길이(px)
+  function battery(ctx, x0, y0, x1, y1, size, { color = C.ink, wire = C.wire, wireW = 3 } = {}) {
+    const { L, ux, uy } = unitOf(x0, y0, x1, y1), px = -uy, py = ux;
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, g = Math.min(L * 0.18, size * 0.32);
+    const mx = cx - ux * g, my = cy - uy * g, qx = cx + ux * g, qy = cy + uy * g;
+    line(ctx, x0, y0, mx, my, wire, wireW);
+    line(ctx, qx, qy, x1, y1, wire, wireW);
+    line(ctx, mx + px * size * 0.5, my + py * size * 0.5, mx - px * size * 0.5, my - py * size * 0.5, color, Math.max(5, size * 0.24), 'butt');
+    line(ctx, qx + px * size, qy + py * size, qx - px * size, qy - py * size, color, Math.max(2.2, size * 0.09), 'butt');
+    return { plus: [qx, qy], minus: [mx, my], px, py };
+  }
+  // 축전기: 판 두 장. q는 (x1, y1) 쪽 판의 전하 비율(−1…1). 판 사이에 전기장 화살표(+ 판 → − 판)
+  function capacitor(ctx, x0, y0, x1, y1, size, { q = 0, gap = null, wire = C.wire, wireW = 3, signs = true, field = true, fs = 14 } = {}) {
+    const { L, ux, uy } = unitOf(x0, y0, x1, y1), px = -uy, py = ux;
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, g = gap ?? Math.min(L * 0.2, size * 0.36);
+    const ax = cx - ux * g, ay = cy - uy * g, bx = cx + ux * g, by = cy + uy * g;   // a 판 (x0 쪽), b 판 (x1 쪽)
+    line(ctx, x0, y0, ax, ay, wire, wireW);
+    line(ctx, bx, by, x1, y1, wire, wireW);
+    const plate = (x, y, s) => {
+      ctx.beginPath(); ctx.moveTo(x + px * size, y + py * size); ctx.lineTo(x - px * size, y - py * size);
+      const col = Math.abs(s) < 0.02 ? C.ink : s > 0 ? C.current : C.neg;
+      ctx.strokeStyle = col; ctx.lineWidth = Math.max(3.4, size * 0.12); ctx.lineCap = 'butt'; ctx.stroke();
+    };
+    plate(ax, ay, -q); plate(bx, by, q);
+    const aq = Math.abs(q);
+    if (field && aq > 0.03) {
+      const n = 5, sgn = q > 0 ? -1 : 1;          // 화살표 방향: + 판에서 − 판으로 (b → a 이면 −u)
+      ctx.save(); ctx.globalAlpha = Math.min(1, 0.25 + aq);
+      for (let k = 0; k < n; k++) {
+        const t = -0.72 + 1.44 * k / (n - 1), ox = cx + px * size * t, oy = cy + py * size * t;
+        const len = 2 * g * 0.72;
+        EM.vec(ctx, ox - sgn * ux * len / 2, oy - sgn * uy * len / 2, sgn * ux * len, sgn * uy * len, C.efield, Math.max(1.6, size * 0.045));
+      }
+      ctx.restore();
+    }
+    if (signs && aq > 0.03) {
+      const n = Math.max(1, Math.round(5 * aq)), off = g + Math.max(9, size * 0.22);
+      ctx.save(); ctx.font = `700 ${fs}px ${F.ui}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      for (let k = 0; k < n; k++) {
+        const t = n === 1 ? 0 : -0.75 + 1.5 * k / (n - 1);
+        const sx = cx + px * size * t, sy = cy + py * size * t;
+        ctx.fillStyle = q > 0 ? C.current : C.neg; ctx.fillText(q > 0 ? '+' : '−', sx + ux * off, sy + uy * off);
+        ctx.fillStyle = q > 0 ? C.neg : C.current; ctx.fillText(q > 0 ? '−' : '+', sx - ux * off, sy - uy * off);
+      }
+      ctx.restore();
+    }
+    return { a: [ax, ay], b: [bx, by], px, py };
+  }
+  // 코일(인덕터) 회로 기호: 고리 n개. amp: 고리 높이(px). side: 고리가 튀어나오는 쪽 (+1 | −1)
+  // depth면 나선을 살짝 위(시작 끝 쪽)에서 비스듬히 본 것으로 그려 뒤쪽 반(각 고리의 시작 끝 쪽 호)을 흐리게 한다.
+  // 그러면 감긴 방향이 보인다: 전류가 (x0, y0) → (x1, y1)로 흐를 때 코일 속 자기장은 (x1, y1) → (x0, y0) 쪽 (side = 1).
+  function coil(ctx, x0, y0, x1, y1, amp, { n = 5, color = C.current, width = 3, side = 1, lead = 0.12, depth = false } = {}) {
+    const { L, ux, uy } = unitOf(x0, y0, x1, y1), px = -uy * side, py = ux * side;
+    const s0 = L * lead, s1 = L * (1 - lead), Lc = s1 - s0;
+    const pitch = Lc / (n + 0.6), r = Math.max(pitch * 0.62, Lc / n * 0.5);
+    ctx.save();
+    ctx.strokeStyle = C.wire; ctx.lineWidth = width; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + ux * s0, y0 + uy * s0);
+    ctx.moveTo(x0 + ux * s1, y0 + uy * s1); ctx.lineTo(x1, y1); ctx.stroke();
+    // 늘어진 사이클로이드: 축 방향 s = s0 + r(1 − cos 2πu) + D·u, 옆 방향 h = amp·sin(2πu)를 0…n + ½까지.
+    // 반 바퀴를 더 그려 끝점이 축 위의 가장 먼 곳(s = s1)에 오게 한다 → 끝 도선과 끊김 없이 이어진다.
+    const M = Math.round((n + 0.5) * 36), D = (Lc - 2 * r) / (n + 0.5);
+    const pt = i => {
+      const u = i / 36, th = TAU * u;
+      const s = s0 + r * (1 - Math.cos(th)) + D * u, h = amp * Math.sin(th);
+      return [x0 + ux * s + px * h, y0 + uy * s + py * h, Math.cos(th) > 0];   // 셋째: 뒤쪽 반인가
+    };
+    const pass = back => {
+      ctx.beginPath();
+      let on = false, prev = pt(0);
+      for (let i = 1; i <= M; i++) {
+        const p = pt(i), isB = depth && (prev[2] && p[2]);
+        if (depth && isB !== back) { on = false; prev = p; continue; }
+        if (!on) { ctx.moveTo(prev[0], prev[1]); on = true; }
+        ctx.lineTo(p[0], p[1]); prev = p;
+      }
+      ctx.strokeStyle = color; ctx.lineWidth = back ? width * 0.7 : width; ctx.lineJoin = 'round';
+      ctx.globalAlpha = back ? 0.4 : 1; ctx.stroke(); ctx.globalAlpha = 1;
+    };
+    if (depth) pass(true);
+    pass(false);
+    ctx.restore();
+  }
+  // 단자 (작은 빈 원)
+  function terminal(ctx, x, y, r = 5, color = C.ink) {
+    ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fillStyle = C.stage; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = color; ctx.stroke();
+  }
+  // 스위치 날: 축 (x0, y0)에서 끝 (x1, y1) 쪽으로. open은 0(닫힘)…1(열림, 35° 들림)
+  function blade(ctx, x0, y0, x1, y1, open, { color = C.ink, width = 3, lift = 35 * Math.PI / 180, dir = -1 } = {}) {
+    const { L, ux, uy } = unitOf(x0, y0, x1, y1);
+    const a = Math.atan2(uy, ux) + dir * lift * Math.max(0, Math.min(1, open));
+    line(ctx, x0, y0, x0 + Math.cos(a) * L, y0 + Math.sin(a) * L, color, width);
+  }
+  // 불꽃: (x, y) 가운데, 크기 size(px). seed가 바뀌면 모양이 바뀐다
+  function spark(ctx, x, y, size, seed = 0, a = 1) {
+    if (a <= 0.01) return;
+    let r = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+    const rnd = () => { r = Math.sin(r * 12.9898 + 4.1414) * 43758.5453; return r - Math.floor(r); };
+    ctx.save();
+    ctx.globalAlpha = a;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, size * 1.3);
+    g.addColorStop(0, EM.alpha(C.efield, 0.55)); g.addColorStop(1, EM.alpha(C.efield, 0));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, size * 1.3, 0, TAU); ctx.fill();
+    for (let k = 0; k < 5; k++) {
+      const th = TAU * (k / 5 + rnd() * 0.15);
+      ctx.beginPath(); ctx.moveTo(x, y);
+      let px = x, py = y;
+      for (let j = 1; j <= 4; j++) {
+        const rr = size * j / 4, jt = (rnd() - 0.5) * 0.9;
+        px = x + Math.cos(th + jt) * rr; py = y + Math.sin(th + jt) * rr;
+        ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = k % 2 ? C.efield : '#FFD25A'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round'; ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // 에너지 막대: items = [{ label: [[글, 글꼴], ...], v: 0–1 (전체에 대한 비), color, outline? }], 상자 { x, y, w, h }
+  function energyBars(ctx, box, items, { fs = 14, title = null, ticks = true } = {}) {
+    const { x, y, w, h } = box;
+    const lab = fs * 3.0, top = title ? fs * 2.0 : fs * 0.6, left = ticks ? fs * 2.8 : 6;
+    const ph = h - lab - top, pw = w - left - 6;
+    const GY = v => y + top + (1 - v) * ph;
+    ctx.save();
+    if (title) EM.runs(ctx, title, x + left, y + fs * 0.8, C.muted);
+    ctx.lineWidth = 1; ctx.strokeStyle = C.line;
+    for (const v of [0.5, 1]) { const yy = Math.round(GY(v)) + 0.5; ctx.beginPath(); ctx.moveTo(x + left, yy); ctx.lineTo(x + left + pw, yy); ctx.stroke(); }
+    ctx.strokeStyle = C.muted;
+    ctx.beginPath(); ctx.moveTo(x + left + 0.5, GY(1)); ctx.lineTo(x + left + 0.5, GY(0) + 0.5); ctx.lineTo(x + left + pw, GY(0) + 0.5); ctx.stroke();
+    if (ticks) {
+      ctx.fillStyle = C.muted; ctx.font = `500 ${Math.round(fs * 0.85)}px ${F.num}`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      for (const v of [0, 0.5, 1]) ctx.fillText(String(Math.round(v * 100)), x + left - 5, GY(v));
+      ctx.textAlign = 'left'; ctx.fillText('%', x + left - fs * 2.4, GY(1) - fs * 0.9);
+    }
+    const n = items.length, slot = pw / n, bw = Math.min(slot * 0.5, fs * 3.2);
+    items.forEach((it, k) => {
+      const cx = x + left + slot * (k + 0.5), v = Math.max(0, Math.min(1.05, it.v));
+      if (v > 0.002) {
+        ctx.fillStyle = it.outline ? EM.alpha(it.color, 0.18) : it.color;
+        ctx.fillRect(cx - bw / 2, GY(v), bw, GY(0) - GY(v));
+        if (it.outline) { ctx.lineWidth = 2; ctx.strokeStyle = it.color; ctx.strokeRect(cx - bw / 2 + 1, GY(v) + 1, bw - 2, GY(0) - GY(v) - 1); }
+      }
+      EM.runs(ctx, it.label, cx, GY(0) + fs * 1.05, it.labelColor || it.color, { align: 'center' });
+      if (it.sub) EM.runs(ctx, it.sub, cx, GY(0) + fs * 2.45, C.muted, { align: 'center' });
+    });
+    ctx.restore();
+    return { GY, left, pw };
+  }
+  // 용수철–물체: 벽 (x0, y), 평형 자리 xe에서 x만큼 벗어난 물체(너비 bw). 감쇠기(dashpot)를 함께 그릴 수 있다
+  function springMass(ctx, x0, y, xe, x, bw, bh, { coils = 9, amp = 9, damper = false, fs = 14, vArrow = null } = {}) {
+    ctx.save();
+    ctx.fillStyle = EM.alpha(C.muted, 0.25);
+    ctx.fillRect(x0 - 10, y - bh * 0.9, 10, bh * 1.8);
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x0, y - bh * 0.9); ctx.lineTo(x0, y + bh * 0.9); ctx.stroke();
+    const xm = xe + x - bw / 2, ys = damper ? y - bh * 0.22 : y;
+    // 용수철 지그재그
+    const L = xm - x0, lead = Math.min(14, L * 0.12);
+    ctx.beginPath(); ctx.moveTo(x0, ys); ctx.lineTo(x0 + lead, ys);
+    const n = coils * 2;
+    for (let i = 1; i < n; i++) ctx.lineTo(x0 + lead + (L - 2 * lead) * i / n, ys + (i % 2 ? -amp : amp));
+    ctx.lineTo(xm - lead, ys); ctx.lineTo(xm, ys);
+    ctx.strokeStyle = C.ink; ctx.lineWidth = 1.8; ctx.lineJoin = 'round'; ctx.stroke();
+    if (damper) {
+      const yd = y + bh * 0.26, xc = x0 + L * 0.45;
+      ctx.beginPath(); ctx.moveTo(x0, yd); ctx.lineTo(xc - 16, yd);
+      ctx.moveTo(xc - 16, yd - 9); ctx.lineTo(xc + 14, yd - 9); ctx.moveTo(xc - 16, yd + 9); ctx.lineTo(xc + 14, yd + 9);
+      ctx.moveTo(xc - 16, yd - 9); ctx.lineTo(xc - 16, yd + 9);
+      ctx.moveTo(xc + 4, yd - 7); ctx.lineTo(xc + 4, yd + 7); ctx.moveTo(xc + 4, yd); ctx.lineTo(xm, yd);
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.8; ctx.stroke();
+    }
+    ctx.fillStyle = EM.alpha(C.neg, 0.18); ctx.strokeStyle = C.ink; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(xm, y - bh / 2, bw, bh, 4); ctx.fill(); ctx.stroke();
+    EM.runs(ctx, [['m', `italic ${Math.round(fs * 1.3)}px ${F.math}`]], xm + bw / 2, y, C.ink, { align: 'center' });
+    // 평형 자리
+    ctx.setLineDash([4, 4]); ctx.strokeStyle = C.muted; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(xe, y - bh * 0.95); ctx.lineTo(xe, y + bh * 0.95); ctx.stroke(); ctx.setLineDash([]);
+    if (vArrow && Math.abs(vArrow) > 14) EM.vec(ctx, xm + bw / 2 - vArrow / 2, y - bh / 2 - 12, vArrow, 0, C.ink, 2.6);
+    ctx.restore();
+  }
+
+  return { bMark, bField, vArrow, charge, pathInfo, pointAt, flow, flowVec, stroke, meter, resistor, needle, timePlot,
+    line, battery, capacitor, coil, terminal, blade, spark, energyBars, springMass };
+})();
+
+/* ================= CH27 공용: 캔버스 글꼴 (CH31과 같음) =================
+   그림 속 글자는 CH30 화면 2–5와 같게: 한글 fs = 본문의 0.8×1.5배, 기호(q, B, L …)는 그 1.5배. */
+const SF = fs => ({
+  fs,
+  ui: `600 ${fs}px ${EM.F.ui}`, uiS: `500 ${Math.round(fs * 0.9)}px ${EM.F.ui}`, uiXS: `500 ${Math.round(fs * 0.78)}px ${EM.F.ui}`,
+  mi: `italic ${Math.round((fs + 2) * 1.5)}px ${EM.F.math}`, mb: `700 ${Math.round((fs + 2) * 1.5)}px ${EM.F.math}`, m: `${Math.round((fs + 2) * 1.5)}px ${EM.F.math}`,
+  sub: `500 ${Math.round(fs * 0.72 * 1.5)}px ${EM.F.ui}`, subI: `italic ${Math.round(fs * 0.8 * 1.5)}px ${EM.F.math}`,
+  num: `600 ${fs}px ${EM.F.num}`, numS: `500 ${Math.round(fs * 0.85)}px ${EM.F.num}`,
+  mi2: `italic ${Math.round(fs * 1.25)}px ${EM.F.math}`, m2: `${Math.round(fs * 1.25)}px ${EM.F.math}`, sub2: `500 ${Math.round(fs * 0.8)}px ${EM.F.ui}`,
+});
+const stageFs = () => Math.max(12, Math.round(EM.remPx() * 0.8 * 1.5));
+// 부호를 붙인 수: 0에 아주 가까우면 부호 없이 0
+const sgnStr = (v, d = 3) => (Math.abs(v) < 5e-4 ? '0' : (v > 0 ? '+' : '−') + EM.fmt(Math.abs(v), d));
+
+/* ================= CH27 공용: RC 회로 계산 (화면 1, 2) =================
+   교재 그림 27.14: 스위치 하나가 열림 · a(전지 쪽, 충전) · b(전지를 뺀 고리, 방전) 세 자리에 놓인다.
+   한 구간(스위치 자리가 그대로인 동안) 전하는 q = q∞ + (q₀ − q∞) e^(−(t − t₀)/τ), τ = RC (식 27.18, 27.22).
+   q∞ = Cℰ (a), 0 (b). 열림이면 전류가 없어 q가 그대로다. 전류 i = dq/dt: +는 그림 27.14b처럼 저항을 위에서 아래로(시계 방향).
+   에너지는 구간마다 정확히 적분한다: 전지의 일 ℰ·Δq, 저항의 열 R∫i² dt = (q₀ − q∞)²/2C · (e^(−2s₀/τ) − e^(−2s₁/τ)). */
+const RCSIM = (o) => {
+  'use strict';
+  const S = { emf: o.emf, R: o.R, C: o.C, sw: 'open', t: 0, seg: { t0: 0, q0: 0 }, W: 0, Q: 0, tSwitch: null };
+  const closed = () => S.sw !== 'open';
+  const tau = () => S.R * S.C;
+  const qInf = () => (S.sw === 'a' ? S.C * S.emf : S.sw === 'b' ? 0 : S.seg.q0);
+  function qAt(t) { return closed() ? qInf() + (S.seg.q0 - qInf()) * Math.exp(-(t - S.seg.t0) / tau()) : S.seg.q0; }
+  const q = () => qAt(S.t);
+  const i = () => (closed() ? (qInf() - q()) / tau() : 0);
+  function anchor() { S.seg = { t0: S.t, q0: q() }; }
+  function advance(dt) {
+    if (dt <= 0) return;
+    if (closed()) {
+      const T = tau(), D = S.seg.q0 - qInf(), sa = S.t - S.seg.t0, sb = sa + dt;
+      const ea = Math.exp(-sa / T), eb = Math.exp(-sb / T);
+      if (S.sw === 'a') S.W += S.emf * (qAt(S.t + dt) - q());   // 전지가 옮긴 전하 × ℰ
+      S.Q += D * D / (2 * S.C) * (ea * ea - eb * eb);
+    }
+    S.t += dt;
+  }
+  function reset() { Object.assign(S, { sw: 'open', t: 0, seg: { t0: 0, q0: 0 }, W: 0, Q: 0, tSwitch: null }); }
+  function setSw(pos) {
+    if (pos === S.sw) return;
+    anchor();
+    S.sw = pos;
+    S.tSwitch = S.t;
+  }
+  function setParam(k, v) { anchor(); S[k] = v; }
+  // 오래 기다린 것처럼: 빈 축전기를 a에 두고 끝까지 충전한 상태 (전지의 일 Cℰ², 열 ½Cℰ²). 스위치는 열지 않는다.
+  function forceCharged() {
+    S.sw = 'a'; S.seg = { t0: S.t, q0: S.C * S.emf };
+    S.W = S.C * S.emf * S.emf; S.Q = 0.5 * S.C * S.emf * S.emf; S.tSwitch = null;
+  }
+  const VC = () => q() / S.C;                        // 왼쪽 판 − 오른쪽 판
+  const VR = () => i() * S.R;                        // 저항 위 끝 − 아래 끝
+  const UC = () => q() * q() / (2 * S.C);
+  return { S, q, qAt, i, tau, qInf, closed, anchor, advance, reset, setSw, setParam, forceCharged, VC, VR, UC };
+};
+
+/* ================= CH27 공용: RC 회로 그림 (Serway 그림 27.14) =================
+   아래 변: 전지 ℰ(+가 왼쪽). 위 변: 스위치(축은 오른쪽, 접점 a는 왼쪽, b는 왼쪽 아래), 그 오른쪽에 축전기 C(+ 판이 왼쪽).
+   오른쪽 변: 저항 R. b에서 세로 도선이 아래 변으로 내려간다. 전류 +는 시계 방향: 위 변에서 오른쪽, 저항에서 아래. */
+const RCDRAW = (() => {
+  'use strict';
+  const { TAU, C, F } = EM;
+  const W = 12, H = 7;
+  const XA = 3.6, XP = 6.0, BL = XP - XA, ANG_B = 40 * Math.PI / 180, ANG_O = 35 * Math.PI / 180;
+  const XB = XP - BL * Math.cos(ANG_B), YB = H - BL * Math.sin(ANG_B);
+  const XC0 = 7.6, XC1 = 9.6, YR0 = 5.6, YR1 = 1.4, XBAT0 = 1.2, XBAT1 = 2.8;
+  const VIEW = { x0: -1.4, x1: 13.4, y0: -1.4, y1: 8.4 };
+  // 전류 화살표가 움직이는 빠르기 (세상 단위/s, 전류가 기준값일 때). 실제 유동 속력처럼 느리게 둔다.
+  // 전류의 세기는 화살표의 길이로 보인다. 빨리 감기 때도 화살표는 빨라지지 않는다.
+  const FLOW_V = 0.3;
+
+  function frame(box, extraRight = 0) {
+    const vw = VIEW.x1 - VIEW.x0 + extraRight, vh = VIEW.y1 - VIEW.y0;
+    const s = Math.min(box.w / vw, box.h / vh);
+    const ox = box.x + (box.w - vw * s) / 2 - VIEW.x0 * s, oy = box.y + (box.h - vh * s) / 2 + VIEW.y1 * s;
+    return { s, X: x => ox + x * s, Y: y => oy - y * s, vw };
+  }
+  // 스위치 날의 각(세상 좌표, y 위): a는 π, b는 π + 40°, 열림은 π − 35°(위로 들림)
+  const swAngle = pos => (pos === 'a' ? Math.PI : pos === 'b' ? Math.PI + ANG_B : Math.PI - ANG_O);
+
+  /* st = { f, ang (날의 각), qf (q/(Cℰ)), i, iRef, flow, sw, VR, VC, showV, hide } */
+  function draw(ctx, fr, st) {
+    const { s, X, Y } = fr, f = st.f, fs = f.fs;
+    const wireW = Math.max(2.6, 0.075 * s);
+    const P = pts => pts.map(([x, y]) => [X(x), Y(y)]);
+    const wire = pts => KIT.stroke(ctx, P(pts), false, C.wire, wireW);
+    wire([[XBAT0, 0], [0, 0], [0, H], [XA, H]]);
+    wire([[XP, H], [XC0, H]]);
+    wire([[XC1, H], [W, H], [W, YR0]]);
+    wire([[W, YR1], [W, 0], [XBAT1, 0]]);
+    wire([[XB, YB], [XB, 0]]);
+    // 전지: + 판이 왼쪽 (KIT.battery는 + 판이 둘째 점 쪽)
+    KIT.battery(ctx, X(XBAT1), Y(0), X(XBAT0), Y(0), 0.55 * s, { wireW });
+    EM.runs(ctx, [['ℰ', f.m]], X((XBAT0 + XBAT1) / 2), Y(-0.95), C.ink, { align: 'center', halo: true });
+    EM.runs(ctx, [['+', `700 ${fs}px ${F.ui}`]], X(XBAT0 + 0.1), Y(0.75), C.ink, { align: 'center', halo: true });
+    EM.runs(ctx, [['−', `700 ${fs}px ${F.ui}`]], X(XBAT1 - 0.1), Y(0.75), C.ink, { align: 'center', halo: true });
+    // 스위치
+    const th = st.ang;
+    KIT.line(ctx, X(XP), Y(H), X(XP + BL * Math.cos(th)), Y(H + BL * Math.sin(th)), C.ink, wireW);
+    KIT.terminal(ctx, X(XA), Y(H), Math.max(5, 0.1 * s)); KIT.terminal(ctx, X(XB), Y(YB), Math.max(5, 0.1 * s));
+    ctx.beginPath(); ctx.arc(X(XP), Y(H), Math.max(4.5, 0.09 * s), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
+    EM.runs(ctx, [['a', f.mi]], X(XA - 0.1), Y(H + 0.62), C.ink, { align: 'center', halo: true });
+    EM.runs(ctx, [['b', f.mi]], X(XB) + fs * 0.9, Y(YB - 0.15), C.ink, { align: 'left', halo: true });
+    EM.runs(ctx, [['S', f.m]], X(XP + 0.3), Y(H - 0.75), C.ink, { align: 'left', halo: true });
+    // 축전기 (KIT.capacitor의 q는 둘째 점(오른쪽) 판의 몫이므로 부호를 뒤집는다)
+    KIT.capacitor(ctx, X(XC0), Y(H), X(XC1), Y(H), 0.62 * s, { q: -(st.hide ? 0 : st.qf), wireW, fs: Math.round(fs * 1.1), gap: 0.3 * s });
+    EM.runs(ctx, [['C', f.mi]], X((XC0 + XC1) / 2), Y(H + 1.15), C.ink, { align: 'center', halo: true });
+    // 저항
+    KIT.resistor(ctx, X(W), Y(YR0), X(W), Y(YR1), 0.28 * s, C.ink, Math.max(2.4, 0.06 * s), 8);
+    EM.runs(ctx, [['R', f.mi]], X(W + 0.7), Y((YR0 + YR1) / 2), C.ink, { align: 'left', halo: true });
+    // 갈림점
+    ctx.beginPath(); ctx.arc(X(XB), Y(0), Math.max(4, 0.08 * s), 0, TAU); ctx.fillStyle = C.wire; ctx.fill();
+
+    // 전류 화살촉: 충전은 큰 고리(전지 포함), 방전은 b 쪽 작은 고리. i < 0이면 거꾸로
+    const skip = (px, py) => {
+      const x = (px - X(0)) / s, y = (Y(0) - py) / s;
+      return (x > XBAT0 - 0.15 && x < XBAT1 + 0.15 && Math.abs(y) < 0.7) || (x > XC0 - 0.1 && x < XC1 + 0.1 && Math.abs(y - H) < 0.8) ||
+        (y > YR1 - 0.15 && y < YR0 + 0.15 && Math.abs(x - W) < 0.6) || Math.hypot(x - XP, y - H) < 0.35 || Math.hypot(x - XA, y - H) < 0.35 || Math.hypot(x - XB, y - YB) < 0.35;
+    };
+    const ia = Math.abs(st.i) / (st.iRef || 1);
+    if (!st.hide && ia > 0.004 && st.sw !== 'open') {
+      let loop = st.sw === 'a'
+        ? [[XBAT0 - 0.15, 0], [0, 0], [0, H], [XP, H], [W, H], [W, 0], [XBAT1 + 0.15, 0]]
+        : [[XP, H], [W, H], [W, 0], [XB, 0], [XB, YB]];
+      const closedLoop = st.sw === 'b';
+      let ph = st.flow * s;
+      if (st.i < 0) { loop = loop.slice().reverse(); ph = -ph; }
+      KIT.flowVec(ctx, P(loop), closedLoop, ph, 1.5 * s, 0.95 * s * Math.min(1.2, ia), C.current, Math.max(2.2, 0.055 * s), skip);
+    }
+
+    // 전위차 이름표와 높은 쪽(+)
+    if (st.showV && !st.hide) {
+      const vt = v => `${EM.fmt(Math.abs(v), 3)} V`;
+      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['C', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VC), f.num]], X((XC0 + XC1) / 2), Y(H - 1.05), C.accent, { align: 'center', halo: true });
+      EM.runs(ctx, [['Δ', f.m], ['V', f.mi], ['R', f.subI, fs * 0.35], [' = ', f.m], [vt(st.VR), f.num]], X(W - 0.7), Y((YR0 + YR1) / 2), C.neg, { align: 'right', halo: true });
+      const sgn = (x, y, plus, col) => EM.runs(ctx, [[plus ? '+' : '−', `700 ${Math.round(fs * 1.25)}px ${F.ui}`]], X(x), Y(y), col, { align: 'center', halo: true });
+      const tiny = 1e-4 * (st.emfRef || 1);
+      if (Math.abs(st.VR) > tiny) { const topHi = st.VR > 0; sgn(W - 0.55, YR0 - 0.1, topHi, C.neg); sgn(W - 0.55, YR1 + 0.1, !topHi, C.neg); }
+    }
+    return { skip };
+  }
+
+  /* 오른쪽 막대: ΔV_C, ΔV_R (그리고 ℰ). 눈금 끝 = vmax */
+  function voltBars(ctx, fr, st) {
+    const { s, X, Y } = fr, f = st.f, fs = f.fs;
+    const x0 = X(13.9), x1 = X(13.9 + 3.6), yTop = Y(7.0), yBot = Y(-0.6);
+    const y0 = (yTop + yBot) / 2, half = (yBot - yTop) / 2 - fs * 1.3;
+    const items = [
+      { v: st.VC, color: C.accent, label: [['Δ', f.m2], ['V', f.mi2], ['C', f.sub2, fs * 0.3]] },
+      { v: st.VR, color: C.neg, label: [['Δ', f.m2], ['V', f.mi2], ['R', f.sub2, fs * 0.3]] },
+    ];
+    if (st.emfOn) items.push({ v: st.emf, color: C.ink, outline: true, label: [['ℰ', f.m2]] });
+    const slot = (x1 - x0) / items.length, bw = Math.min(slot * 0.55, 0.7 * s);
+    ctx.save();
+    ctx.strokeStyle = C.muted; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x1, y0); ctx.stroke();
+    items.forEach((it, k) => {
+      const cx = x0 + slot * (k + 0.5), hgt = Math.max(-1.05, Math.min(1.05, it.v / st.vmax)) * half;
+      if (Math.abs(hgt) > 0.5) {
+        if (it.outline) { ctx.lineWidth = 2; ctx.strokeStyle = it.color; ctx.strokeRect(cx - bw / 2, y0 - Math.max(0, hgt), bw, Math.abs(hgt)); }
+        else { ctx.fillStyle = it.color; ctx.fillRect(cx - bw / 2, y0 - Math.max(0, hgt), bw, Math.abs(hgt)); }
+      }
+      EM.runs(ctx, it.label, cx, it.v < -1e-9 ? y0 - fs * 1.2 : y0 + fs * 1.35, it.color, { align: 'center', halo: true });
+    });
+    const sm = `${Math.round(fs * 1.05)}px ${F.math}`, si = `italic ${Math.round(fs * 1.05)}px ${F.math}`, sb = `500 ${Math.round(fs * 0.7)}px ${F.ui}`;
+    const txt = st.open ? [['스위치가 열려 전류가 없다', f.uiS]]
+      : [['Δ', sm], ['V', si], ['C', sb, fs * 0.25], [' + Δ', sm], ['V', si], ['R', sb, fs * 0.25], [st.emfOn ? ' = ℰ' : ' = 0', sm]];
+    EM.runs(ctx, txt, (x0 + x1) / 2, yTop - fs * 0.2, C.muted, { align: 'center', halo: true });
+    ctx.restore();
+  }
+
+  return { W, H, XA, XP, XB, YB, XC0, XC1, YR0, YR1, FLOW_V, frame, swAngle, draw, voltBars };
+})();
+
+/* 스위치 단추 묶음(.seg [data-sw])과 날의 움직임을 맡는 작은 도우미 (화면 1, 2) */
+function rcSwitchUI(prefix, sim, state, def, onAct) {
+  const seg = document.querySelectorAll(`#${prefix} .seg [data-sw]`);
+  seg.forEach(b => b.addEventListener('click', () => { EM.wake(def()); onAct(b.dataset.sw); }));
+  return {
+    sync() { seg.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sw === sim.S.sw))); },
+    animate(instant) {
+      const to = RCDRAW.swAngle(sim.S.sw);
+      if (state.swAnim) { state.swAnim.cancel(); state.swAnim = null; }
+      if (instant) { state.ang = to; return; }
+      const from = state.ang;
+      state.swAnim = EM.tween(200, e => { state.ang = from + (to - from) * e; EM.requestDraw(def()); });
+    },
+  };
+}
+
+/* ================= 화면 1: 충전과 방전 (Serway 27.4, 그림 27.14–27.15, 예제 27.7, 27.8) =================
+   ℰ − q/C − iR = 0 (식 27.15) → q = Cℰ(1 − e^(−t/RC)), i = (ℰ/R)e^(−t/RC), τ = RC (식 27.18–27.20).
+   방전: −q/C − iR = 0 (식 27.21) → q = Q_i e^(−t/RC), i = −(Q_i/RC)e^(−t/RC) (식 27.22–27.23).
+   예제 27.7: ℰ = 12.0 V, C = 5.00 μF, R = 8.00 × 10⁵ Ω → τ = 4.00 s, Q_max = 60.0 μC, I_i = 15.0 μA.
+   예제 27.8: 전하가 처음의 1/4 → t = τ ln 4 = 1.39τ, 에너지가 1/4 → t = ½τ ln 4 = 0.693τ, 반감기 t½ = 0.693τ. */
+(() => {
+  'use strict';
+  const { TAU, C, F, m: M } = EM;
+  const $ = id => document.getElementById('s1-' + id);
+  const WIN = 24;                                    // 그래프 창 (s)
+  const E0 = 12, R0 = 8e5, C0 = 5e-6;
+  const sim = RCSIM({ emf: E0, R: R0, C: C0 });
+  const state = { showV: true, hist: [], clock: 0, script: [], ff: false, ghost: null, marks: null, tauMark: false, hideAns: false, ang: RCDRAW.swAngle('open'), swAnim: null };
+  let flowPh = 0, def = null, ui = null;
+
+  const anim = EM.loop(dt => {
+    state.clock += dt;
+    while (state.script.length && state.script[0].at <= state.clock) state.script.shift().fn();
+    const S = sim.S, far = Math.abs(sim.q() - sim.qInf()) > 0.002 * S.C * S.emf;
+    let k = state.ff && sim.closed() && far ? 8 : 1;
+    if (state.ff && k === 1) state.ff = false;
+    const dtr = dt * k, n = Math.max(1, Math.ceil(dtr / 0.02));
+    for (let j = 0; j < n; j++) { sim.advance(dtr / n); record(); }
+    flowPh += dt * RCDRAW.FLOW_V * Math.min(1.2, Math.abs(sim.i()) / (S.emf / S.R)) * Math.sign(sim.i());
+    updateLive();
+    EM.requestDraw(def);
+  });
+  function record() {
+    const H = state.hist, t = sim.S.t;
+    if (H.length && t - H[H.length - 1][0] < 0.02) return;
+    H.push([t, sim.q(), sim.i()]);
+    while (H.length > 2 && H[0][0] < t - WIN * 1.05) H.shift();
+  }
+  function reset() {
+    sim.reset(); state.hist = []; state.ff = false; state.ghost = null; state.marks = null; state.tauMark = false;
+    ui.animate(true);
+    record();
+  }
+  function act(what) {
+    if (what === 'ff') { state.ff = true; return; }
+    sim.setSw(what);
+    ui.animate(false); ui.sync();
+    updateReadouts();
+  }
+
+  /* ---------- 그리기 ---------- */
+  let stage, sctx, graph, gctx;
+  function drawStage() {
+    const { w, h } = EM.fitCanvas(stage, sctx);
+    if (w < 40 || h < 40) return;
+    const ctx = sctx, f = SF(stageFs());
+    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
+    const fr = RCDRAW.frame({ x: 10, y: 6, w: w - 20, h: h - 12 }, 4.4);
+    const S = sim.S, i = sim.i(), Iref = S.emf / S.R, hide = state.hideAns;
+    const st = { f, ang: state.ang, qf: Math.min(1.2, sim.q() / (S.C * S.emf)), i, iRef: Iref, flow: flowPh, sw: S.sw, VR: sim.VR(), VC: sim.VC(), emfRef: S.emf, showV: state.showV, hide };
+    RCDRAW.draw(ctx, fr, st);
+    if (!hide) RCDRAW.voltBars(ctx, fr, { f, VR: st.VR, VC: st.VC, emf: S.emf, emfOn: S.sw === 'a', vmax: Math.max(S.emf, sim.VC()), open: S.sw === 'open' });
+    const { X, Y } = fr;
+    EM.runs(ctx, [['q', f.mi], [hide ? ' = ?' : ` = ${EM.fmt(sim.q() * 1e6, 3)} μC`, f.num]], X((RCDRAW.XC0 + RCDRAW.XC1) / 2), Y(RCDRAW.H - 1.95), C.accent, { align: 'center', halo: true });
+    EM.runs(ctx, [['i', f.mi], [hide ? ' = ?' : ` = ${sgnStr(i * 1e6, 3)} μA`, f.num]], X(RCDRAW.W / 2 + 1.6), Y(-0.95), C.current, { align: 'center', halo: true });
+  }
+
+  function drawGraph() {
+    const { w, h } = EM.fitCanvas(graph, gctx);
+    if (w < 60 || h < 60) return;
+    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
+    const fM = `italic ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`, fS = `500 ${Math.round(fs * 0.8)}px ${F.ui}`;
+    const S = sim.S, t = S.t, tmin = Math.max(0, t - WIN), tmax = tmin + WIN, hide = state.hideAns;
+    const Hs = state.hist.filter(p => p[0] >= tmin - 0.05);
+    const qMax = S.C * S.emf * 1e6, qHi = Math.max(20, Math.ceil(Math.max(qMax, sim.q() * 1e6) * 1.15 / 10) * 10);
+    const Ii = S.emf / S.R * 1e6, iHi = Math.max(10, Math.ceil(Math.max(Ii, Math.abs(sim.i()) * 1e6) * 1.15 / 5) * 5);
+    const qS = [{ pts: Hs.map(p => [p[0], p[1] * 1e6]), f: () => sim.q() * 1e6, color: C.accent }];
+    const iS = [{ pts: Hs.map(p => [p[0], p[2] * 1e6]), f: () => sim.i() * 1e6, color: C.current }];
+    if (state.ghost && S.tSwitch != null) {
+      const g = state.ghost, tc = S.tSwitch, tg = g.R * S.C;
+      qS.unshift({ f: tm => (tm < tc ? NaN : S.C * S.emf * (1 - Math.exp(-(tm - tc) / tg)) * 1e6), color: C.muted, dash: [6, 5], width: 2, noDot: true });
+      iS.unshift({ f: tm => (tm < tc ? NaN : S.emf / g.R * Math.exp(-(tm - tc) / tg) * 1e6), color: C.muted, dash: [6, 5], width: 2, noDot: true });
+    }
+    const out = KIT.timePlot(gctx, w, h, {
+      tmin, tmax, t, tstep: 4,
+      xLabel: [['t', fM], [' (s)', fU]],
+      panels: [
+        { label: [['q', fM], ['  (μC)', fU]], lo: 0, hi: qHi, series: hide ? [] : qS, note: hide ? [['?', fU]] : null },
+        { label: [['i', fM], ['  (μA)  + 충전, − 방전', fU]], lo: -iHi, hi: iHi, series: hide ? [] : iS, note: hide ? [['?', fU]] : null },
+      ],
+    });
+    if (hide || S.tSwitch == null) return;
+    const [B0, B1] = out.boxes, T = sim.tau();
+    const guide = (box, tt, v, lab, labY = null) => {
+      if (tt < tmin || tt > tmax || tt > t + 1e-9) return;
+      const x = out.GX(tt), y = box.GY(v);
+      gctx.save(); gctx.setLineDash([4, 4]); gctx.strokeStyle = C.muted; gctx.lineWidth = 1.3;
+      gctx.beginPath(); gctx.moveTo(x, box.T0 + box.ph); gctx.lineTo(x, y); gctx.lineTo(out.L, y); gctx.stroke(); gctx.restore();
+      EM.runs(gctx, lab, x + 4, labY ?? (box.T0 + box.ph - fs * 0.7), C.muted, { halo: C.panel });
+    };
+    // 충전: τ에서 q는 63.2 %, i는 36.8 %. 방전: 반감기와 1/4
+    if (state.tauMark && S.sw === 'a') {
+      const tt = S.tSwitch + T, q0 = state.tauMark.q0;
+      const qv = (q0 + (S.C * S.emf - q0) * (1 - Math.exp(-1))) * 1e6;
+      guide(B0, tt, qv, [['τ', fM], [`  63.2 %`, fU]]);
+      guide(B1, tt, Ii * Math.exp(-1), [['τ', fM], [`  36.8 %`, fU]]);
+    }
+    if (state.marks && S.sw === 'b') {
+      const Qi = state.marks.Qi * 1e6;
+      guide(B0, S.tSwitch + T * Math.LN2, Qi / 2, [['t', fM], ['½', fS], [' = 0.693τ', fU]], B0.GY(Qi / 2) - fs * 0.9);
+      guide(B0, S.tSwitch + T * Math.log(4), Qi / 4, [['1.39τ', fU]], B0.GY(Qi / 4) - fs * 0.9);
+    }
+  }
+
+  /* ---------- 글 ---------- */
+  const row = (k, id, unit, cls = '') => `<dt${cls}>${k}</dt><dd id="s1-${id}"${cls}>–</dd><dd${cls}>${unit}</dd>`;
+  function updateLive() {
+    const S = sim.S, hide = state.hideAns;
+    $('kT').textContent = EM.fmt(S.R * S.C, 3);
+    $('kQ').textContent = EM.fmt(S.C * S.emf * 1e6, 3);
+    $('kIi').textContent = EM.fmt(S.emf / S.R * 1e6, 3);
+    $('kq').textContent = hide ? '?' : EM.fmt(sim.q() * 1e6, 3);
+    $('ki').textContent = hide ? '?' : sgnStr(sim.i() * 1e6, 3);
+    $('kVC').textContent = hide ? '?' : EM.fmt(sim.VC(), 3);
+    $('kVR').textContent = hide ? '?' : sgnStr(sim.VR(), 3);
+  }
+  function updateReadouts() {
+    const S = sim.S;
+    $('eOut').textContent = `${S.emf.toFixed(1)} V`;
+    $('cOut').textContent = `${(S.C * 1e6).toFixed(1)} μF`;
+    $('rOut').textContent = `${(S.R / 1e3).toFixed(0)} kΩ`;
+    for (const [id, v] of [['eIn', S.emf], ['cIn', S.C * 1e6], ['rIn', S.R / 1e3]]) if (Math.abs(+$(id).value - v) > 1e-9) $(id).value = v;
+    $('vChk').checked = state.showV;
+    ui.sync();
+    updateLive();
+  }
+
+  const QA = {
+    q: `빈 축전기. 스위치를 a에 놓는 <b>순간</b>, 회로의 전류는?`,
+    choices: ['0 (축전기의 두 판 사이는 끊겨 있으니까)', `ℰ/${M('R')}`, `ℰ/2${M('R')}`, `0에서 서서히 늘어난다`],
+    answer: 1,
+    why: `닫는 순간 ${M('q')} = 0이라 축전기 양단의 전위차 ${M('q')}/${M('C')}도 0이다. 고리 법칙 ℰ − ${M('q')}/${M('C')} − ${M('iR')} = 0에서 ${M('I')}<sub>i</sub> = ℰ/${M('R')}(식 27.16): 전류는 처음이 가장 크다. 전하는 판 사이를 건너지 않는다. 한쪽 판으로 들어가는 만큼 다른 판에서 나와 도선에는 전류가 흐른다. 빈 축전기는 처음 순간 '이어진 도선'처럼 행동한다.`,
+  };
+  const QB = {
+    tag: '개념 확인',
+    q: `스위치를 a에 두고 <b>오랜 시간</b>이 지났다. 전지의 기전력 ℰ와 같은 크기의 전위차가 걸리는 곳은?`,
+    choices: ['저항기', '축전기', '저항기와 축전기에 반씩', '어느 것도 아니다'],
+    answer: 1,
+    why: `전하가 ${M('Q')}<sub>max</sub> = ${M('C')}ℰ(식 27.17)에 이르면 전류가 0이라 저항기의 전위차 ${M('iR')}도 0. 기전력은 모두 축전기에 걸린다. 충전된 축전기는 '끊긴 도선'처럼 행동한다. 인덕터와 정반대다(인덕터는 처음에 끊긴 도선, 오래 뒤에 이어진 도선).`,
+  };
+  const QC = {
+    q: `저항만 두 배(800 kΩ → 1.60 MΩ)로 바꾸고 빈 축전기를 다시 충전한다. 축전기에 쌓이는 최대 전하량 ${M('Q')}<sub>max</sub>와 시간 상수 τ는?`,
+    choices: [`${M('Q')}<sub>max</sub>는 그대로, τ는 두 배`, `${M('Q')}<sub>max</sub>는 두 배, τ는 그대로`, `${M('Q')}<sub>max</sub>는 절반, τ는 두 배`, '둘 다 그대로'],
+    answer: 0,
+    why: `${M('Q')}<sub>max</sub> = ${M('C')}ℰ에는 ${M('R')}이 없다. 저항은 전류를 줄여(처음 전류 ℰ/${M('R')}이 절반) 같은 전하를 채우는 데 걸리는 시간만 늘린다: τ = ${M('RC')} = 8.00 s. 인덕터 회로(τ = ${M('L')}/${M('R')})는 저항이 클수록 빨라지는 것과 반대다.`,
+  };
+  const QD = {
+    q: `가득 충전된 축전기. 스위치를 a에서 b로 옮기면(전지가 빠진다) 저항기를 지나는 전류의 방향은?`,
+    choices: ['충전할 때와 같은 방향 (위 → 아래)', '충전할 때와 반대 방향 (아래 → 위)', '흐르지 않는다 (전지가 없으니까)', '처음에는 위 → 아래, 나중에는 아래 → 위'],
+    answer: 1,
+    why: `이제 축전기가 전지 노릇을 한다. + 판(왼쪽)의 전하가 b 쪽 도선과 아래 변을 돌아 저항기를 아래에서 위로 지나 − 판으로 간다. 식 27.23의 전류가 음수인 것이 그 뜻이다. 크기는 ${M('Q')}<sub>i</sub>/${M('RC')} = ℰ/${M('R')}에서 시작해 같은 τ로 줄어든다. 흐르던 전류를 그 방향 그대로 이어 가는 인덕터와 다르다.`,
+  };
+  const STEPS = [
+    { reset: true, quiz: QA, hideAns: true, cap: `전지 ℰ, 축전기 ${M('C')}, 저항 ${M('R')}을 직렬로 이은 ${M('RC')} 회로(교재 그림 27.14). 스위치는 열림, a, b 세 자리에 놓인다. 지금은 열려 있고 축전기는 비어 있다.` },
+    { reset: true, quiz: QA, reveal: true, script: [[0.6, 'a']], tauMark: true, cap: `'재생'을 누르면 스위치가 a로 간다. 전류는 ℰ/${M('R')} = 15.0 μA에서 시작해 줄고, 전하는 ${M('Q')}<sub>max</sub> = ${M('C')}ℰ = 60.0 μC에 다가간다(예제 27.7, 교재 그림 27.15). 시간 상수 τ = ${M('RC')} = 4.00 s가 지나면 전하는 나중값의 63.2 %, 전류는 처음값의 36.8 %. 화면 속 시간은 실제와 같다.` },
+    { reset: true, quiz: QB, hideAns: true, cap: `스위치를 a에 두고 충분히 기다리면 어떻게 될까?` },
+    { reset: true, quiz: QB, reveal: true, script: [[0.4, 'a'], [0.5, 'ff']], cap: `'재생'을 누르면 a로 옮기고 빨리 감는다. 처음에는 Δ${M('V')}<sub>R</sub> = ℰ, Δ${M('V')}<sub>C</sub> = 0. 나중에는 Δ${M('V')}<sub>C</sub> = ℰ, Δ${M('V')}<sub>R</sub> = 0. 두 전위차의 합은 언제나 ℰ (오른쪽 막대).` },
+    { reset: true, quiz: QC, R: R0, cap: `시간 상수가 무엇에 달렸는지 보자. 지금은 ${M('R')} = 800 kΩ, τ = 4.00 s.` },
+    { reset: true, quiz: QC, reveal: true, R: 2 * R0, ghost: R0, tauMark: true, script: [[0.5, 'a']], cap: `${M('R')} = 1.60 MΩ: 처음 전류 7.50 μA, τ = 8.00 s. 나중 전하량은 60.0 μC 그대로다. 점선은 ${M('R')} = 800 kΩ일 때. ${M('C')}를 두 배로 해도 τ는 두 배지만, 이때는 ${M('Q')}<sub>max</sub>도 두 배가 된다(조절에서 해 볼 수 있다).` },
+    { reset: true, R: R0, charged: true, quiz: QD, cap: `${M('R')} = 800 kΩ로 되돌리고, a에서 충분히 기다려 축전기가 60.0 μC로 가득 찼다. 전류는 0.` },
+    { chargedIfNot: true, quiz: QD, reveal: true, script: [[0.6, 'b']], cap: `전류는 −15.0 μA에서 시작해 0으로 간다: 저항기를 아래에서 위로. 전하는 ${M('q')} = ${M('Q')}<sub>i</sub>${M('e')}<sup>−${M('t')}/τ</sup>로 같은 τ = 4.00 s에 따라 준다. b의 고리에는 전지가 없어 Δ${M('V')}<sub>C</sub> + Δ${M('V')}<sub>R</sub> = 0: 저항기의 아래 끝이 높다.` },
+    { reset: true, R: R0, charged: true, marks: true, script: [[0.6, 'b']], cap: `다시 가득 충전된 상태에서 방전한다(예제 27.8). '재생'을 누르면 b로 옮긴다. 반감기 0.693τ = 2.77 s에 30.0 μC, 1.39τ = 5.55 s에 15.0 μC. 그런데 축전기의 <b>에너지</b> ${M('q')}<sup>2</sup>/2${M('C')}는 전하의 제곱이라 더 빨리 줄어, 0.693τ에 벌써 4분의 1이 된다(예제 27.8 (B)). 방사성 붕괴의 반감기도 같은 꼴이다.` },
+  ];
+
+  def = EM.register({
+    id: 's1',
+    steps: STEPS,
+    init(root) {
+      stage = $('stage'); graph = $('graph');
+      sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
+      ui = rcSwitchUI('s1', sim, state, () => def, act);
+      $('kv').innerHTML = row('시간 상수 τ = <span class="m">RC</span>', 'kT', 's') + row('최대 전하량 <span class="m">C</span>ℰ', 'kQ', 'μC') + row('처음 전류 ℰ/<span class="m">R</span>', 'kIi', 'μA') +
+        row('전하량 <span class="m">q</span>', 'kq', 'μC') + row('전류 <span class="m">i</span>', 'ki', 'μA') +
+        row('Δ<span class="m">V</span><sub>C</sub> = <span class="m">q</span>/<span class="m">C</span>', 'kVC', 'V') + row('Δ<span class="m">V</span><sub>R</sub> = <span class="m">iR</span>', 'kVR', 'V', ' class="sum"');
+      $('resetBtn').addEventListener('click', () => { EM.wake(def); reset(); updateReadouts(); EM.requestDraw(def); });
+      const bind = (id, key, k) => $(id).addEventListener('input', e => { sim.setParam(key, +e.target.value * k); updateReadouts(); EM.requestDraw(def); });
+      bind('eIn', 'emf', 1); bind('rIn', 'R', 1e3); bind('cIn', 'C', 1e-6);
+      $('vChk').addEventListener('change', e => { state.showV = e.target.checked; EM.requestDraw(def); });
+      reset();
+      updateReadouts();
+    },
+    enterStep(i, { replay = false } = {}) {
+      const S = STEPS[i];
+      state.script = [];
+      state.hideAns = !!S.hideAns;
+      if (S.R) sim.setParam('R', S.R);
+      if (S.reset) { sim.setParam('emf', E0); sim.setParam('C', C0); reset(); }
+      const full = sim.S.sw === 'a' && Math.abs(sim.q() - sim.S.C * sim.S.emf) < 0.01 * sim.S.C * sim.S.emf;
+      if (S.charged || (S.chargedIfNot && (replay || !full))) {
+        if (!S.charged) reset();
+        sim.forceCharged(); ui.animate(true); record();
+      }
+      state.ghost = S.ghost ? { R: S.ghost } : null;
+      state.tauMark = S.tauMark ? { q0: 0 } : false;
+      state.marks = S.marks ? { Qi: sim.S.C * sim.S.emf } : null;
+      $('playBtn').hidden = !S.script;
+      updateReadouts();
+    },
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    play() {
+      const S = STEPS[def.step];
+      if (!S.script) return false;
+      def.enterStep(def.step, { replay: true });
+      state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      EM.requestDraw(def);
+    },
+    show() { anim.start(); },
+    hide() { anim.stop(); },
+    draw() { drawStage(); drawGraph(); },
+  });
+})();
+
+/* ================= 화면 2: 에너지 (Serway 27.4 마지막 문단, 예제 27.9, 문제 26, 30) =================
+   충전이 끝날 때까지 전지가 한 일 W = Q_max ℰ = Cℰ², 축전기에 쌓인 에너지 ½Cℰ², 나머지 ½Cℰ²는 저항의 열 (본문, 문제 30).
+   열 R∫i² dt = (ℰ²/R)(RC/2) = ½Cℰ²: R이 사라진다 (예제 27.9의 적분, 문제 26). 방전하면 축전기의 에너지가 모두 열로 (예제 27.9). */
+(() => {
+  'use strict';
+  const { C, F, m: M } = EM;
+  const $ = id => document.getElementById('s2-' + id);
+  const WIN = 24;
+  const E0 = 12, R0 = 8e5, C0 = 5e-6, UREF = C0 * E0 * E0;   // Cℰ² = 720 μJ
+  const sim = RCSIM({ emf: E0, R: R0, C: C0 });
+  const state = { hist: [], clock: 0, script: [], ff: false, ghost: null, hideAns: false, ang: RCDRAW.swAngle('open'), swAnim: null };
+  let flowPh = 0, def = null, ui = null;
+
+  const anim = EM.loop(dt => {
+    state.clock += dt;
+    while (state.script.length && state.script[0].at <= state.clock) state.script.shift().fn();
+    const S = sim.S, far = Math.abs(sim.q() - sim.qInf()) > 0.002 * S.C * S.emf;
+    let k = state.ff && sim.closed() && far ? 8 : 1;
+    if (state.ff && k === 1) state.ff = false;
+    const dtr = dt * k, n = Math.max(1, Math.ceil(dtr / 0.02));
+    for (let j = 0; j < n; j++) { sim.advance(dtr / n); record(); }
+    flowPh += dt * RCDRAW.FLOW_V * Math.min(1.2, Math.abs(sim.i()) / iRef2()) * Math.sign(sim.i());
+    updateLive();
+    EM.requestDraw(def);
+  });
+  const iRef2 = () => sim.S.emf / Math.min(sim.S.R, R0);   // 화살표 길이의 기준: R을 줄이면 처음 전류가 커진 만큼 길어진다
+  const PB = () => (sim.S.sw === 'a' ? sim.S.emf * sim.i() : 0);
+  const PR = () => sim.i() * sim.i() * sim.S.R;
+  const PC = () => sim.q() * sim.i() / sim.S.C;
+  function record() {
+    const H = state.hist, t = sim.S.t;
+    if (H.length && t - H[H.length - 1][0] < 0.02) return;
+    H.push([t, sim.S.W, sim.UC(), sim.S.Q, PB(), PR(), PC()]);
+    while (H.length > 2 && H[0][0] < t - WIN * 1.05) H.shift();
+  }
+  function reset() {
+    sim.reset(); state.hist = []; state.ff = false; state.ghost = null;
+    ui.animate(true);
+    record();
+  }
+  function act(what) {
+    if (what === 'ff') { state.ff = true; return; }
+    sim.setSw(what);
+    ui.animate(false); ui.sync();
+    updateReadouts();
+  }
+
+  let stage, sctx, graph, gctx;
+  function drawStage() {
+    const { w, h } = EM.fitCanvas(stage, sctx);
+    if (w < 40 || h < 40) return;
+    const ctx = sctx, f = SF(stageFs());
+    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
+    const fr = RCDRAW.frame({ x: 10, y: 6, w: w - 20, h: h - 12 }, 4.6);
+    const S = sim.S, i = sim.i(), hide = state.hideAns;
+    RCDRAW.draw(ctx, fr, { f, ang: state.ang, qf: Math.min(1.2, sim.q() / (S.C * S.emf)), i, iRef: iRef2(), flow: flowPh, sw: S.sw, VR: sim.VR(), VC: sim.VC(), emfRef: S.emf, showV: false, hide: false });
+    const { X, Y } = fr;
+    const box = { x: X(13.8), y: Y(7.9), w: X(13.8 + 4.4) - X(13.8), h: Y(-1.0) - Y(7.9) };
+    const sub = (a, b) => [[a, f.mi2], [b, f.sub2, f.fs * 0.3]];
+    KIT.energyBars(ctx, box, [
+      { label: [['W', f.mi2]], v: hide ? 0 : S.W / UREF, color: C.ink, outline: true, sub: [['전지의 일', f.uiXS]] },
+      { label: sub('U', 'C'), v: hide ? 0 : sim.UC() / UREF, color: C.efield, sub: [['축전기', f.uiXS]] },
+      { label: sub('E', 'R'), v: hide ? 0 : S.Q / UREF, color: C.heat, sub: [['저항의 열', f.uiXS]] },
+    ], { fs: f.fs, title: [['C', f.mi2], ['ℰ', f.m2], ['²', f.uiS], [' = 100 %', f.uiS]] });
+    if (hide) EM.runs(ctx, [['?', `700 ${f.fs * 2}px ${F.ui}`]], box.x + box.w / 2 + f.fs, box.y + box.h * 0.45, C.muted, { align: 'center', halo: true });
+    EM.runs(ctx, [['i', f.mi], [` = ${sgnStr(i * 1e6, 3)} μA`, f.num]], X(RCDRAW.W / 2 + 1.6), Y(-0.95), C.current, { align: 'center', halo: true });
+  }
+
+  function drawGraph() {
+    const { w, h } = EM.fitCanvas(graph, gctx);
+    if (w < 60 || h < 60) return;
+    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
+    const fM = `italic ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`, fS = `500 ${Math.round(fs * 0.8)}px ${F.ui}`;
+    const S = sim.S, t = S.t, tmin = Math.max(0, t - WIN), tmax = tmin + WIN, hide = state.hideAns;
+    const Hs = state.hist.filter(p => p[0] >= tmin - 0.05);
+    const u = 1e6, eHi = Math.ceil(UREF * u * 1.12 / 100) * 100;
+    const pHi = Math.max(200, Math.ceil(S.emf * S.emf / S.R * u * 1.12 / 100) * 100);
+    const eS = [
+      { pts: Hs.map(p => [p[0], p[1] * u]), f: () => S.W * u, color: C.ink, width: 2 },
+      { pts: Hs.map(p => [p[0], p[2] * u]), f: () => sim.UC() * u, color: C.efield },
+      { pts: Hs.map(p => [p[0], p[3] * u]), f: () => S.Q * u, color: C.heat },
+    ];
+    const pS = [
+      { pts: Hs.map(p => [p[0], p[4] * u]), f: () => PB() * u, color: C.ink, width: 2 },
+      { pts: Hs.map(p => [p[0], p[6] * u]), f: () => PC() * u, color: C.efield },
+      { pts: Hs.map(p => [p[0], p[5] * u]), f: () => PR() * u, color: C.heat },
+    ];
+    if (state.ghost && S.tSwitch != null) {
+      const tc = S.tSwitch, tg = state.ghost.R * S.C;
+      eS.unshift({ f: tm => (tm < tc ? NaN : 0.5 * UREF * (1 - Math.exp(-2 * (tm - tc) / tg)) * u), color: C.heat, dash: [6, 5], width: 2, noDot: true, alpha: 0.6 });
+      pS.unshift({ f: tm => (tm < tc ? NaN : S.emf * S.emf / state.ghost.R * Math.exp(-2 * (tm - tc) / tg) * u), color: C.heat, dash: [6, 5], width: 2, noDot: true, alpha: 0.6 });
+    }
+    KIT.timePlot(gctx, w, h, {
+      tmin, tmax, t, tstep: 4,
+      panels: [
+        { label: [['W', fM], [' 검정, ', fU], ['U', fM], ['C', fS, fs * 0.3], [' 주황, ', fU], ['E', fM], ['R', fS, fs * 0.3], [' 갈색  (μJ)', fU]], lo: 0, hi: eHi, series: hide ? [] : eS, note: hide ? [['?', fU]] : null },
+        { label: [['일률  ℰ', fU], ['i', fM], [', d', fU], ['U', fM], ['C', fS, fs * 0.3], ['/d', fU], ['t', fM], [', ', fU], ['i', fM], ['²', fU], ['R', fM], ['  (μW)', fU]], lo: -pHi, hi: pHi, series: hide ? [] : pS, note: hide ? [['?', fU]] : null },
+      ],
+    });
+  }
+
+  const row = (k, id, unit, cls = '') => `<dt${cls}>${k}</dt><dd id="s2-${id}"${cls}>–</dd><dd${cls}>${unit}</dd>`;
+  function updateLive() {
+    const S = sim.S, hide = state.hideAns, u = 1e6;
+    $('kT').textContent = EM.fmt(S.R * S.C, 3);
+    $('kW').textContent = hide ? '?' : EM.fmt(S.W * u, 3);
+    $('kU').textContent = hide ? '?' : EM.fmt(sim.UC() * u, 3);
+    $('kQ').textContent = hide ? '?' : EM.fmt(S.Q * u, 3);
+    $('kS').textContent = hide ? '?' : EM.fmt((S.W - sim.UC() - S.Q) * u, 2);
+  }
+  function updateReadouts() {
+    const S = sim.S;
+    $('rOut').textContent = `${(S.R / 1e3).toFixed(0)} kΩ`;
+    if (Math.abs(+$('rIn').value - S.R / 1e3) > 1e-9) $('rIn').value = S.R / 1e3;
+    ui.sync();
+    updateLive();
+  }
+
+  const Q1 = {
+    q: `빈 축전기를 a에 놓고 끝까지 충전한다. 그동안 전지가 한 일 ${M('W')} 가운데 축전기에 쌓이는 몫은?`,
+    choices: ['전부', '절반', `${M('R')}이 작을수록 많이 (전부에 가깝게)`, `1 − 1/${M('e')} = 63.2 %`],
+    answer: 1,
+    why: `전지는 전하 ${M('Q')}<sub>max</sub> = ${M('C')}ℰ를 기전력 ℰ로 밀어 올리므로 ${M('W')} = ${M('Q')}<sub>max</sub>ℰ = ${M('C')}ℰ<sup>2</sup>. 축전기에 쌓이는 에너지는 ½${M('Q')}<sub>max</sub>ℰ = ½${M('C')}ℰ<sup>2</sup>: 꼭 절반이다. 나머지 절반은 저항에서 내부 에너지(열)가 된다. 전하가 처음에는 낮은 전위차(빈 축전기)로, 나중에야 ℰ까지 올라가는데 전지는 처음부터 ℰ로 일하기 때문이다.`,
+  };
+  const Q2 = {
+    q: `저항을 4분의 1(800 kΩ → 200 kΩ)로 줄이고 다시 빈 축전기를 충전한다. 저항에서 열로 나가는 에너지는?`,
+    choices: ['4분의 1로 준다', `그대로 ½${M('C')}ℰ<sup>2</sup>`, '4배로 는다', '0에 가까워진다 (저항이 작으니까)'],
+    answer: 1,
+    why: `처음 전류 ℰ/${M('R')}은 4배, 처음 일률 ℰ<sup>2</sup>/${M('R')}도 4배다. 그러나 τ = ${M('RC')}가 4분의 1이라 그만큼 짧게 흐른다. ${M('E')}<sub>R</sub> = ∫<sub>0</sub><sup>∞</sup>(ℰ<sup>2</sup>/${M('R')})${M('e')}<sup>−2${M('t')}/${M('RC')}</sup>d${M('t')} = (ℰ<sup>2</sup>/${M('R')})(${M('RC')}/2) = ½${M('C')}ℰ<sup>2</sup>: ${M('R')}이 사라진다. 저항을 아무리 작게 해도 절반은 축전기에 들어가지 못한다.`,
+  };
+  const Q3 = {
+    tag: '예제 27.9',
+    q: `가득 충전된 축전기를 b로 옮겨 저항으로 완전히 방전한다. 저항에서 열로 나가는 에너지는?`,
+    choices: [`½${M('C')}ℰ<sup>2</sup> (축전기의 에너지 전부)`, `¼${M('C')}ℰ<sup>2</sup>`, `${M('C')}ℰ<sup>2</sup>`, `${M('R')}에 따라 다르다`],
+    answer: 0,
+    why: `축전기와 저항만 남은 고립계라 에너지 보존으로 ${M('E')}<sub>R</sub> = ${M('U')}<sub>C</sub> = ½${M('C')}ℰ<sup>2</sup>. 일률 ${M('i')}<sup>2</sup>${M('R')}을 0부터 ∞까지 적분해도 같다(예제 27.9의 두 번째 풀이). 예제의 수치: 5.00 μF, 800 V이면 1.60 J.`,
+  };
+  const STEPS = [
+    { reset: true, R: R0, quiz: Q1, hideAns: true, cap: `교재 그림 27.14의 회로에 에너지 막대를 붙였다. 전지가 한 일 ${M('W')}, 축전기의 전기 에너지 ${M('U')}<sub>C</sub>, 저항의 열 ${M('E')}<sub>R</sub>. 막대는 ${M('C')}ℰ<sup>2</sup> = 720 μJ를 100 %로 잰다.` },
+    { reset: true, R: R0, quiz: Q1, reveal: true, script: [[0.5, 'a'], [8, 'ff']], cap: `'재생'을 누르면 a로 옮기고, 8 s 뒤 빨리 감는다. 끝나면 ${M('W')} = 720 μJ, ${M('U')}<sub>C</sub> = 360 μJ, ${M('E')}<sub>R</sub> = 360 μJ. 아래 그래프에서 전지의 일률 ℰ${M('i')}는 언제나 축전기로 가는 몫 d${M('U')}<sub>C</sub>/d${M('t')}와 열 ${M('i')}<sup>2</sup>${M('R')}의 합이다.` },
+    { reset: true, R: R0, quiz: Q2, cap: `저항이 열을 만드니, 저항을 줄이면 잃는 에너지도 줄지 않을까?` },
+    { reset: true, R: R0 / 4, ghost: R0, quiz: Q2, reveal: true, script: [[0.5, 'a']], cap: `${M('R')} = 200 kΩ: τ = 1.00 s. 열의 일률은 처음에 4배(720 μW)지만 4분의 1의 시간 만에 끝난다. 쌓인 열은 그대로 360 μJ (점선은 ${M('R')} = 800 kΩ일 때). 조절에서 다른 ${M('R')}도 해 보자.` },
+    { reset: true, R: R0, charged: true, quiz: Q3, cap: `${M('R')} = 800 kΩ로 되돌리고 가득 충전했다. 지금까지 ${M('W')} = 720 μJ, ${M('U')}<sub>C</sub> = 360 μJ, ${M('E')}<sub>R</sub> = 360 μJ.` },
+    { chargedIfNot: true, quiz: Q3, reveal: true, script: [[0.5, 'b'], [8, 'ff']], cap: `방전하면 ${M('U')}<sub>C</sub>가 모두 열로 간다: 끝나면 ${M('E')}<sub>R</sub> = 720 μJ = ${M('W')}. 충전하고 방전하면 전지가 한 일은 결국 모두 열이 된다. 막대의 합 ${M('U')}<sub>C</sub> + ${M('E')}<sub>R</sub>는 언제나 ${M('W')}와 같다(값 접기의 마지막 줄).` },
+  ];
+
+  def = EM.register({
+    id: 's2',
+    steps: STEPS,
+    init(root) {
+      stage = $('stage'); graph = $('graph');
+      sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
+      ui = rcSwitchUI('s2', sim, state, () => def, act);
+      $('kv').innerHTML = row('시간 상수 τ = <span class="m">RC</span>', 'kT', 's') + row('전지가 한 일 <span class="m">W</span>', 'kW', 'μJ') +
+        row('축전기의 에너지 <span class="m">U</span><sub>C</sub>', 'kU', 'μJ') + row('저항의 열 <span class="m">E</span><sub>R</sub>', 'kQ', 'μJ') +
+        row('<span class="m">W</span> − <span class="m">U</span><sub>C</sub> − <span class="m">E</span><sub>R</sub>', 'kS', 'μJ', ' class="sum"');
+      $('resetBtn').addEventListener('click', () => { EM.wake(def); reset(); updateReadouts(); EM.requestDraw(def); });
+      $('rIn').addEventListener('input', e => { sim.setParam('R', +e.target.value * 1e3); updateReadouts(); EM.requestDraw(def); });
+      reset();
+      updateReadouts();
+    },
+    enterStep(i, { replay = false } = {}) {
+      const S = STEPS[i];
+      state.script = [];
+      state.hideAns = !!S.hideAns;
+      if (S.R) sim.setParam('R', S.R);
+      if (S.reset) reset();
+      const full = sim.S.sw === 'a' && Math.abs(sim.q() - sim.S.C * sim.S.emf) < 0.01 * sim.S.C * sim.S.emf;
+      if (S.charged || (S.chargedIfNot && (replay || !full))) {
+        if (!S.charged) reset();
+        sim.forceCharged(); ui.animate(true); record();
+      }
+      state.ghost = S.ghost ? { R: S.ghost } : null;
+      $('playBtn').hidden = !S.script;
+      updateReadouts();
+    },
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    play() {
+      const S = STEPS[def.step];
+      if (!S.script) return false;
+      def.enterStep(def.step, { replay: true });
+      state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      EM.requestDraw(def);
+    },
+    show() { anim.start(); },
+    hide() { anim.stop(); },
+    draw() { drawStage(); drawGraph(); },
+  });
+})();
+
+/* ================= 화면 3: 가지가 있는 회로 (Serway 퀴즈 27.5 그림 27.16, 문제 23·24 그림 P27.23) =================
+   두 회로 모두 '전지 줄기 + 가운데 가지 + 축전기가 든 오른쪽 고리'로 그린다.
+   전류의 +: 줄기 i_T는 시계 방향(왼쪽 변 위로, 위 변 오른쪽으로), 가운데 가지 i_M은 아래로, 오른쪽 고리 i_R은 시계 방향. i_T = i_M + i_R.
+   A (퀴즈 27.5): 가운데 R, 오른쪽 고리에 C(위 변)와 R(오른쪽 변). 스위치는 아래 변(줄기).
+     닫힘: i_M = ℰ/R, i_R = (ℰ − v)/R, τ = RC → 처음 전지 전류 2ℰ/R, 오랜 뒤 ℰ/R (퀴즈의 답 (i) c, (ii) d).
+     열림: 축전기가 두 R을 거쳐 방전, i_R = −v/2R, τ = 2RC.
+   B (문제 23): 줄기에 R₁, 가운데 스위치, 오른쪽 고리에 R₂(위 변)와 C(오른쪽 변). ℰ = 10.0 V, R₁ = 50.0 kΩ, R₂ = 100 kΩ, C = 10.0 μF.
+     열림: 직렬, τ = (R₁ + R₂)C = 1.50 s. 닫힘: i_T = ℰ/R₁, i_R = −v/R₂, τ = R₂C = 1.00 s,
+     스위치 전류 i_M = ℰ/R₁ + v/R₂ = 200 μA + (100 μA)e^(−t/1.00 s) (문제 23의 답). */
+(() => {
+  'use strict';
+  const { TAU, C, F, m: M } = EM;
+  const $ = id => document.getElementById('s3-' + id);
+  const WIN = 12;
+  const SCN = {
+    A: {
+      emf: 12, R: 8e5, Cap: 5e-6,
+      vInf(sw) { return sw ? this.emf : 0; },
+      tau(sw) { return (sw ? 1 : 2) * this.R * this.Cap; },
+      cur(sw, v) { const iR = sw ? (this.emf - v) / this.R : -v / (2 * this.R), iM = sw ? this.emf / this.R : -iR; return { T: iM + iR, M: iM, R: iR }; },
+      names: { T: ['i', '전지'], M: ['i', '1'], R: ['i', '2'] },
+    },
+    B: {
+      emf: 10, R1: 5e4, R2: 1e5, Cap: 1e-5,
+      vInf(sw) { return sw ? 0 : this.emf; },
+      tau(sw) { return (sw ? this.R2 : this.R1 + this.R2) * this.Cap; },
+      cur(sw, v) { if (!sw) { const i = (this.emf - v) / (this.R1 + this.R2); return { T: i, M: 0, R: i }; } const iT = this.emf / this.R1, iR = -v / this.R2; return { T: iT, M: iT - iR, R: iR }; },
+      names: { T: ['i', '1'], M: ['i', 'S'], R: ['i', '2'] },
+    },
+  };
+  const S = { scene: 'A', sw: false, t: 0, seg: { t0: 0, v0: 0 }, tSwitch: null };
+  const sc = () => SCN[S.scene];
+  const vAt = t => { const P = sc(), vi = P.vInf(S.sw); return vi + (S.seg.v0 - vi) * Math.exp(-(t - S.seg.t0) / P.tau(S.sw)); };
+  const v = () => vAt(S.t);
+  const cur = () => sc().cur(S.sw, v());
+  const iRef = () => (S.scene === 'A' ? 2 * SCN.A.emf / SCN.A.R : SCN.B.emf / SCN.B.R1 * 1.5);
+  const state = { hist: [], clock: 0, script: [], ff: false, hideAns: false, blade: 1, anim: null, ph: { T: 0, M: 0, R: 0 } };
+  let def = null;
+
+  function anchor() { S.seg = { t0: S.t, v0: v() }; }
+  function setSw(on) { if (on === S.sw) return; anchor(); S.sw = on; S.tSwitch = S.t; animBlade(false); updateReadouts(); }
+  function animBlade(instant) {
+    const to = S.sw ? 0 : 1;
+    if (state.anim) { state.anim.cancel(); state.anim = null; }
+    if (instant) { state.blade = to; return; }
+    const from = state.blade;
+    state.anim = EM.tween(180, e => { state.blade = from + (to - from) * e; EM.requestDraw(def); });
+  }
+  // 처음 상태: v0, 스위치 sw로 (오래 그대로였던 것처럼)
+  function setup(scene, sw, v0) {
+    S.scene = scene; S.sw = sw; S.t = 0; S.seg = { t0: 0, v0 }; S.tSwitch = null;
+    state.hist = []; state.ff = false; animBlade(true); record();
+    document.querySelectorAll('#s3 .seg [data-scene]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scene === scene)));
+  }
+  function record() {
+    const H = state.hist, t = S.t;
+    if (H.length && t - H[H.length - 1][0] < 0.01) return;
+    const c = cur();
+    H.push([t, c.T, c.M, c.R, v()]);
+    while (H.length > 2 && H[0][0] < t - WIN * 1.05) H.shift();
+  }
+  const anim = EM.loop(dt => {
+    state.clock += dt;
+    while (state.script.length && state.script[0].at <= state.clock) state.script.shift().fn();
+    const far = Math.abs(v() - sc().vInf(S.sw)) > 0.002 * sc().emf;
+    let k = state.ff && far ? 6 : 1;
+    if (state.ff && k === 1) state.ff = false;
+    const dtr = dt * k, n = Math.max(1, Math.ceil(dtr / 0.01));
+    for (let j = 0; j < n; j++) { S.t += dtr / n; record(); }
+    const c = cur(), ir = iRef();
+    for (const key of ['T', 'M', 'R']) state.ph[key] += dt * RCDRAW.FLOW_V * Math.min(1.2, Math.abs(c[key]) / ir) * Math.sign(c[key] || 0);
+    updateLive();
+    EM.requestDraw(def);
+  });
+  function act(what) {
+    if (what === 'close') setSw(true);
+    else if (what === 'open') setSw(false);
+    else if (what === 'ff') state.ff = true;
+  }
+
+  /* ---------- 그리기 ---------- */
+  const GW = 10, GH = 6, XM = 5.4, YB0 = 2.2, YB1 = 3.8;
+  const VIEW = { x0: -1.6, x1: 11.6, y0: -1.3, y1: 7.3 };
+  let stage, sctx, graph, gctx;
+  function drawStage() {
+    const { w, h } = EM.fitCanvas(stage, sctx);
+    if (w < 40 || h < 40) return;
+    const ctx = sctx, f = SF(stageFs()), fs = f.fs;
+    ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
+    const vw = VIEW.x1 - VIEW.x0, vh = VIEW.y1 - VIEW.y0;
+    const s = Math.min((w - 20) / vw, (h - 12) / vh);
+    const ox = 10 + (w - 20 - vw * s) / 2 - VIEW.x0 * s, oy = 6 + (h - 12 - vh * s) / 2 + VIEW.y1 * s;
+    const X = x => ox + x * s, Y = y => oy - y * s;
+    const P = pts => pts.map(([x, y]) => [X(x), Y(y)]);
+    const wireW = Math.max(2.6, 0.075 * s);
+    const wire = pts => KIT.stroke(ctx, P(pts), false, C.wire, wireW);
+    const A = S.scene === 'A', hide = state.hideAns, P0 = sc();
+    const avoid = [];                                       // 화살촉을 그리지 않을 부품 자리 [x0, y0, x1, y1]
+    const term = (x, y) => KIT.terminal(ctx, X(x), Y(y), Math.max(5, 0.1 * s));
+    const lab = (txt, x, y, align = 'center', col = C.ink) => EM.runs(ctx, txt, X(x), Y(y), col, { align, halo: true });
+    // 전지 (왼쪽 변, +가 위)
+    KIT.battery(ctx, X(0), Y(YB0), X(0), Y(YB1), 0.55 * s, { wireW });
+    lab([['ℰ', f.m]], -0.75, (YB0 + YB1) / 2, 'right');
+    lab([['+', `700 ${fs}px ${F.ui}`]], 0.6, YB1 - 0.05, 'left');
+    avoid.push([-0.7, YB0 - 0.15, 0.7, YB1 + 0.15]);
+    wire([[0, YB1], [0, GH]]);
+    wire([[0, YB0], [0, 0]]);
+    const vf = hide ? 0 : v() / P0.emf;
+    if (A) {
+      // 줄기: 위 변은 도선, 아래 변에 스위치 (축 왼쪽)
+      const XS0 = 1.8, XS1 = 3.4;
+      wire([[0, GH], [XM, GH]]); wire([[0, 0], [XS0, 0]]); wire([[XS1, 0], [XM, 0]]);
+      KIT.blade(ctx, X(XS0), Y(0), X(XS1), Y(0), state.blade, { width: wireW, dir: -1 });
+      term(XS0, 0); term(XS1, 0);
+      lab([['S', f.m]], (XS0 + XS1) / 2, -0.8);
+      avoid.push([XS0 - 0.3, -0.6, XS1 + 0.3, 1.2]);
+      // 가운데 R
+      wire([[XM, GH], [XM, 4.3]]); wire([[XM, 1.7], [XM, 0]]);
+      KIT.resistor(ctx, X(XM), Y(4.3), X(XM), Y(1.7), 0.28 * s, C.ink, Math.max(2.4, 0.06 * s), 8);
+      lab([['R', f.mi]], XM + 0.65, 3.0, 'left');
+      avoid.push([XM - 0.5, 1.55, XM + 0.5, 4.45]);
+      // 오른쪽 고리: 위 변에 C, 오른쪽 변에 R
+      wire([[XM, GH], [7.1, GH]]); wire([[8.5, GH], [GW, GH], [GW, 4.3]]); wire([[GW, 1.7], [GW, 0], [XM, 0]]);
+      KIT.capacitor(ctx, X(7.1), Y(GH), X(8.5), Y(GH), 0.55 * s, { q: -vf, wireW, fs: Math.round(fs * 1.05), gap: 0.26 * s });
+      lab([['C', f.mi]], 6.95, GH + 0.6, 'right');
+      avoid.push([6.9, GH - 0.8, 8.7, GH + 0.8]);
+      KIT.resistor(ctx, X(GW), Y(4.3), X(GW), Y(1.7), 0.28 * s, C.ink, Math.max(2.4, 0.06 * s), 8);
+      lab([['R', f.mi]], GW + 0.65, 3.0, 'left');
+      avoid.push([GW - 0.5, 1.55, GW + 0.5, 4.45]);
+    } else {
+      // 줄기: 위 변에 R₁
+      wire([[0, GH], [1.4, GH]]); wire([[3.8, GH], [XM, GH]]); wire([[0, 0], [XM, 0]]);
+      KIT.resistor(ctx, X(1.4), Y(GH), X(3.8), Y(GH), 0.28 * s, C.ink, Math.max(2.4, 0.06 * s), 8);
+      lab([['R', f.mi], ['1', f.sub, fs * 0.35]], 2.6, GH + 0.75);
+      avoid.push([1.25, GH - 0.5, 3.95, GH + 0.5]);
+      // 가운데 스위치 (축이 아래)
+      wire([[XM, GH], [XM, 3.8]]); wire([[XM, 2.0], [XM, 0]]);
+      KIT.blade(ctx, X(XM), Y(2.0), X(XM), Y(3.8), state.blade, { width: wireW, dir: 1 });
+      term(XM, 2.0); term(XM, 3.8);
+      lab([['S', f.m]], XM - 0.6, 2.9, 'right');
+      avoid.push([XM - 0.3, 1.8, XM + 1.4, 4.0]);
+      // 오른쪽 고리: 위 변에 R₂, 오른쪽 변에 C
+      wire([[XM, GH], [6.6, GH]]); wire([[9.0, GH], [GW, GH], [GW, 3.7]]); wire([[GW, 2.3], [GW, 0], [XM, 0]]);
+      KIT.resistor(ctx, X(6.6), Y(GH), X(9.0), Y(GH), 0.28 * s, C.ink, Math.max(2.4, 0.06 * s), 8);
+      lab([['R', f.mi], ['2', f.sub, fs * 0.35]], 7.8, GH + 0.75);
+      avoid.push([6.45, GH - 0.5, 9.15, GH + 0.5]);
+      KIT.capacitor(ctx, X(GW), Y(3.7), X(GW), Y(2.3), 0.55 * s, { q: -vf, wireW, fs: Math.round(fs * 1.05), gap: 0.26 * s });
+      lab([['C', f.mi]], GW + 0.9, 3.0, 'left');
+      avoid.push([GW - 0.8, 2.1, GW + 0.8, 3.9]);
+    }
+    for (const x of [XM]) for (const y of [0, GH]) { ctx.beginPath(); ctx.arc(X(x), Y(y), Math.max(4, 0.08 * s), 0, TAU); ctx.fillStyle = C.wire; ctx.fill(); }
+
+    // 전류 화살촉: 가지마다 크기에 비례하는 진하기, 부호에 따라 방향
+    if (!hide) {
+      const skip = (px, py) => { const x = (px - ox) / s, y = (oy - py) / s; return avoid.some(([a, b, c, d]) => x > a && x < c && y > b && y < d) || (Math.abs(x - XM) < 0.3 && (Math.abs(y) < 0.3 || Math.abs(y - GH) < 0.3)); };
+      const c = cur(), ir = iRef(), lw = Math.max(2.2, 0.055 * s);
+      const paths = {
+        T: [[[0, YB1 + 0.15], [0, GH], [XM - 0.2, GH]], [[XM - 0.2, 0], [0, 0], [0, YB0 - 0.15]]],
+        M: [[[XM, GH - 0.2], [XM, 0.2]]],
+        R: [[[XM + 0.2, GH], [GW, GH], [GW, 0], [XM + 0.2, 0]]],
+      };
+      for (const key of ['T', 'M', 'R']) {
+        const a = Math.abs(c[key]) / ir;
+        if (a < 0.004) continue;
+        for (let pts of paths[key]) {
+          let ph = state.ph[key];
+          if (c[key] < 0) { pts = pts.slice().reverse(); ph = -ph; }
+          KIT.flowVec(ctx, P(pts), false, ph * s, 1.4 * s, 0.95 * s * Math.min(1.2, a), C.current, lw, skip);
+        }
+      }
+    }
+    // 가지 전류 이름표
+    const c = cur(), N = P0.names;
+    const il = (key, x, y, align) => lab([[N[key][0], f.mi], [N[key][1], f.sub, fs * 0.35], [hide ? ' = ?' : ` = ${sgnStr(c[key] * 1e6, 3)} μA`, f.num]], x, y, align, C.current);
+    il('T', -0.3, GH + 0.75, 'left');
+    il('M', XM + (A ? 0.65 : 1.0), A ? 1.0 : 1.0, 'left');
+    il('R', A ? GW - 0.6 : 7.6, A ? -0.85 : -0.85, A ? 'right' : 'center');
+    lab([['Δ', f.m], ['V', f.mi], ['C', f.subI, fs * 0.35], [hide ? ' = ?' : ` = ${EM.fmt(v(), 3)} V`, f.num]], A ? 7.8 : GW - 0.9, A ? GH - 1.1 : 3.0, A ? 'center' : 'right', C.accent);
+  }
+
+  function drawGraph() {
+    const { w, h } = EM.fitCanvas(graph, gctx);
+    if (w < 60 || h < 60) return;
+    const fs = Math.max(11, Math.round(EM.remPx() * 0.68));
+    const fM = `italic ${fs + 1}px ${F.math}`, fU = `500 ${fs}px ${F.ui}`, fS = `500 ${Math.round(fs * 0.8)}px ${F.ui}`;
+    const t = S.t, tmin = Math.max(0, t - WIN), tmax = tmin + WIN, hide = state.hideAns, P0 = sc(), N = P0.names;
+    const Hs = state.hist.filter(p => p[0] >= tmin - 0.02);
+    const u = 1e6, iHi = S.scene === 'A' ? 40 : 400, iStep = S.scene === 'A' ? 10 : 100;
+    const c = () => cur();
+    const iS = [
+      { pts: Hs.map(p => [p[0], p[1] * u]), f: () => c().T * u, color: C.current },
+      { pts: Hs.map(p => [p[0], p[2] * u]), f: () => c().M * u, color: C.neg, noDot: true },
+      { pts: Hs.map(p => [p[0], p[3] * u]), f: () => c().R * u, color: C.accent, noDot: true },
+    ];
+    const nm = (k, col) => [[N[k][0], fM], [N[k][1], fS, fs * 0.3], [` ${col}`, fU]];
+    KIT.timePlot(gctx, w, h, {
+      tmin, tmax, t, tstep: S.scene === 'A' ? 2 : 1,
+      panels: [
+        { label: [...nm('T', '자홍,  '), ...nm('M', '파랑,  '), ...nm('R', '보라  (μA)')], lo: -iHi / 2, hi: iHi, step: iStep, series: hide ? [] : iS, note: hide ? [['?', fU]] : null },
+        { label: [['Δ', fU], ['V', fM], ['C', fS, fs * 0.3], ['  (V)', fU]], lo: 0, hi: P0.emf * 1.2, step: S.scene === 'A' ? 4 : 2, series: hide ? [] : [{ pts: Hs.map(p => [p[0], p[4]]), f: () => v(), color: C.efield }], note: hide ? [['?', fU]] : null },
+      ],
+    });
+  }
+
+  /* ---------- 글 ---------- */
+  const row = (k, id, unit, cls = '') => `<dt${cls}>${k}</dt><dd id="s3-${id}"${cls}>–</dd><dd${cls}>${unit}</dd>`;
+  const nmH = k => { const n = sc().names[k]; return `<span class="m">${n[0]}</span><sub>${n[1]}</sub>`; };
+  function buildKv() {
+    $('kv').innerHTML = row('지금의 시간 상수 τ', 'kT', 's') + row('축전기 전압 Δ<span class="m">V</span><sub>C</sub>', 'kV', 'V') +
+      row(nmH('T'), 'kiT', 'μA') + row(nmH('M'), 'kiM', 'μA') + row(nmH('R'), 'kiR', 'μA', ' class="sum"');
+    $('note').innerHTML = S.scene === 'A'
+      ? `퀴즈 27.5(그림 27.16): ℰ = 12.0 V, 두 저항 <span class="m">R</span> = 800 kΩ, <span class="m">C</span> = 5.00 μF. 전지의 내부 저항은 0. ${nmH('T')} = ${nmH('M')} + ${nmH('R')}.`
+      : `문제 23: ℰ = 10.0 V, <span class="m">R</span><sub>1</sub> = 50.0 kΩ, <span class="m">R</span><sub>2</sub> = 100 kΩ, <span class="m">C</span> = 10.0 μF. ${nmH('M')}는 스위치를 아래로 지나는 전류. ${nmH('T')} = ${nmH('M')} + ${nmH('R')}.`;
+  }
+  function updateLive() {
+    const hide = state.hideAns, c = cur();
+    $('kT').textContent = EM.fmt(sc().tau(S.sw), 3);
+    $('kV').textContent = hide ? '?' : EM.fmt(v(), 3);
+    $('kiT').textContent = hide ? '?' : sgnStr(c.T * 1e6, 3);
+    $('kiM').textContent = hide ? '?' : sgnStr(c.M * 1e6, 3);
+    $('kiR').textContent = hide ? '?' : sgnStr(c.R * 1e6, 3);
+  }
+  function updateReadouts() { $('swBtn').textContent = S.sw ? 'S 열기' : 'S 닫기'; updateLive(); }
+
+  const QA1 = {
+    tag: '퀴즈 27.5 (i)',
+    q: `전지의 내부 저항은 없다. 축전기가 빈 채로 스위치를 닫은 <b>바로 직후</b> 전지에 흐르는 전류는?`,
+    choices: ['0', `ℰ/2${M('R')}`, `2ℰ/${M('R')}`, `ℰ/${M('R')}`, '알 수 없다'],
+    answer: 2,
+    why: `직후에는 축전기에 전하가 없어 양단 전위차가 0: 축전기를 이어진 도선으로 보면 된다. 그러면 두 ${M('R')}이 전지에 나란히 이어져 등가 저항 ${M('R')}/2, 전류 2ℰ/${M('R')}. 두 가지에 ℰ/${M('R')}씩 흐른다.`,
+  };
+  const QA2 = {
+    tag: '퀴즈 27.5 (ii)',
+    q: `스위치를 닫고 <b>오랜 시간</b>이 지난 뒤 전지에 흐르는 전류는?`,
+    choices: ['0', `ℰ/2${M('R')}`, `2ℰ/${M('R')}`, `ℰ/${M('R')}`, '알 수 없다'],
+    answer: 3,
+    why: `축전기가 ℰ까지 충전되면 그 가지에는 전류가 없다: 끊긴 도선. 가운데 ${M('R')}에만 ℰ/${M('R')}이 흐른다. 그 사이 축전기 가지의 전류는 (ℰ/${M('R')})${M('e')}<sup>−${M('t')}/${M('RC')}</sup>로 준다: 전지가 이상적이라 가운데 가지와 상관없이 축전기 가지만의 ${M('RC')} 회로다.`,
+  };
+  const QB1 = {
+    tag: '문제 23 (a)(b)',
+    q: `ℰ = 10.0 V, ${M('R')}<sub>1</sub> = 50.0 kΩ, ${M('R')}<sub>2</sub> = 100 kΩ, ${M('C')} = 10.0 μF. 스위치를 닫기 <b>전</b>과 닫은 <b>후</b> 회로의 시간 상수는?`,
+    choices: ['1.50 s, 1.00 s', '1.00 s, 1.50 s', '0.500 s, 1.00 s', '1.50 s, 0.333 s'],
+    answer: 0,
+    why: `열려 있으면 ${M('R')}<sub>1</sub>, ${M('R')}<sub>2</sub>, ${M('C')}가 전지와 직렬: τ = (${M('R')}<sub>1</sub> + ${M('R')}<sub>2</sub>)${M('C')} = 1.50 s. 닫으면 스위치가 전지 쪽과 축전기 쪽을 갈라놓는다. 축전기는 ${M('R')}<sub>2</sub>와 스위치로 된 고리에서만 방전한다: τ = ${M('R')}<sub>2</sub>${M('C')} = 1.00 s. ${M('R')}<sub>1</sub>은 축전기의 시간 상수와 상관없어진다.`,
+  };
+  const QB2 = {
+    tag: '옮겨 쓰기', // 출처: 문제 23의 회로를 그대로 쓰고 질문을 더함 (답은 직접 풀이)
+    q: `스위치를 닫은 채 오래 두어 축전기가 비었다. 이제 스위치를 다시 열면 축전기는?`,
+    choices: ['τ = 1.00 s로 다시 충전된다', 'τ = 1.50 s로 다시 충전된다', '충전되지 않는다', '곧바로 10.0 V가 된다'],
+    answer: 1,
+    why: `열면 회로가 ℰ, ${M('R')}<sub>1</sub>, ${M('R')}<sub>2</sub>, ${M('C')}의 직렬 ${M('RC')} 회로가 된다: 처음 전류 ℰ/(${M('R')}<sub>1</sub> + ${M('R')}<sub>2</sub>) = 66.7 μA에서 τ = 1.50 s로 줄고 축전기는 10.0 V에 다가간다. 시간 상수는 '축전기에서 본' 저항으로 정해지고, 스위치가 그 저항을 바꾼다.`,
+  };
+  const STEPS = [
+    { scene: 'A', sw: false, v0: 0, quiz: QA1, hideAns: true, cap: `교재 그림 27.16의 회로(퀴즈 27.5). 전지에 저항 ${M('R')} 하나인 가지와, 축전기 ${M('C')}와 ${M('R')}이 직렬인 가지가 나란히 이어져 있다. 스위치는 열려 있고 축전기는 비어 있다.` },
+    { scene: 'A', sw: false, v0: 0, quiz: QA1, reveal: true, script: [[0.6, 'close']], cap: `'재생'을 누르면 스위치를 닫는다. 직후 ${M('i')}<sub>전지</sub> = 2ℰ/${M('R')} = 30.0 μA, 가지마다 15.0 μA. 그래프에서 ${M('i')}<sub>2</sub>(보라)만 τ = ${M('RC')} = 4.00 s로 준다.` },
+    { scene: 'A', sw: false, v0: 0, quiz: QA2, cap: `오래 기다리면 전지의 전류는 어디로 다가갈까?` },
+    { scene: 'A', sw: false, v0: 0, quiz: QA2, reveal: true, script: [[0.5, 'close'], [3, 'ff']], cap: `'재생'을 누르면 닫고 3 s 뒤 빨리 감는다. ${M('i')}<sub>전지</sub>는 30.0 μA에서 15.0 μA로. 규칙: 처음 순간 빈 축전기 = 이어진 도선, 오랜 뒤 충전된 축전기 = 끊긴 도선. 다시 열면 축전기가 두 ${M('R')}을 거쳐 τ = 2${M('RC')}로 방전한다('S 열기'로 해 보자).` },
+    { scene: 'B', sw: false, v0: 10, quiz: QB1, cap: `문제 23의 회로. 스위치를 오래 열어 두어 축전기가 ℰ = 10.0 V로 충전되었고 전류는 없다. 이제 스위치를 닫는다.` },
+    { scene: 'B', sw: false, v0: 10, quiz: QB1, reveal: true, script: [[0.6, 'close']], cap: `닫으면 ${M('i')}<sub>1</sub> = ℰ/${M('R')}<sub>1</sub> = 200 μA가 곧바로 흐르고, 축전기는 ${M('R')}<sub>2</sub>와 스위치를 거쳐 τ = 1.00 s로 방전한다(${M('i')}<sub>2</sub> < 0). 스위치를 지나는 전류는 ${M('i')}<sub>S</sub> = 200 μA + (100 μA)${M('e')}<sup>−${M('t')}/1.00 s</sup> (문제 23 (c)): 처음 300 μA, 나중 200 μA.` },
+    { scene: 'B', sw: true, v0: 0, quiz: QB2, cap: `스위치를 닫은 채 오래 두어 축전기가 비었다. ${M('i')}<sub>1</sub> = 200 μA만 스위치로 흐른다.` },
+    { scene: 'B', sw: true, v0: 0, quiz: QB2, reveal: true, script: [[0.6, 'open']], cap: `열면 스위치 전류가 0이 되고 직렬 회로의 전류 66.7 μA가 축전기를 채우기 시작한다. τ = 1.50 s로 10.0 V에 다가간다. 같은 축전기라도 둘레 회로가 바뀌면 시간 상수가 바뀐다.` },
+  ];
+
+  def = EM.register({
+    id: 's3',
+    steps: STEPS,
+    init(root) {
+      stage = $('stage'); graph = $('graph');
+      sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
+      document.querySelectorAll('#s3 .seg [data-scene]').forEach(b => b.addEventListener('click', () => {
+        EM.wake(def); state.script = []; state.hideAns = false;   // 직접 장면을 바꾸면 값을 보인다
+        setup(b.dataset.scene, false, b.dataset.scene === 'B' ? SCN.B.emf : 0);
+        buildKv(); updateReadouts(); EM.requestDraw(def);
+      }));
+      $('swBtn').addEventListener('click', () => { EM.wake(def); setSw(!S.sw); });
+      $('resetBtn').addEventListener('click', () => { EM.wake(def); def.enterStep(def.step, { replay: true }); EM.requestDraw(def); });
+      setup('A', false, 0);
+      buildKv();
+      updateReadouts();
+    },
+    enterStep(i) {
+      const St = STEPS[i];
+      state.script = [];
+      state.hideAns = !!St.hideAns;
+      setup(St.scene, St.sw, St.v0);
+      buildKv();
+      $('playBtn').hidden = !St.script;
+      updateReadouts();
+    },
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    play() {
+      const St = STEPS[def.step];
+      if (!St.script) return false;
+      def.enterStep(def.step, { replay: true });
+      state.script = St.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      EM.requestDraw(def);
+    },
+    show() { anim.start(); },
+    hide() { anim.stop(); },
+    draw() { drawStage(); drawGraph(); },
+  });
+})();
+
+EM.boot();
+</script>
+</body>
+</html>
