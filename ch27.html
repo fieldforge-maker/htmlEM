@@ -797,7 +797,11 @@ const EM = (() => {
     });
     prev.addEventListener('click', () => goStep(def, def.step - 1));
     next.addEventListener('click', () => goStep(def, def.step + 1));
-    if (playNext) playNext.addEventListener('click', () => { goStep(def, def.step + 1); startPlay(def); });
+    // ▶: 이 단계의 시연을 아직 안 했으면 여기서 재생, 했거나 시연이 없으면 다음 단계로 넘기고 재생
+    if (playNext) playNext.addEventListener('click', () => {
+      if (!playsHere(def)) goStep(def, def.step + 1);
+      startPlay(def);
+    });
     toggle.addEventListener('click', () => setCaptionOpen(!captionOpen));
     def.rail = { prev, next, playNext, dots, toggle, caption };
     buildQuiz(def);
@@ -862,9 +866,17 @@ const EM = (() => {
   /* (CH27) 재생 상태: 화면 위 '재생' 단추는 재생 → 멈춤 → 계속. def.play()는 그 단계의 시연(script)을 처음부터 시작하고,
      시연이 없으면 false를 돌려준다. 멈춤은 화면의 움직임(def.hide/def.show)을 잠시 세운다. */
   const PLAY_LABEL = { idle: '▶ 재생', running: '❚❚ 멈춤', paused: '▶ 계속' };
+  const playsHere = def => !!def.steps[def.step].script && def.playState === 'idle';
   function setPlay(def, st) {
     def.playState = st;
     if (def.playBtn) { def.playBtn.textContent = PLAY_LABEL[st]; def.playBtn.classList.toggle('primary', st !== 'running'); }
+    const pn = def.rail && def.rail.playNext;
+    if (pn) {
+      const here = playsHere(def);
+      pn.disabled = !here && def.step === def.steps.length - 1;
+      const lab = here ? '이 단계 재생' : '다음 단계로 넘기고 재생';
+      pn.setAttribute('aria-label', lab); pn.title = lab;
+    }
   }
   function startPlay(def) {
     if (!def.play) return;
@@ -890,7 +902,6 @@ const EM = (() => {
     });
     prev.disabled = i === 0;
     next.disabled = i === def.steps.length - 1;
-    if (def.rail.playNext) def.rail.playNext.disabled = next.disabled;
     if (def.play) { if (def.playState === 'paused' && def.show) def.show(); setPlay(def, 'idle'); }
     caption.innerHTML = def.steps[i].cap;
     renderQuiz(def, i);
