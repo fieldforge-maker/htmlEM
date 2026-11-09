@@ -175,7 +175,10 @@ h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text
 .canvas-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .can-drag { cursor: grab; }
 .dragging { cursor: grabbing; }
-.stage-tools { position: absolute; top: 10px; right: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+/* 단추 막대는 그림 아래, 범례와 같은 줄의 오른쪽 (단계 레일의 '다음' 단추 바로 위) */
+.stage-foot { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; padding-right: 10px; }
+.stage-foot .legend { flex: 1 1 auto; min-width: 0; }
+.stage-tools { margin-left: auto; padding: 6px 0 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .stage-tools .btn { background: var(--panel); }
 .legend { display: flex; flex-wrap: wrap; gap: .2em 1.2em; padding: .35em 12px .6em; font-size: .76em; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: .4em; }
@@ -425,6 +428,15 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s1-stage" aria-label="자기장 영역에 반쯤 걸친 고리와 검류계. 실험 1은 고리를 당기고, 실험 2는 자석을 밀고, 실험 3은 자기장의 세기를 줄인다."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><b class="key-b">×</b><b class="mv">B</b> (들어감)</span>
+          <span><i class="key-current"></i>전류</span>
+          <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b></span>
+          <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
+          <span><i class="key-efield"></i>전기력 <span class="m">q</span><b class="mv">E</b></span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="보기">
             <button type="button" data-view="0" aria-pressed="true">셋 다</button>
@@ -434,13 +446,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <button class="btn primary" type="button" id="s1-playBtn" hidden>재생</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><b class="key-b">×</b><b class="mv">B</b> (들어감)</span>
-        <span><i class="key-current"></i>전류</span>
-        <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b></span>
-        <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
-        <span><i class="key-efield"></i>전기력 <span class="m">q</span><b class="mv">E</b></span>
       </div>
     </div>
 
@@ -511,6 +516,15 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s2-stage" aria-label="자기장 속을 지나는 전하, 막대 또는 고리. 관성계 A와 B 사이를 오가며 본다."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><b class="key-b">×</b><b class="mv">B</b> (들어감)</span>
+          <span><i class="key-vel"></i>&nbsp;속도</span>
+          <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
+          <span><i class="key-efield"></i>전기장, 전기력</span>
+          <span><i class="key-pos">+</i><i class="key-neg">−</i>전하</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="관성계">
             <button type="button" data-frame="0" aria-pressed="true">A · 자석과 함께</button>
@@ -518,13 +532,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <button class="btn primary" type="button" id="s2-playBtn" hidden>재생</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><b class="key-b">×</b><b class="mv">B</b> (들어감)</span>
-        <span><i class="key-vel"></i>&nbsp;속도</span>
-        <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
-        <span><i class="key-efield"></i>전기장, 전기력</span>
-        <span><i class="key-pos">+</i><i class="key-neg">−</i>전하</span>
       </div>
     </div>
 
@@ -584,6 +591,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s3-stage" aria-label="위에서 본 긴 솔레노이드의 단면. 안의 자기장이 변하면 둘레를 감는 유도 전기장이 생긴다. 청록 점선 원(적분 경로)은 끌어서 크기를 바꾼다."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><b class="key-b">•</b><b class="mv">B</b> (나옴)</span>
+          <span><i class="key-current"></i>솔레노이드 전류</span>
+          <span><i class="key-efield"></i>유도 전기장 <b class="mv">E</b></span>
+          <span><i class="key-path"></i>적분 경로</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="자기장의 변화">
             <button type="button" data-mode="up" aria-pressed="false">증가</button>
@@ -593,12 +608,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           </div>
           <button class="btn primary" type="button" id="s3-playBtn" hidden>재생</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><b class="key-b">•</b><b class="mv">B</b> (나옴)</span>
-        <span><i class="key-current"></i>솔레노이드 전류</span>
-        <span><i class="key-efield"></i>유도 전기장 <b class="mv">E</b></span>
-        <span><i class="key-path"></i>적분 경로</span>
       </div>
     </div>
 
@@ -667,6 +676,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s4-stage" aria-label="스위치가 달린 회로. 철심 고리, 자기장 속 회로의 스위치, 미끄럼 막대 세 장면."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><b class="key-b">×</b><b class="mv">B</b> (들어감)</span>
+          <span><i class="key-current"></i>전류</span>
+          <span><i class="key-field"></i>자기선속 / 자기력</span>
+          <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b></span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="장면">
             <button type="button" data-scene="ring" aria-pressed="true">철심 고리</button>
@@ -676,12 +693,6 @@ sub, sup { font-size: .7em; line-height: 0; }
           <button class="btn" type="button" id="s4-actBtn">스위치 닫기</button>
           <button class="btn primary" type="button" id="s4-playBtn" hidden>재생</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><b class="key-b">×</b><b class="mv">B</b> (들어감)</span>
-        <span><i class="key-current"></i>전류</span>
-        <span><i class="key-field"></i>자기선속 / 자기력</span>
-        <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b></span>
       </div>
     </div>
 
@@ -732,16 +743,18 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s5-stage" aria-label="비스듬히 본 도는 금속 원판. 자기장은 위쪽을 향하고, 축 밑과 가장자리에 접점이 닿아 있고 바깥 회로에 저항이 있다."></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><b class="mv">B</b> (위쪽, ↑)</span>
+          <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b> = ω<span class="m">r</span></span>
+          <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
+          <span><i class="key-current"></i>전류</span>
+        </div>
         <div class="stage-tools">
           <button class="btn" type="button" id="s5-openBtn">회로 끊기</button>
           <button class="btn primary" type="button" id="s5-playBtn" hidden>재생</button>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><b class="mv">B</b> (위쪽, ↑)</span>
-        <span><i class="key-vel"></i>&nbsp;<b class="mv">v</b> = ω<span class="m">r</span></span>
-        <span><i class="key-field"></i>자기력 <span class="m">q</span><b class="mv">v</b>×<b class="mv">B</b></span>
-        <span><i class="key-current"></i>전류</span>
       </div>
     </div>
 
@@ -1662,7 +1675,7 @@ const KIT = (() => {
     const ctx = sctx;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const fsT = Math.max(12, Math.round(EM.remPx() * 0.78 * 1.5));
-    const topPad = (tools ? tools.offsetHeight : 34) + 18;
+    const topPad = 18;                                  // 단추 막대는 그림 아래 줄로 옮겼다
     const pad = 14, aspect = (WX1 - WX0) / (2 * WY);
     const title = (k, x, y, align = 'left') => EM.runs(ctx, [
       [`실험 ${k}`, `700 ${fsT}px ${F.ui}`], [`  ${TITLE[k - 1]}`, `500 ${Math.round(fsT * 0.92)}px ${F.ui}`, 0, C.muted],

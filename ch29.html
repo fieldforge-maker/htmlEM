@@ -168,7 +168,10 @@ h2 { margin: 0; font-size: 1.4em; font-weight: 700; letter-spacing: -.01em; text
 .canvas-box > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
 .can-drag { cursor: grab; }
 .dragging { cursor: grabbing; }
-.stage-tools { position: absolute; top: 10px; right: 10px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+/* 단추 막대는 그림 아래, 범례와 같은 줄의 오른쪽 (단계 레일의 '다음' 단추 바로 위) */
+.stage-foot { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; padding-right: 10px; }
+.stage-foot .legend { flex: 1 1 auto; min-width: 0; }
+.stage-tools { margin-left: auto; padding: 6px 0 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
 .legend { display: flex; flex-wrap: wrap; gap: .2em 1.2em; padding: .35em 12px .6em; font-size: .76em; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: .4em; }
 .key-path { display: inline-block; width: 1.8em; border-top: 3px dashed var(--path); }
@@ -403,11 +406,13 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s1-stage" aria-label="위에서 본 토로이드와 원형 앙페르 경로"></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-path"></i>앙페르 경로</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-path"></i>앙페르 경로</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
@@ -484,10 +489,12 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s2-stage" aria-label="도선 하나를 나선으로 감은 토로이드의 입체 그림. 끌어서 돌려 볼 수 있다."></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류</span>
-        <span><i class="key-path"></i>경로 2</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류</span>
+          <span><i class="key-path"></i>경로 2</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
@@ -547,10 +554,12 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s3-stage" aria-label="잘라서 곧게 펴지는 토로이드를 위에서 본 단면"></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
@@ -621,10 +630,12 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s4-stage" aria-label="축을 지나는 면으로 자른 솔레노이드와 자기력선"></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
@@ -691,12 +702,14 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s5-stage" aria-label="긴 솔레노이드의 단면과 직사각형 앙페르 경로"></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-path"></i>앙페르 경로</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
-        <span><i class="key-contrib"></i><b class="eq k-eq"><b class="mv">B</b>·d<b class="mv">s</b> ≠ 0</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-path"></i>앙페르 경로</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+          <span><i class="key-contrib"></i><b class="eq k-eq"><b class="mv">B</b>·d<b class="mv">s</b> ≠ 0</b></span>
+        </div>
       </div>
     </div>
 
@@ -776,10 +789,12 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s6-stage" aria-label="도선 하나를 나선으로 감은 솔레노이드와 그 바깥을 도는 원형 앙페르 경로의 입체 그림. 끌어서 돌려 볼 수 있다."></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류</span>
-        <span><i class="key-path"></i>앙페르 경로</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="key-current"></i>전류</span>
+          <span><i class="key-path"></i>앙페르 경로</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
@@ -861,6 +876,14 @@ sub, sup { font-size: .7em; line-height: 0; }
     <div class="stage-wrap">
       <div class="canvas-box">
         <canvas id="s7-stage" aria-label="두 줄의 도선과 점 P의 자기장"></canvas>
+      </div>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-field key-thin"></i>한 줄의 <b class="mv">B</b></span>
+          <span><i class="key-field"></i>합</span>
+        </div>
         <div class="stage-tools">
           <div class="seg" role="group" aria-label="자기장을 만드는 줄">
             <button type="button" data-src="top" aria-pressed="false">위</button>
@@ -868,12 +891,6 @@ sub, sup { font-size: .7em; line-height: 0; }
             <button type="button" data-src="both" aria-pressed="true">둘 다</button>
           </div>
         </div>
-      </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-field key-thin"></i>한 줄의 <b class="mv">B</b></span>
-        <span><i class="key-field"></i>합</span>
       </div>
     </div>
 
@@ -932,11 +949,13 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s8-stage" aria-label="종이면에 수직인 긴 직선 도선들과 닫힌 앙페르 경로"></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-path"></i>앙페르 경로</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-path"></i>앙페르 경로</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
@@ -1069,10 +1088,12 @@ sub, sup { font-size: .7em; line-height: 0; }
       <div class="canvas-box">
         <canvas id="s9-stage" aria-label="축을 지나는 면으로 자른 솔레노이드와 자기력선"></canvas>
       </div>
-      <div class="legend" aria-hidden="true">
-        <span><i class="sym dot"></i>나옴</span>
-        <span><i class="sym cross"></i>들어감</span>
-        <span><i class="key-field"></i><b class="mv">B</b></span>
+      <div class="stage-foot">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sym dot"></i>나옴</span>
+          <span><i class="sym cross"></i>들어감</span>
+          <span><i class="key-field"></i><b class="mv">B</b></span>
+        </div>
       </div>
     </div>
 
