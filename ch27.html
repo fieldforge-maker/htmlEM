@@ -348,6 +348,9 @@ sub, sup { font-size: .7em; line-height: 0; }
   border: 1px solid var(--line); background: var(--panel); color: var(--ink);
 }
 .nav-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+/* (CH27) 다음 단추 옆의 '넘기고 재생' 단추 */
+.nav-end { display: flex; align-items: center; gap: 8px; }
+.nav-btn.play-next { border-color: var(--accent); color: var(--accent); }
 .nav-btn:disabled { opacity: .35; cursor: default; }
 .step-body { min-width: 0; }
 .step-top { display: flex; align-items: center; gap: 10px; }
@@ -434,7 +437,7 @@ sub, sup { font-size: .7em; line-height: 0; }
         </div>
       </div>
       <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 <span class="m">i</span></span>
+        <span><i class="key-current"></i>전류 <span class="m">i</span> (화살표가 길수록 세다)</span>
         <span style="color:var(--neg)">■ Δ<span class="m">V</span><sub>R</sub></span>
         <span style="color:var(--accent)">■ Δ<span class="m">V</span><sub>C</sub></span>
         <span><i class="key-efield"></i>축전기 속 전기장</span>
@@ -457,7 +460,8 @@ sub, sup { font-size: .7em; line-height: 0; }
       <details class="fold">
         <summary>값</summary>
         <div class="fold-body"><dl class="kv" id="s1-kv"></dl>
-          <p class="geo">전류는 그림처럼 저항을 위에서 아래로 지날 때 +(시계 방향). 방전 전류는 −로 나온다(식 27.23).</p></div>
+          <p class="geo">전류는 그림처럼 저항을 위에서 아래로 지날 때 +(시계 방향). 방전 전류는 −로 나온다(식 27.23).</p>
+          <p class="geo">화살표의 길이가 전류의 세기다. 화살표가 움직이는 빠르기는 일부러 느리게 그렸다: 도선 속 전자의 실제 유동 속력은 1초에 1 mm도 안 된다.</p></div>
       </details>
       <details class="fold">
         <summary>조절</summary>
@@ -558,7 +562,7 @@ sub, sup { font-size: .7em; line-height: 0; }
         </div>
       </div>
       <div class="legend" aria-hidden="true">
-        <span><i class="key-current"></i>전류 (화살표가 많을수록 세다)</span>
+        <span><i class="key-current"></i>전류 (화살표가 길수록 세다)</span>
         <span><i class="key-efield"></i>축전기 속 전기장</span>
       </div>
     </div>
@@ -769,15 +773,17 @@ const EM = (() => {
   const ICON_PREV = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
   const ICON_NEXT = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
 
+  const ICON_PLAY = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg>';
   function buildRail(def) {
     const rail = def.el.querySelector('.steps');
+    const nextBtn = `<button class="nav-btn primary" type="button" aria-label="다음 단계">${ICON_NEXT}</button>`;
     rail.innerHTML =
       `<button class="nav-btn" type="button" aria-label="이전 단계">${ICON_PREV}</button>` +
       '<div class="step-body"><div class="step-top"><div class="dots" role="group" aria-label="단계"></div>' +
       '<button class="cap-toggle" type="button" aria-expanded="false">설명</button></div>' +
       '<p class="caption" hidden aria-live="polite"></p></div>' +
-      `<button class="nav-btn primary" type="button" aria-label="다음 단계">${ICON_NEXT}</button>`;
-    const [prev, next] = rail.querySelectorAll('.nav-btn');
+      (def.play ? `<div class="nav-end"><button class="nav-btn play-next" type="button" aria-label="다음 단계로 넘기고 재생" title="넘기고 재생">${ICON_PLAY}</button>${nextBtn}</div>` : nextBtn);
+    const prev = rail.querySelector('.nav-btn'), next = rail.querySelector('.nav-btn.primary'), playNext = rail.querySelector('.play-next');
     const dotsBox = rail.querySelector('.dots');
     const toggle = rail.querySelector('.cap-toggle');
     const caption = rail.querySelector('.caption');
@@ -791,8 +797,9 @@ const EM = (() => {
     });
     prev.addEventListener('click', () => goStep(def, def.step - 1));
     next.addEventListener('click', () => goStep(def, def.step + 1));
+    if (playNext) playNext.addEventListener('click', () => { goStep(def, def.step + 1); startPlay(def); });
     toggle.addEventListener('click', () => setCaptionOpen(!captionOpen));
-    def.rail = { prev, next, dots, toggle, caption };
+    def.rail = { prev, next, playNext, dots, toggle, caption };
     buildQuiz(def);
   }
   // 설명 문구는 모든 화면이 같이 열고 닫는다
@@ -852,6 +859,26 @@ const EM = (() => {
     Z.btn.parentElement.hidden = shown;
   }
 
+  /* (CH27) 재생 상태: 화면 위 '재생' 단추는 재생 → 멈춤 → 계속. def.play()는 그 단계의 시연(script)을 처음부터 시작하고,
+     시연이 없으면 false를 돌려준다. 멈춤은 화면의 움직임(def.hide/def.show)을 잠시 세운다. */
+  const PLAY_LABEL = { idle: '▶ 재생', running: '❚❚ 멈춤', paused: '▶ 계속' };
+  function setPlay(def, st) {
+    def.playState = st;
+    if (def.playBtn) { def.playBtn.textContent = PLAY_LABEL[st]; def.playBtn.classList.toggle('primary', st !== 'running'); }
+  }
+  function startPlay(def) {
+    if (!def.play) return;
+    if (def.playState === 'paused' && def.show) def.show();
+    setPlay(def, def.play() === false ? 'idle' : 'running');
+  }
+  function togglePlay(def) {
+    if (def.playState === 'running') { if (def.hide) def.hide(); setPlay(def, 'paused'); }
+    else if (def.playState === 'paused') { if (def.show) def.show(); setPlay(def, 'running'); }
+    else startPlay(def);
+  }
+  // 멈춘 채로 다른 조작을 하면 움직임을 다시 켠다
+  function wake(def) { if (def && def.playState === 'paused') { if (def.show) def.show(); setPlay(def, 'running'); } }
+
   function goStep(def, i, initial = false) {
     i = Math.max(0, Math.min(def.steps.length - 1, i));
     const forward = !initial && i === def.step + 1;
@@ -863,6 +890,8 @@ const EM = (() => {
     });
     prev.disabled = i === 0;
     next.disabled = i === def.steps.length - 1;
+    if (def.rail.playNext) def.rail.playNext.disabled = next.disabled;
+    if (def.play) { if (def.playState === 'paused' && def.show) def.show(); setPlay(def, 'idle'); }
     caption.innerHTML = def.steps[i].cap;
     renderQuiz(def, i);
     def.enterStep(i, { forward, initial });
@@ -880,6 +909,7 @@ const EM = (() => {
       else t.removeAttribute('aria-current');
     });
     if (def.show) def.show();
+    if (def.playState === 'paused') setPlay(def, 'running');
     requestDraw(def);
   }
   function route() {
@@ -922,6 +952,10 @@ const EM = (() => {
       def.raf = 0;
       buildRail(def);
       def.init(def.el);
+      if (def.play) {
+        def.playBtn = document.getElementById(def.id + '-playBtn');
+        def.playBtn.addEventListener('click', () => togglePlay(def));
+      }
       def.el.querySelectorAll('canvas').forEach(cv => new ResizeObserver(() => requestDraw(def)).observe(cv.parentElement));
       def.el.querySelectorAll('details').forEach(d => d.addEventListener('toggle', () => requestDraw(def)));
       goStep(def, 0, true);
@@ -957,7 +991,7 @@ const EM = (() => {
     TAU, MU0, C, F, reduceMotion,
     fitCanvas, arrowHead, arrow, vec, haloText, runs, marker, alpha, remPx, niceStep, minus, fmt,
     m, mv, DOT, CROSS, frac,
-    tween, loop, register, requestDraw, boot,
+    tween, loop, register, requestDraw, boot, wake,
   };
 })();
 
@@ -1059,6 +1093,21 @@ const KIT = (() => {
       EM.arrowHead(ctx, p.x + p.ux * size * 0.5, p.y + p.uy * size * 0.5, p.ux, p.uy, size, color);
     }
     ctx.restore();
+  }
+  // (CH27) 전류 화살표: 길이 len(px)이 전류의 세기를 나타낸다. phase(px)로 천천히 움직인다.
+  // 꺾인 곳에 걸친 화살표는 그리지 않는다(도선 밖으로 삐져나가지 않게)
+  function flowVec(ctx, pts, closed, phase, spacing, len, color, width, skip = null) {
+    const info = pathInfo(pts, closed);
+    if (!info.L || len < 3) return;
+    const n = Math.max(1, Math.round(info.L / spacing)), sp = info.L / n;
+    for (let i = 0; i < n; i++) {
+      const s = ((i * sp + phase) % info.L + info.L) % info.L;
+      if (!closed && (s < len * 0.5 + 4 || s > info.L - len * 0.5 - 4)) continue;
+      const a = pointAt(info, s - len / 2), b = pointAt(info, s + len / 2), c = pointAt(info, s);
+      if (!a || !b || a.k !== b.k) continue;
+      if (skip && (skip(c.x, c.y) || skip(a.x, a.y) || skip(b.x, b.y))) continue;
+      EM.arrow(ctx, a.x, a.y, c.ux, c.uy, len, color, width);
+    }
   }
   function stroke(ctx, pts, closed, color, width, dash = null) {
     ctx.save();
@@ -1400,7 +1449,7 @@ const KIT = (() => {
     ctx.restore();
   }
 
-  return { bMark, bField, vArrow, charge, pathInfo, pointAt, flow, stroke, meter, resistor, needle, timePlot,
+  return { bMark, bField, vArrow, charge, pathInfo, pointAt, flow, flowVec, stroke, meter, resistor, needle, timePlot,
     line, battery, capacitor, coil, terminal, blade, spark, energyBars, springMass };
 })();
 
@@ -1473,6 +1522,9 @@ const RCDRAW = (() => {
   const XB = XP - BL * Math.cos(ANG_B), YB = H - BL * Math.sin(ANG_B);
   const XC0 = 7.6, XC1 = 9.6, YR0 = 5.6, YR1 = 1.4, XBAT0 = 1.2, XBAT1 = 2.8;
   const VIEW = { x0: -1.4, x1: 13.4, y0: -1.4, y1: 8.4 };
+  // 전류 화살표가 움직이는 빠르기 (세상 단위/s, 전류가 기준값일 때). 실제 유동 속력처럼 느리게 둔다.
+  // 전류의 세기는 화살표의 길이로 보인다. 빨리 감기 때도 화살표는 빨라지지 않는다.
+  const FLOW_V = 0.3;
 
   function frame(box, extraRight = 0) {
     const vw = VIEW.x1 - VIEW.x0 + extraRight, vh = VIEW.y1 - VIEW.y0;
@@ -1528,8 +1580,9 @@ const RCDRAW = (() => {
         ? [[XBAT0 - 0.15, 0], [0, 0], [0, H], [XP, H], [W, H], [W, 0], [XBAT1 + 0.15, 0]]
         : [[XP, H], [W, H], [W, 0], [XB, 0], [XB, YB]];
       const closedLoop = st.sw === 'b';
-      if (st.i < 0) loop = loop.slice().reverse();
-      KIT.flow(ctx, P(loop), closedLoop, st.flow * s, 1.35 * s, Math.max(9, 0.2 * s), C.current, Math.min(1, 0.3 + 0.9 * ia), skip);
+      let ph = st.flow * s;
+      if (st.i < 0) { loop = loop.slice().reverse(); ph = -ph; }
+      KIT.flowVec(ctx, P(loop), closedLoop, ph, 1.5 * s, 0.95 * s * Math.min(1.2, ia), C.current, Math.max(2.2, 0.055 * s), skip);
     }
 
     // 전위차 이름표와 높은 쪽(+)
@@ -1573,13 +1626,13 @@ const RCDRAW = (() => {
     ctx.restore();
   }
 
-  return { W, H, XA, XP, XB, YB, XC0, XC1, YR0, YR1, frame, swAngle, draw, voltBars };
+  return { W, H, XA, XP, XB, YB, XC0, XC1, YR0, YR1, FLOW_V, frame, swAngle, draw, voltBars };
 })();
 
 /* 스위치 단추 묶음(.seg [data-sw])과 날의 움직임을 맡는 작은 도우미 (화면 1, 2) */
 function rcSwitchUI(prefix, sim, state, def, onAct) {
   const seg = document.querySelectorAll(`#${prefix} .seg [data-sw]`);
-  seg.forEach(b => b.addEventListener('click', () => onAct(b.dataset.sw)));
+  seg.forEach(b => b.addEventListener('click', () => { EM.wake(def()); onAct(b.dataset.sw); }));
   return {
     sync() { seg.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sw === sim.S.sw))); },
     animate(instant) {
@@ -1615,7 +1668,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     if (state.ff && k === 1) state.ff = false;
     const dtr = dt * k, n = Math.max(1, Math.ceil(dtr / 0.02));
     for (let j = 0; j < n; j++) { sim.advance(dtr / n); record(); }
-    flowPh += dt * 2.2 * Math.min(2, Math.abs(sim.i()) / (S.emf / S.R) * 1.6) * k;
+    flowPh += dt * RCDRAW.FLOW_V * Math.min(1.2, Math.abs(sim.i()) / (S.emf / S.R)) * Math.sign(sim.i());
     updateLive();
     EM.requestDraw(def);
   });
@@ -1749,13 +1802,6 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     answer: 1,
     why: `이제 축전기가 전지 노릇을 한다. + 판(왼쪽)의 전하가 b 쪽 도선과 아래 변을 돌아 저항기를 아래에서 위로 지나 − 판으로 간다. 식 27.23의 전류가 음수인 것이 그 뜻이다. 크기는 ${M('Q')}<sub>i</sub>/${M('RC')} = ℰ/${M('R')}에서 시작해 같은 τ로 줄어든다. 흐르던 전류를 그 방향 그대로 이어 가는 인덕터와 다르다.`,
   };
-  const QE = {
-    tag: '예제 27.8',
-    q: `방전할 때 축전기의 전하량이 처음 값의 <b>4분의 1</b>이 되는 데 걸리는 시간은?`,
-    choices: ['τ/4', '0.693τ', '1.39τ', '4τ'],
-    answer: 2,
-    why: `${M('Q')}<sub>i</sub>/4 = ${M('Q')}<sub>i</sub>${M('e')}<sup>−${M('t')}/τ</sup>에서 ${M('t')} = τ ln 4 = 1.39τ. 절반이 되는 반감기는 ${M('t')}<sub>½</sub> = τ ln 2 = 0.693τ이고, 4분의 1은 반감기를 두 번 지난 때다. 지수 감소는 같은 시간마다 같은 비율로 줄어든다.`,
-  };
   const STEPS = [
     { reset: true, quiz: QA, hideAns: true, cap: `전지 ℰ, 축전기 ${M('C')}, 저항 ${M('R')}을 직렬로 이은 ${M('RC')} 회로(교재 그림 27.14). 스위치는 열림, a, b 세 자리에 놓인다. 지금은 열려 있고 축전기는 비어 있다.` },
     { reset: true, quiz: QA, reveal: true, script: [[0.6, 'a']], tauMark: true, cap: `'재생'을 누르면 스위치가 a로 간다. 전류는 ℰ/${M('R')} = 15.0 μA에서 시작해 줄고, 전하는 ${M('Q')}<sub>max</sub> = ${M('C')}ℰ = 60.0 μC에 다가간다(예제 27.7, 교재 그림 27.15). 시간 상수 τ = ${M('RC')} = 4.00 s가 지나면 전하는 나중값의 63.2 %, 전류는 처음값의 36.8 %. 화면 속 시간은 실제와 같다.` },
@@ -1765,8 +1811,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     { reset: true, quiz: QC, reveal: true, R: 2 * R0, ghost: R0, tauMark: true, script: [[0.5, 'a']], cap: `${M('R')} = 1.60 MΩ: 처음 전류 7.50 μA, τ = 8.00 s. 나중 전하량은 60.0 μC 그대로다. 점선은 ${M('R')} = 800 kΩ일 때. ${M('C')}를 두 배로 해도 τ는 두 배지만, 이때는 ${M('Q')}<sub>max</sub>도 두 배가 된다(조절에서 해 볼 수 있다).` },
     { reset: true, R: R0, charged: true, quiz: QD, cap: `${M('R')} = 800 kΩ로 되돌리고, a에서 충분히 기다려 축전기가 60.0 μC로 가득 찼다. 전류는 0.` },
     { chargedIfNot: true, quiz: QD, reveal: true, script: [[0.6, 'b']], cap: `전류는 −15.0 μA에서 시작해 0으로 간다: 저항기를 아래에서 위로. 전하는 ${M('q')} = ${M('Q')}<sub>i</sub>${M('e')}<sup>−${M('t')}/τ</sup>로 같은 τ = 4.00 s에 따라 준다. b의 고리에는 전지가 없어 Δ${M('V')}<sub>C</sub> + Δ${M('V')}<sub>R</sub> = 0: 저항기의 아래 끝이 높다.` },
-    { reset: true, R: R0, charged: true, quiz: QE, cap: `다시 가득 충전된 상태에서 방전한다. 전하가 4분의 1로 줄 때까지 얼마나 걸릴까?` },
-    { chargedIfNot: true, quiz: QE, reveal: true, marks: true, script: [[0.6, 'b']], cap: `반감기 0.693τ = 2.77 s에 30.0 μC, 1.39τ = 5.55 s에 15.0 μC. 그런데 축전기의 <b>에너지</b> ${M('q')}<sup>2</sup>/2${M('C')}는 전하의 제곱이라 더 빨리 줄어, 0.693τ에 벌써 4분의 1이 된다(예제 27.8 (B)). 방사성 붕괴의 반감기도 같은 꼴이다.` },
+    { reset: true, R: R0, charged: true, marks: true, script: [[0.6, 'b']], cap: `다시 가득 충전된 상태에서 방전한다(예제 27.8). '재생'을 누르면 b로 옮긴다. 반감기 0.693τ = 2.77 s에 30.0 μC, 1.39τ = 5.55 s에 15.0 μC. 그런데 축전기의 <b>에너지</b> ${M('q')}<sup>2</sup>/2${M('C')}는 전하의 제곱이라 더 빨리 줄어, 0.693τ에 벌써 4분의 1이 된다(예제 27.8 (B)). 방사성 붕괴의 반감기도 같은 꼴이다.` },
   ];
 
   def = EM.register({
@@ -1779,17 +1824,10 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       $('kv').innerHTML = row('시간 상수 τ = <span class="m">RC</span>', 'kT', 's') + row('최대 전하량 <span class="m">C</span>ℰ', 'kQ', 'μC') + row('처음 전류 ℰ/<span class="m">R</span>', 'kIi', 'μA') +
         row('전하량 <span class="m">q</span>', 'kq', 'μC') + row('전류 <span class="m">i</span>', 'ki', 'μA') +
         row('Δ<span class="m">V</span><sub>C</sub> = <span class="m">q</span>/<span class="m">C</span>', 'kVC', 'V') + row('Δ<span class="m">V</span><sub>R</sub> = <span class="m">iR</span>', 'kVR', 'V', ' class="sum"');
-      $('resetBtn').addEventListener('click', () => { reset(); updateReadouts(); EM.requestDraw(def); });
+      $('resetBtn').addEventListener('click', () => { EM.wake(def); reset(); updateReadouts(); EM.requestDraw(def); });
       const bind = (id, key, k) => $(id).addEventListener('input', e => { sim.setParam(key, +e.target.value * k); updateReadouts(); EM.requestDraw(def); });
       bind('eIn', 'emf', 1); bind('rIn', 'R', 1e3); bind('cIn', 'C', 1e-6);
       $('vChk').addEventListener('change', e => { state.showV = e.target.checked; EM.requestDraw(def); });
-      $('playBtn').addEventListener('click', () => {
-        const S = STEPS[def.step];
-        if (!S.script) return;
-        def.enterStep(def.step, { replay: true });
-        state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
-        EM.requestDraw(def);
-      });
       reset();
       updateReadouts();
     },
@@ -1809,6 +1847,14 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       state.marks = S.marks ? { Qi: sim.S.C * sim.S.emf } : null;
       $('playBtn').hidden = !S.script;
       updateReadouts();
+    },
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    play() {
+      const S = STEPS[def.step];
+      if (!S.script) return false;
+      def.enterStep(def.step, { replay: true });
+      state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      EM.requestDraw(def);
     },
     show() { anim.start(); },
     hide() { anim.stop(); },
@@ -1837,10 +1883,11 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     if (state.ff && k === 1) state.ff = false;
     const dtr = dt * k, n = Math.max(1, Math.ceil(dtr / 0.02));
     for (let j = 0; j < n; j++) { sim.advance(dtr / n); record(); }
-    flowPh += dt * 2.2 * Math.min(2, Math.abs(sim.i()) / (S.emf / R0) * 1.6) * k;
+    flowPh += dt * RCDRAW.FLOW_V * Math.min(1.2, Math.abs(sim.i()) / iRef2()) * Math.sign(sim.i());
     updateLive();
     EM.requestDraw(def);
   });
+  const iRef2 = () => sim.S.emf / Math.min(sim.S.R, R0);   // 화살표 길이의 기준: R을 줄이면 처음 전류가 커진 만큼 길어진다
   const PB = () => (sim.S.sw === 'a' ? sim.S.emf * sim.i() : 0);
   const PR = () => sim.i() * sim.i() * sim.S.R;
   const PC = () => sim.q() * sim.i() / sim.S.C;
@@ -1870,7 +1917,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const fr = RCDRAW.frame({ x: 10, y: 6, w: w - 20, h: h - 12 }, 4.6);
     const S = sim.S, i = sim.i(), hide = state.hideAns;
-    RCDRAW.draw(ctx, fr, { f, ang: state.ang, qf: Math.min(1.2, sim.q() / (S.C * S.emf)), i, iRef: S.emf / R0, flow: flowPh, sw: S.sw, VR: sim.VR(), VC: sim.VC(), emfRef: S.emf, showV: false, hide: false });
+    RCDRAW.draw(ctx, fr, { f, ang: state.ang, qf: Math.min(1.2, sim.q() / (S.C * S.emf)), i, iRef: iRef2(), flow: flowPh, sw: S.sw, VR: sim.VR(), VC: sim.VC(), emfRef: S.emf, showV: false, hide: false });
     const { X, Y } = fr;
     const box = { x: X(13.8), y: Y(7.9), w: X(13.8 + 4.4) - X(13.8), h: Y(-1.0) - Y(7.9) };
     const sub = (a, b) => [[a, f.mi2], [b, f.sub2, f.fs * 0.3]];
@@ -1971,15 +2018,8 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       $('kv').innerHTML = row('시간 상수 τ = <span class="m">RC</span>', 'kT', 's') + row('전지가 한 일 <span class="m">W</span>', 'kW', 'μJ') +
         row('축전기의 에너지 <span class="m">U</span><sub>C</sub>', 'kU', 'μJ') + row('저항의 열 <span class="m">E</span><sub>R</sub>', 'kQ', 'μJ') +
         row('<span class="m">W</span> − <span class="m">U</span><sub>C</sub> − <span class="m">E</span><sub>R</sub>', 'kS', 'μJ', ' class="sum"');
-      $('resetBtn').addEventListener('click', () => { reset(); updateReadouts(); EM.requestDraw(def); });
+      $('resetBtn').addEventListener('click', () => { EM.wake(def); reset(); updateReadouts(); EM.requestDraw(def); });
       $('rIn').addEventListener('input', e => { sim.setParam('R', +e.target.value * 1e3); updateReadouts(); EM.requestDraw(def); });
-      $('playBtn').addEventListener('click', () => {
-        const S = STEPS[def.step];
-        if (!S.script) return;
-        def.enterStep(def.step, { replay: true });
-        state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
-        EM.requestDraw(def);
-      });
       reset();
       updateReadouts();
     },
@@ -1997,6 +2037,14 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       state.ghost = S.ghost ? { R: S.ghost } : null;
       $('playBtn').hidden = !S.script;
       updateReadouts();
+    },
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    play() {
+      const S = STEPS[def.step];
+      if (!S.script) return false;
+      def.enterStep(def.step, { replay: true });
+      state.script = S.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      EM.requestDraw(def);
     },
     show() { anim.start(); },
     hide() { anim.stop(); },
@@ -2074,7 +2122,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     const dtr = dt * k, n = Math.max(1, Math.ceil(dtr / 0.01));
     for (let j = 0; j < n; j++) { S.t += dtr / n; record(); }
     const c = cur(), ir = iRef();
-    for (const key of ['T', 'M', 'R']) state.ph[key] += dt * 2.2 * Math.min(2, Math.abs(c[key]) / ir * 2.4) * k * Math.sign(c[key] || 0);
+    for (const key of ['T', 'M', 'R']) state.ph[key] += dt * RCDRAW.FLOW_V * Math.min(1.2, Math.abs(c[key]) / ir) * Math.sign(c[key] || 0);
     updateLive();
     EM.requestDraw(def);
   });
@@ -2159,7 +2207,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
     // 전류 화살촉: 가지마다 크기에 비례하는 진하기, 부호에 따라 방향
     if (!hide) {
       const skip = (px, py) => { const x = (px - ox) / s, y = (oy - py) / s; return avoid.some(([a, b, c, d]) => x > a && x < c && y > b && y < d) || (Math.abs(x - XM) < 0.3 && (Math.abs(y) < 0.3 || Math.abs(y - GH) < 0.3)); };
-      const c = cur(), ir = iRef(), sz = Math.max(9, 0.2 * s);
+      const c = cur(), ir = iRef(), lw = Math.max(2.2, 0.055 * s);
       const paths = {
         T: [[[0, YB1 + 0.15], [0, GH], [XM - 0.2, GH]], [[XM - 0.2, 0], [0, 0], [0, YB0 - 0.15]]],
         M: [[[XM, GH - 0.2], [XM, 0.2]]],
@@ -2171,7 +2219,7 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
         for (let pts of paths[key]) {
           let ph = state.ph[key];
           if (c[key] < 0) { pts = pts.slice().reverse(); ph = -ph; }
-          KIT.flow(ctx, P(pts), false, ph * s, 1.25 * s, sz, C.current, Math.min(1, 0.25 + 1.5 * a), skip);
+          KIT.flowVec(ctx, P(pts), false, ph * s, 1.4 * s, 0.95 * s * Math.min(1.2, a), C.current, lw, skip);
         }
       }
     }
@@ -2274,19 +2322,12 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       stage = $('stage'); graph = $('graph');
       sctx = stage.getContext('2d'); gctx = graph.getContext('2d');
       document.querySelectorAll('#s3 .seg [data-scene]').forEach(b => b.addEventListener('click', () => {
-        state.script = []; state.hideAns = false;          // 직접 장면을 바꾸면 값을 보인다
+        EM.wake(def); state.script = []; state.hideAns = false;   // 직접 장면을 바꾸면 값을 보인다
         setup(b.dataset.scene, false, b.dataset.scene === 'B' ? SCN.B.emf : 0);
         buildKv(); updateReadouts(); EM.requestDraw(def);
       }));
-      $('swBtn').addEventListener('click', () => setSw(!S.sw));
-      $('resetBtn').addEventListener('click', () => { def.enterStep(def.step, { replay: true }); EM.requestDraw(def); });
-      $('playBtn').addEventListener('click', () => {
-        const St = STEPS[def.step];
-        if (!St.script) return;
-        def.enterStep(def.step, { replay: true });
-        state.script = St.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
-        EM.requestDraw(def);
-      });
+      $('swBtn').addEventListener('click', () => { EM.wake(def); setSw(!S.sw); });
+      $('resetBtn').addEventListener('click', () => { EM.wake(def); def.enterStep(def.step, { replay: true }); EM.requestDraw(def); });
       setup('A', false, 0);
       buildKv();
       updateReadouts();
@@ -2299,6 +2340,14 @@ function rcSwitchUI(prefix, sim, state, def, onAct) {
       buildKv();
       $('playBtn').hidden = !St.script;
       updateReadouts();
+    },
+    // 그 단계의 시연을 처음 상태에서 다시 시작한다 (화면 위 '재생'과 단계 레일의 '넘기고 재생')
+    play() {
+      const St = STEPS[def.step];
+      if (!St.script) return false;
+      def.enterStep(def.step, { replay: true });
+      state.script = St.script.map(([d, what]) => ({ at: state.clock + d, fn: () => act(what) }));
+      EM.requestDraw(def);
     },
     show() { anim.start(); },
     hide() { anim.stop(); },
