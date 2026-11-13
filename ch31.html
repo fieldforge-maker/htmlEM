@@ -722,7 +722,7 @@ sub, sup { font-size: .7em; line-height: 0; }
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
-        <canvas id="s5-stage" aria-label="전지, 스위치, 축전기, 코일로 된 LC 회로. 오른쪽에 축전기와 코일의 에너지 막대, 아래에 같은 순간의 용수철과 물체."></canvas>
+        <canvas id="s5-stage" aria-label="전지, 스위치, 코일(가운데), 축전기(오른쪽)로 된 LC 회로. 오른쪽에 축전기와 코일의 에너지 막대. 용수철–물체를 켜면 그 아래에 같은 순간의 용수철과 물체."></canvas>
       </div>
       <div class="stage-foot">
         <div class="legend" aria-hidden="true">
@@ -743,7 +743,7 @@ sub, sup { font-size: .7em; line-height: 0; }
       </section>
       <section class="quiz" hidden></section>
       <div class="view-toggles toggles" role="group" aria-label="보기">
-        <label><input type="checkbox" id="s5-springChk" checked><span>용수철–물체</span></label>
+        <label><input type="checkbox" id="s5-springChk"><span>용수철–물체</span></label>
       </div>
       <details class="fold" open>
         <summary><span><span class="m">q</span>(<span class="m">t</span>), <span class="m">i</span>(<span class="m">t</span>), 에너지</span></summary>
@@ -776,7 +776,7 @@ sub, sup { font-size: .7em; line-height: 0; }
     </div>
     <div class="stage-wrap">
       <div class="canvas-box">
-        <canvas id="s6-stage" aria-label="축전기, 코일, 저항으로 된 RLC 회로. 오른쪽에 축전기·코일·열의 에너지 막대, 아래에 감쇠기가 달린 용수철과 물체."></canvas>
+        <canvas id="s6-stage" aria-label="코일(가운데), 축전기(오른쪽), 저항으로 된 RLC 회로. 오른쪽에 축전기·코일·열의 에너지 막대, 아래에 감쇠기가 달린 용수철과 물체."></canvas>
       </div>
       <div class="stage-foot">
         <div class="legend" aria-hidden="true">
@@ -2133,48 +2133,49 @@ const RLSIM = (o) => {
 };
 
 /* ================= CH31 공용: LC·RLC 회로 그림 (Serway 그림 31.11, 31.15) =================
-   왼쪽 변: 전지 ℰ. 가운데 세로 가지: 축전기 C(위 판 전하 q). 그 위에 스위치 S의 축: a(왼쪽, 전지 쪽) 또는 b(오른쪽, 코일 쪽).
-   오른쪽 변: 코일 L. RLC면 아래 변 오른쪽 절반에 저항 R.
-   진동하는 동안(S = b) 전류의 +는 시계 방향: 축 → b → 코일(아래로) → 아래 변(왼쪽으로) → 축전기(아래에서 위로). i_cw = −dq/dt. */
+   왼쪽 변: 전지 ℰ. 가운데 세로 가지: 코일 L. 오른쪽 변: 축전기 C(위 판 전하 q). RLC면 아래 변 오른쪽 절반에 저항 R.
+   스위치 S의 축은 위 변 가운데에 있고, 위 변을 따라 축전기의 위 판과 이어진다. 날은 a(왼쪽, 전지 쪽)나 b(축 바로 아래, 코일 위 끝)에 닿는다.
+   S = a: 전지 ↔ 축전기(충전, 코일은 떨어져 있다). S = b: 축전기 ↔ 코일(진동, 전지는 떨어진다).
+   진동하는 동안(S = b) 전류의 +는 시계 방향: 축 → 위 변(오른쪽으로) → 축전기(위에서 아래로) → 아래 변(왼쪽으로) → 코일(아래에서 위로) → b → 축.
+   시계 방향 전류는 축전기의 위 판으로 들어가므로 i_cw = +dq/dt. */
 const LCDRAW = (() => {
   'use strict';
   const { TAU, C, F } = EM;
-  const W = 10, H = 7, XC = 4.6, XA = 3.2, XB = 6.0, YC0 = 2.6, YC1 = 4.4, YL0 = 5.6, YL1 = 1.4, XR0 = 5.9, XR1 = 8.6;
+  const W = 10, H = 7, XM = 4.6, XA = 3.2, BL = XM - XA, YB = H - BL, YC0 = 2.6, YC1 = 4.4, YL0 = YB, YL1 = 1.2, XR0 = 5.9, XR1 = 8.6;
   const YBAT0 = 2.6, YBAT1 = 4.4;
-  const VIEW = { x0: -1.5, x1: 11.6, y0: -1.0, y1: 8.4 };
+  const VIEW = { x0: -1.5, x1: 11.8, y0: -1.0, y1: 8.4 };
   function frame(box) {
     const vw = VIEW.x1 - VIEW.x0, vh = VIEW.y1 - VIEW.y0;
     const s = Math.min(box.w / vw, box.h / vh);
     const ox = box.x + (box.w - vw * s) / 2 - VIEW.x0 * s, oy = box.y + (box.h - vh * s) / 2 + VIEW.y1 * s;
     return { s, X: x => ox + x * s, Y: y => oy - y * s };
   }
-  /* st = { f, sw (0 = a … 1 = b), q (위 판 전하 / Q0, −1…1), icw (시계 방향 전류 / I0), flow, R (저항이 있나), heatGlow } */
+  /* st = { f, sw (0 = a … 1 = b), q (위 판 전하 / Q0, −1…1), icw (시계 방향 전류 / I0 = dq/dt / I0), flow, R (저항이 있나), heatGlow } */
   function draw(ctx, fr, st) {
     const { s, X, Y } = fr, f = st.f, fs = f.fs;
     const wireW = Math.max(2.6, 0.075 * s);
     const P = pts => pts.map(([x, y]) => [X(x), Y(y)]);
     const wire = pts => KIT.stroke(ctx, P(pts), false, C.wire, wireW);
-    wire([[0, YBAT1], [0, H], [XA, H]]);
-    wire([[0, YBAT0], [0, 0], [XC, 0]]);
-    wire([[XB, H], [W, H], [W, YL0]]);
-    wire([[W, YL1], [W, 0], st.R ? [XR1, 0] : [XC, 0]]);
-    if (st.R) wire([[XR0, 0], [XC, 0]]);
-    wire([[XC, 0], [XC, YC0]]);
-    wire([[XC, YC1], [XC, H - 0.05]]);
+    wire([[0, YBAT1], [0, H], [XA, H]]);                    // 전지 (+) → a
+    wire([[0, YBAT0], [0, 0], [XM, 0]]);                    // 전지 (−) → 아래 가운데 마디
+    wire([[XM, H], [W, H], [W, YC1]]);                      // 스위치 축 → 축전기 위 판
+    wire([[W, YC0], [W, 0], st.R ? [XR1, 0] : [XM, 0]]);    // 축전기 아래 판 → 아래 가운데 마디
+    if (st.R) wire([[XR0, 0], [XM, 0]]);
+    wire([[XM, 0], [XM, YL1]]);                             // 아래 가운데 마디 → 코일 아래 끝
     // 전지
     KIT.battery(ctx, X(0), Y(YBAT0), X(0), Y(YBAT1), 0.55 * s, { wireW });
     EM.runs(ctx, [['ℰ', f.m]], X(-0.75), Y((YBAT0 + YBAT1) / 2), C.ink, { align: 'right', halo: true });
     // 축전기 (판은 가로: 아래 판이 x0 쪽, 위 판이 x1 쪽)
-    KIT.capacitor(ctx, X(XC), Y(YC0), X(XC), Y(YC1), 0.85 * s, { q: st.q, wireW, fs: Math.round(fs * 1.1), gap: 0.32 * s });
-    EM.runs(ctx, [['C', f.mi]], X(XC + 1.25), Y((YC0 + YC1) / 2), C.ink, { align: 'left', halo: true });
-    // 스위치
-    const th = Math.PI * (1 - st.sw), BL = XC - XA;      // 세상 각: a 쪽 π, b 쪽 0 (옮기는 동안 위로 들린다)
-    KIT.line(ctx, X(XC), Y(H), X(XC + BL * Math.cos(th)), Y(H + BL * Math.sin(th)), C.ink, wireW);
-    KIT.terminal(ctx, X(XA), Y(H), Math.max(5, 0.1 * s)); KIT.terminal(ctx, X(XB), Y(H), Math.max(5, 0.1 * s));
-    ctx.beginPath(); ctx.arc(X(XC), Y(H), Math.max(4.5, 0.09 * s), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
+    KIT.capacitor(ctx, X(W), Y(YC0), X(W), Y(YC1), 0.85 * s, { q: st.q, wireW, fs: Math.round(fs * 1.1), gap: 0.32 * s });
+    EM.runs(ctx, [['C', f.mi]], X(W + 1.1), Y((YC0 + YC1) / 2), C.ink, { align: 'left', halo: true });
+    // 스위치: 날이 축에서 a(세상 각 π, 왼쪽)와 b(3π/2, 아래) 사이를 돈다
+    const th = Math.PI * (1 + 0.5 * st.sw), tr = Math.max(5, 0.1 * s);
+    KIT.line(ctx, X(XM), Y(H), X(XM + BL * Math.cos(th)), Y(H + BL * Math.sin(th)), C.ink, wireW);
+    KIT.terminal(ctx, X(XA), Y(H), tr); KIT.terminal(ctx, X(XM), Y(YB), tr);
+    ctx.beginPath(); ctx.arc(X(XM), Y(H), Math.max(4.5, 0.09 * s), 0, TAU); ctx.fillStyle = C.ink; ctx.fill();
     EM.runs(ctx, [['a', f.mi]], X(XA), Y(H + 0.6), C.ink, { align: 'center', halo: true });
-    EM.runs(ctx, [['b', f.mi]], X(XB), Y(H + 0.6), C.ink, { align: 'center', halo: true });
-    EM.runs(ctx, [['S', f.m]], X(XC), Y(H + 0.75), C.ink, { align: 'center', halo: true });
+    EM.runs(ctx, [['b', f.mi]], X(XM + 0.42), Y(YB), C.ink, { align: 'left', halo: true });
+    EM.runs(ctx, [['S', f.m]], X(XM), Y(H + 0.75), C.ink, { align: 'center', halo: true });
     // 저항
     if (st.R) {
       if (st.heatGlow > 0.01) { ctx.save(); ctx.globalAlpha = Math.min(0.55, st.heatGlow); ctx.fillStyle = C.heat; ctx.beginPath(); ctx.roundRect(X(XR0), Y(0.45), (XR1 - XR0) * s, 0.9 * s, 0.25 * s); ctx.fill(); ctx.restore(); }
@@ -2182,23 +2183,23 @@ const LCDRAW = (() => {
       EM.runs(ctx, [['R', f.mi]], X((XR0 + XR1) / 2), Y(-0.75), C.ink, { align: 'center', halo: true });
     }
     // 코일 + 속 자기장(초록, 전류에 비례)
-    const ia = Math.abs(st.icw);
+    const ia = Math.abs(st.icw), yLm = (YL0 + YL1) / 2;
     if (ia > 0.02) {
       ctx.save(); ctx.globalAlpha = 0.18 + 0.4 * ia; ctx.fillStyle = C.field;
-      ctx.beginPath(); ctx.roundRect(X(W - 0.2), Y(YL0 - 0.25), 0.95 * s, (YL0 - YL1 - 0.5) * s, 0.2 * s); ctx.fill(); ctx.restore();
-      // 전류가 시계 방향(+)이면 코일 속 B는 아래로 그린다 (감은 방향을 그렇게 정한 그림). 전류가 바뀌면 B도 뒤집힌다
-      const dir = st.icw > 0 ? 1 : -1, len = (YL0 - YL1) * 0.7 * s * (0.4 + 0.6 * ia), ym = Y((YL0 + YL1) / 2);
-      EM.vec(ctx, X(W + 0.28), ym - dir * len / 2, 0, dir * len, C.field, Math.max(3, 0.07 * s));
-      EM.runs(ctx, [['B', f.mb]], X(W + 1.2), Y((YL0 + YL1) / 2 + 1.1), C.field, { align: 'left', halo: true });
+      ctx.beginPath(); ctx.roundRect(X(XM - 0.2), Y(YL0 - 0.45), 0.95 * s, (YL0 - YL1 - 0.9) * s, 0.2 * s); ctx.fill(); ctx.restore();
+      // 전류가 시계 방향(+)이면 가운데 코일을 아래에서 위로 지나고, 코일 속 B는 위로 그린다 (감은 방향을 그렇게 정한 그림). 전류가 바뀌면 B도 뒤집힌다
+      const dir = st.icw > 0 ? -1 : 1, len = (YL0 - YL1) * 0.62 * s * (0.4 + 0.6 * ia), ym = Y(yLm);
+      EM.vec(ctx, X(XM + 0.28), ym - dir * len / 2, 0, dir * len, C.field, Math.max(3, 0.07 * s));
+      EM.runs(ctx, [['B', f.mb]], X(XM + 1.2), Y(yLm + 1.1), C.field, { align: 'left', halo: true });
     }
-    KIT.coil(ctx, X(W), Y(YL0), X(W), Y(YL1), 0.62 * s, { n: 5, color: C.current, width: Math.max(2.6, 0.07 * s), side: 1, lead: 0.06 });
-    EM.runs(ctx, [['L', f.mi]], X(W + 1.2), Y((YL0 + YL1) / 2 - 0.2), C.ink, { align: 'left', halo: true });
-    // 전류 화살촉
+    KIT.coil(ctx, X(XM), Y(YL0), X(XM), Y(YL1), 0.62 * s, { n: 5, color: C.current, width: Math.max(2.6, 0.07 * s), side: 1, lead: 0.1 });
+    EM.runs(ctx, [['L', f.mi]], X(XM + 1.2), Y(yLm - 0.2), C.ink, { align: 'left', halo: true });
+    // 전류 화살촉 (코일 구간과 축전기 판 사이는 건너뛴다)
     if (ia > 0.01 && st.sw > 0.5) {
-      const loop = [[XC, H], [W, H], [W, 0], [XC, 0], [XC, YC0 - 0.2]];
+      const loop = [[XM, H], [W, H], [W, 0], [XM, 0], [XM, YL1 - 0.2]];
       const skip = (px, py) => {
         const x = (px - X(0)) / s, y = (Y(0) - py) / s;
-        return (x > W - 0.7 && y > YL1 - 0.1 && y < YL0 + 0.1) || (st.R && x > XR0 - 0.2 && x < XR1 + 0.2 && Math.abs(y) < 0.6) || Math.hypot(x - XB, y - H) < 0.35 || Math.hypot(x - XC, y - H) < 0.35;
+        return (x > W - 0.7 && Math.abs(y - (YC0 + YC1) / 2) < 0.75) || (st.R && x > XR0 - 0.2 && x < XR1 + 0.2 && Math.abs(y) < 0.6) || Math.hypot(x - XM, y - H) < 0.35;
       };
       const path = st.icw > 0 ? loop : loop.slice().reverse();   // 화살촉은 경로 방향을 가리킨다
       KIT.flow(ctx, P(path), false, st.flow * s, 1.3 * s, Math.max(9, 0.2 * s), C.current, Math.min(1, 0.3 + ia), skip);
@@ -3800,7 +3801,7 @@ const LCDRAW = (() => {
   const { TAU, C, F, m: M, mv: MV, frac } = EM;
   const $ = id => document.getElementById('s5-' + id);
   const DISP_T = 4.0;                                       // 기준 회로의 한 주기를 화면에서 4초로
-  const state = { L: 2.81e-3, Cap: 9.00e-12, V0: 12, sw: 1, swPos: 'b', t: 0, Tref: 0, clock: 0, script: [], spring: true, hideAns: false, eqMark: false, phaseTags: true, swAnim: null };
+  const state = { L: 2.81e-3, Cap: 9.00e-12, V0: 12, sw: 1, swPos: 'b', t: 0, Tref: 0, clock: 0, script: [], spring: false, hideAns: false, eqMark: false, phaseTags: true, swAnim: null };
   let flowPh = 0;
 
   const per = () => TAU * Math.sqrt(state.L * state.Cap);
@@ -3833,12 +3834,12 @@ const LCDRAW = (() => {
     const ctx = sctx, f = SF(stageFs()), fs = f.fs;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const st = now(), Q = Q0(), I0 = Q / Math.sqrt(state.L * state.Cap), U = Q * Q / (2 * state.Cap);
-    const icw = -st.i / I0;                                   // 시계 방향 전류 / I_max
+    const icw = st.i / I0;                                    // 시계 방향 전류 / I_max (= dq/dt: 시계 방향 전류는 오른쪽 축전기의 위 판으로 들어간다)
     const fr = LCDRAW.frame({ x: 8, y: 6, w: w * 0.57, h: h - 12 });
     LCDRAW.draw(ctx, fr, { f, sw: state.sw, q: st.q / Q, icw, flow: flowPh, R: false });
     const { X, Y } = fr;
     if (!state.hideAns) {
-      EM.runs(ctx, [['q', f.mi], [` = ${EM.fmt(st.q * 1e12, 3)} pC`, f.numS]], X(4.6) + fs * 0.8, Y(1.6), C.ink, { align: 'left', halo: true, plate: true });
+      EM.runs(ctx, [['q', f.mi], [` = ${EM.fmt(st.q * 1e12, 3)} pC`, f.numS]], X(LCDRAW.W) - fs * 0.8, Y(1.6), C.ink, { align: 'right', halo: true, plate: true });
       EM.runs(ctx, [['i', f.mi], [` = ${EM.fmt(Math.abs(st.i) * 1e3, 3)} mA`, f.numS]], X(7.6), Y(7.8), C.current, { align: 'center', halo: true });
     }
     // 에너지 막대
@@ -3863,7 +3864,7 @@ const LCDRAW = (() => {
     // 용수철–물체 (x ↔ q, v ↔ dq/dt)
     if (state.spring) {
       const y = h * 0.82, x0 = bx + 16, xe = bx + bw * 0.55, A = bw * 0.27, bwid = Math.min(70, bw * 0.16), bh = Math.min(54, h * 0.07);
-      const x = A * st.q / Q, v = -A * 0.45 * icw;          // v ∝ dq/dt = −i_cw
+      const x = A * st.q / Q, v = A * 0.45 * icw;           // v ∝ dq/dt = i_cw
       KIT.springMass(ctx, x0, y, xe, x, bwid, bh, { fs, vArrow: v });
       EM.runs(ctx, [['x', f.mi], [' ↔ ', f.m], ['q', f.mi], ['    ', f.m], ['v', f.mi], [' ↔ ', f.m], ['i', f.mi], ['    ', f.m], ['m', f.mi], [' ↔ ', f.m], ['L', f.mi], ['    ', f.m], ['k', f.mi], [' ↔ 1/', f.m], ['C', f.mi]], bx + bw / 2, y + bh + fs * 1.0, C.muted, { align: 'center', halo: true });
     }
@@ -3884,7 +3885,7 @@ const LCDRAW = (() => {
       tmin: tmin * k, tmax: tmax * k, t: t * k, tstep: EM.niceStep(win * k / 5), xLabel: [['t', fM], [` (${unitTL()})`, fU]],
       panels: [
         { label: [['q', fM], ['  (최댓값에 대한 비)', fU]], lo: -1.15, hi: 1.15, step: 1, series: hid ? [] : [{ f: x => qf(x / k).q / Q, color: C.efield }], note: hid ? [['?', fU]] : null },
-        { label: [['i', fM], ['  시계 방향 (최댓값에 대한 비)', fU]], lo: -1.15, hi: 1.15, step: 1, series: hid ? [] : [{ f: x => -qf(x / k).i / I0, color: C.current }], note: hid ? [['?', fU]] : null },
+        { label: [['i', fM], ['  시계 방향 (최댓값에 대한 비)', fU]], lo: -1.15, hi: 1.15, step: 1, series: hid ? [] : [{ f: x => qf(x / k).i / I0, color: C.current }], note: hid ? [['?', fU]] : null },
         { label: [['U', fM], ['E', fS, fs * 0.3], [' 주황, ', fU], ['U', fM], ['B', fS, fs * 0.3], [' 초록 (전체에 대한 비)', fU]], lo: 0, hi: 1.1, step: 1,
           series: hid ? [] : [{ f: x => { const s = qf(x / k); return s.q * s.q / (2 * state.Cap) / U; }, color: C.efield }, { f: x => { const s = qf(x / k); return 0.5 * state.L * s.i * s.i / U; }, color: C.field }], note: hid ? [['?', fU]] : null },
       ],
@@ -3975,17 +3976,17 @@ const LCDRAW = (() => {
   const STEPS = [
     { sw: 'a', script: [[0.6, 'toB']], cap: `S를 a에 두면 전지가 축전기를 ${M('Q')} = ${M('C')}ℰ로 충전한다(저항이 없어 순식간). '재생' 단추를 눌러 S를 b로 옮기면 축전기가 코일을 지나 방전하기 시작한다(교재 그림 31.11). 회로의 저항과 복사는 없다고 본다.` },
     { sw: 'a', hideAns: true, quiz: QA, cap: `방전이 시작되면 무슨 일이 일어날까?` },
-    { sw: 'a', quiz: QA, reveal: true, script: [[0.6, 'toB']], cap: `'재생' 단추를 누르면 S가 b로 간다. A(전하 최대) → B(전하 0, 전류 최대) → C(반대로 충전) → D(반대 전류 최대) → A. 에너지는 축전기의 전기장과 코일의 자기장을 오간다(교재 그림 31.12). 용수철–물체에서 물체가 평형점에서 가장 빠른 것과 같다.` },
+    { sw: 'a', quiz: QA, reveal: true, script: [[0.6, 'toB']], cap: `'재생' 단추를 누르면 S가 b로 간다. A(전하 최대) → B(전하 0, 전류 최대) → C(반대로 충전) → D(반대 전류 최대) → A. 에너지는 축전기의 전기장과 코일의 자기장을 오간다(교재 그림 31.12).` },
     { quiz: QJ, cap: `에너지가 축전기에서 코일로 옮겨 가는 동안, 누가 전하를 밀고 있을까?` },
     { quiz: QJ, reveal: true, cap: `축전기의 전기력이 전하를 밀어 전류를 키우고, 코일의 유도 전기장은 그 반대로 밀며(역기전력) 에너지를 받아 자기장에 쌓는다. 같은 순간 두 소자의 전압은 크기가 같다: 축전기 전압 = 코일의 유도 기전력.` }, // 출처: Young 30.5 (각 순간 축전기 전위 = 유도 기전력), TYU 30.5
     { quiz: QC, cap: `진동 주기는 무엇으로 정해질까? 지금 ℰ = 12.0 V.` },
     { quiz: QC, reveal: true, V0: 24, cap: `ℰ = 24.0 V: 전하와 전류는 두 배, 주기는 그대로 ${M('T')} = 2π√(${M('LC')}). 교재의 예제 값(${M('L')} = 2.81 mH, ${M('C')} = 9.00 pF)에서 ${M('f')} = 1.00 MHz, ${M('I')}<sub>max</sub> = ω${M('Q')}<sub>max</sub>(ℰ = 12.0 V일 때 0.679 mA).` },
     { V0: 12, hideAns: true, quiz: QD, cap: `에너지 막대와 아래 그래프를 함께 보자.` },
     { V0: 12, quiz: QD, reveal: true, cap: `${M('U')}<sub>E</sub>는 A와 C에서, ${M('U')}<sub>B</sub>는 B와 D에서 최대: 한 주기에 각각 두 번. ${M('q')}와 ${M('i')}는 90°, 두 에너지는 180° 어긋난다.` },
-    { V0: 12, quiz: QE, cap: `교재 표 31.1의 대응을 떠올려 보자. 오른쪽 아래가 같은 순간의 용수철–물체다.` },
-    { V0: 12, quiz: QE, reveal: true, cap: `${M('q')} ↔ ${M('x')}, ${M('i')} ↔ ${M('v')}, ${M('L')} ↔ ${M('m')}, 1/${M('C')} ↔ ${M('k')}, ${M('U')}<sub>B</sub> = ½${M('Li')}<sup>2</sup> ↔ 운동 에너지 ½${M('mv')}<sup>2</sup>, ${M('U')}<sub>E</sub> ↔ 용수철의 퍼텐셜 에너지. ${M('L')}을 키우면(무거운 물체) 진동이 느려진다: 조절에서 ${M('L')}을 네 배로 하면 진동수가 절반이 된다.` },
-    { V0: 12, quiz: QG, cap: `두 에너지가 같아지는 순간을 계산해 보자.` },
-    { V0: 12, quiz: QG, reveal: true, eqMark: true, cap: `그래프의 보라 점: 두 에너지가 각각 50 %인 순간은 ${M('T')}/8마다 온다(어떤 ${M('L')}, ${M('C')}에서도). 실제 회로에는 저항과 복사가 있어 진동이 줄어든다 — 다음 화면.` },
+    { V0: 12, spring: true, quiz: QE, cap: `교재 표 31.1의 대응을 떠올려 보자. 오른쪽 아래가 같은 순간의 용수철–물체다.` },
+    { V0: 12, spring: true, quiz: QE, reveal: true, cap: `${M('q')} ↔ ${M('x')}, ${M('i')} ↔ ${M('v')}, ${M('L')} ↔ ${M('m')}, 1/${M('C')} ↔ ${M('k')}, ${M('U')}<sub>B</sub> = ½${M('Li')}<sup>2</sup> ↔ 운동 에너지 ½${M('mv')}<sup>2</sup>, ${M('U')}<sub>E</sub> ↔ 용수철의 퍼텐셜 에너지. 전하가 0일 때(B, D) 전류가 가장 큰 것은 물체가 평형점에서 가장 빠른 것과 같다. ${M('L')}을 키우면(무거운 물체) 진동이 느려진다: 조절에서 ${M('L')}을 네 배로 하면 진동수가 절반이 된다.` },
+    { V0: 12, spring: true, quiz: QG, cap: `두 에너지가 같아지는 순간을 계산해 보자.` },
+    { V0: 12, spring: true, quiz: QG, reveal: true, eqMark: true, cap: `그래프의 보라 점: 두 에너지가 각각 50 %인 순간은 ${M('T')}/8마다 온다(어떤 ${M('L')}, ${M('C')}에서도). 실제 회로에는 저항과 복사가 있어 진동이 줄어든다 — 다음 화면.` },
   ];
 
   const def = EM.register({
@@ -4017,6 +4018,7 @@ const LCDRAW = (() => {
       state.script = [];
       $('playBtn').hidden = !S.script;
       state.hideAns = !!S.hideAns; state.eqMark = !!S.eqMark;
+      state.spring = !!S.spring;                            // 용수철–물체는 대응을 묻는 10단계부터 (체크박스로 언제든 켜고 끌 수 있다)
       if (S.V0 != null && S.V0 !== state.V0) { state.V0 = S.V0; state.t = 0; }
       if (i === 0 || S.reveal && S.sw) { state.L = 2.81e-3; state.Cap = 9.00e-12; state.V0 = 12; }
       state.Tref = TAU * Math.sqrt(2.81e-3 * 9.00e-12);
@@ -4063,7 +4065,7 @@ const LCDRAW = (() => {
     const ctx = sctx, f = SF(stageFs()), fs = f.fs;
     ctx.fillStyle = C.stage; ctx.fillRect(0, 0, w, h);
     const st = now(), Q = Q0(), U = U0(), I0 = Q * info().w0;
-    const icw = -st.i / I0;
+    const icw = st.i / I0;                                    // 시계 방향 전류 = dq/dt (LCDRAW 참고)
     const UE = st.q * st.q / (2 * state.Cap), UB = 0.5 * state.L * st.i * st.i, Qh = Math.max(0, U - UE - UB);
     const fr = LCDRAW.frame({ x: 8, y: 6, w: w * 0.57, h: h - 12 });
     const PR = st.i * st.i * state.R, Pref = U * info().w0;
